@@ -1,3 +1,3 @@
-// Features: auth module
-// Feature code will be implemented here
-export {};
+export { LoginForm } from './LoginForm';
+export { SignupForm } from './SignupForm';
+export { LogoutButton } from './LogoutButton';

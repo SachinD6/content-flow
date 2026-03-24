@@ -46,6 +46,7 @@ export interface Database {
           role?: 'user' | 'admin';
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

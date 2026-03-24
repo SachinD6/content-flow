@@ -1,9 +1,9 @@
-import { SquareTerminal, Component, GitBranch, Layers, Key } from 'lucide-react';
+import { SquareTerminal, Component, GitBranch, Layers, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { LoginForm } from '@/features/auth/LoginForm';
+import { SignupForm } from '@/features/auth/SignupForm';
 import { Toaster } from '@/components/ui/sonner';
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="flex min-h-screen bg-[#0b0c10] font-sans text-white">
       {/* Left Pane */}
@@ -60,17 +60,17 @@ export default function LoginPage() {
           <div className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-[#6154f0]/10 blur-[120px] rounded-full translate-x-1/3 translate-y-1/3" />
         </div>
 
-        {/* Login Card */}
+        {/* Signup Card */}
         <div className="relative z-10 w-full max-w-[420px] rounded-[24px] bg-[#121319] p-8 shadow-2xl border border-white/5">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="flex h-12 w-14 items-center justify-center rounded-[12px] bg-[#6154f0] shadow-lg mb-6 shadow-[#6154f0]/20">
-              <Key className="h-5 w-5 text-white" strokeWidth={2.5} />
+              <UserPlus className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-white">Welcome back</h2>
-            <p className="mt-2 text-[13px] text-zinc-400">Sign in to your workspace</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-white">Create an account</h2>
+            <p className="mt-2 text-[13px] text-zinc-400">Sign up for your workspace</p>
           </div>
 
-          <LoginForm />
+          <SignupForm />
         </div>
 
         {/* Footer Links */}
