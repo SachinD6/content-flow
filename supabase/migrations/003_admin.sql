@@ -1,0 +1,4 @@
+-- Run in Supabase SQL editor
+-- To make a user admin:
+-- UPDATE public.profiles SET role = 'admin' WHERE email = 'your@email.com';
+-- role column already exists from migration 001
