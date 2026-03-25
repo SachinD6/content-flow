@@ -1,3 +1,11 @@
+export interface Author {
+  _id?: string;
+  name: string;
+  slug?: string;
+  bio?: string;
+  avatar?: string;
+}
+
 export interface Post {
   _id: string;
   title: string;
@@ -6,10 +14,7 @@ export interface Post {
   publishedAt: string;
   featured: boolean;
   tags: string[];
-  author: {
-    name: string;
-    avatar: string;
-  };
+  author: Author;
   coverImage: string;
 }
 

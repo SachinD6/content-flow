@@ -12,6 +12,9 @@ interface UIActions {
   setActivePath: (path: string) => void;
 }
 
+// CORRECT: const sidebarOpen = useUIStore((state) => state.sidebarOpen)
+// WRONG:   const store = useUIStore()
+
 export const useUIStore = create<UIState & UIActions>()(
   persist(
     (set) => ({

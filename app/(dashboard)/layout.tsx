@@ -1,22 +1,33 @@
-import { LogoutButton } from '@/features/auth';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { Sidebar } from '@/features/auth/Sidebar';
+import { TopHeader } from '@/features/auth/TopHeader';
+import { cn } from '@/lib/utils';
+import { ClientLayoutWrapper } from './ClientLayoutWrapper';
 
-export default function DashboardGroupLayout({
+export default async function DashboardGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    redirect('/login');
+  }
+
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar will go here */}
-      <aside className="hidden w-64 border-r bg-muted/40 md:block">
-        <nav className="p-4 flex flex-col h-full justify-between">
-          <div className="text-sm text-muted-foreground">
-            Dashboard navigation coming soon.
+    <div className="flex min-h-screen bg-[#0b0c10] font-sans text-zinc-100 selection:bg-[#6154f0] selection:text-white">
+      <Sidebar />
+      <ClientLayoutWrapper>
+        <TopHeader />
+        <main className="flex-1 p-8 overflow-y-auto">
+          <div className="mx-auto max-w-7xl">
+            {children}
           </div>
-          <LogoutButton />
-        </nav>
-      </aside>
-      <main className="flex-1 p-6">{children}</main>
+        </main>
+      </ClientLayoutWrapper>
     </div>
   );
 }
