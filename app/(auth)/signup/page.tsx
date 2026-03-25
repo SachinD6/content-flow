@@ -1,7 +1,6 @@
 import { SquareTerminal, Component, GitBranch, Layers, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { SignupForm } from '@/features/auth/SignupForm';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function SignupPage() {
   return (
@@ -80,8 +79,6 @@ export default function SignupPage() {
           <Link href="#" className="hover:text-zinc-400 transition-colors">SECURITY</Link>
         </div>
       </div>
-
-      <Toaster />
     </div>
   );
 }

@@ -33,3 +33,31 @@ export interface User {
   aud: string;
   created_at: string;
 }
+
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+
+export interface PageHeaderProps {
+  title: string;
+  description?: string;
+  children?: ReactNode;
+}
+
+export interface EmptyStateProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+export interface LoadingSpinnerProps {
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+
+export interface PostDetailPageProps {
+  params: Promise<{ slug: string }>;
+}

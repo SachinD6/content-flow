@@ -1,7 +1,6 @@
 import { SquareTerminal, Component, GitBranch, Layers, Key } from 'lucide-react';
 import Link from 'next/link';
 import { LoginForm } from '@/features/auth/LoginForm';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function LoginPage() {
   return (
@@ -80,8 +79,6 @@ export default function LoginPage() {
           <Link href="#" className="hover:text-zinc-400 transition-colors">SECURITY</Link>
         </div>
       </div>
-
-      <Toaster />
     </div>
   );
 }

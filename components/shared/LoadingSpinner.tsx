@@ -6,10 +6,7 @@ const sizeMap = {
   lg: 'h-12 w-12',
 } as const;
 
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
+import type { LoadingSpinnerProps } from '@/types';
 
 export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
   return (

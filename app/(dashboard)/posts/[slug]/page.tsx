@@ -1,8 +1,5 @@
 import { PageHeader } from '@/components/shared/PageHeader';
-
-interface PostDetailPageProps {
-  params: Promise<{ slug: string }>;
-}
+import type { PostDetailPageProps } from '@/types';
 
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { slug } = await params;

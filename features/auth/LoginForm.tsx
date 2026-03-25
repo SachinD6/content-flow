@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, EyeOff, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { usePostHog } from 'posthog-js/react';
 import {
   Form,
   FormControl,
@@ -27,6 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +45,7 @@ export function LoginForm() {
     setIsLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
@@ -53,6 +55,19 @@ export function LoginForm() {
           description: error.message,
         });
         return;
+      }
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', data.user.id)
+          .single();
+
+        posthog.identify(data.user.id, {
+          email: data.user.email,
+          plan: profile?.subscription_tier ?? 'free',
+        });
       }
 
       toast.success('Welcome back!');
