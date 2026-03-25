@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { FileWarning, ArrowLeft } from 'lucide-react';
-import { EmptyState } from '@/components';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 export default function SinglePostNotFound() {
   return (

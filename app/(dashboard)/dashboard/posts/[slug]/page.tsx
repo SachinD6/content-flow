@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 import { sanityClient } from '@/lib/sanity/client';
 import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
 import { Badge } from '@/components/ui/badge';
-import { LoadingSpinner } from '@/components';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PostViewTracker } from '@/features/posts/PostViewTracker';
 import type { Post } from '@/types';
 import type { PortableTextBlock } from '@portabletext/types';
