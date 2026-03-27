@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
@@ -8,6 +9,34 @@ export async function middleware(request: NextRequest) {
 
   // Always allow auth callback through
   if (pathname.startsWith('/auth/callback')) {
+    return supabaseResponse;
+  }
+
+  // Protect all /admin/* routes
+  if (pathname.startsWith('/admin')) {
+    // Check user authenticated first
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    // Fetch profile to check role
+    const supabase = createServiceRoleClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    // If not admin, redirect to dashboard
+    if (profile?.role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+
+    // Admin user - allow through
     return supabaseResponse;
   }
 
@@ -41,5 +70,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

@@ -1,6 +1,5 @@
 'use client';
 
-import { Suspense } from 'react';
 import { Menu, Search, Bell, HelpCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -11,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 export function TopHeader() {
-  const { profile, loading } = useUser();
+  const { profile, loading, error } = useUser();
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const pathname = usePathname();
 
@@ -58,9 +57,15 @@ export function TopHeader() {
 
           <div className="flex items-center gap-3 ml-2 border-l border-white/5 pl-6">
             <div className="flex flex-col text-right hidden lg:flex">
-              <span className="text-[13px] font-semibold text-white">
-                {loading ? <Skeleton className="h-4 w-20" /> : profile?.displayName || 'Unknown'}
-              </span>
+              {loading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : error ? (
+                <span className="text-[13px] font-semibold text-red-400">Error</span>
+              ) : (
+                <span className="text-[13px] font-semibold text-white">
+                  {profile?.displayName || 'Unknown'}
+                </span>
+              )}
               <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">
                 {profile?.role || 'USER'}
               </span>

@@ -1,3 +1,2 @@
-// Features: posts module
-// Feature code will be implemented here
-export {};
+export { NewPostForm } from './NewPostForm';
+export { SyncButton } from './SyncButton';

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
+import { draftMode } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { Metadata } from 'next';
 
-import { sanityClient } from '@/lib/sanity/client';
+import { sanityClient, previewSanityClient } from '@/lib/sanity/client';
 import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -26,7 +27,9 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const post = await sanityClient.fetch<Post>(POST_BY_SLUG_QUERY, { slug });
+  const { isEnabled: isDraftMode } = await draftMode();
+  const client = isDraftMode ? previewSanityClient : sanityClient;
+  const post = await client.fetch<Post>(POST_BY_SLUG_QUERY, { slug });
 
   if (!post) {
     return { title: 'Post Not Found' };
@@ -42,7 +45,9 @@ export default async function SinglePostPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await props.params;
-  const post = await sanityClient.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug });
+  const { isEnabled: isDraftMode } = await draftMode();
+  const client = isDraftMode ? previewSanityClient : sanityClient;
+  const post = await client.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug });
 
   if (!post) {
     notFound();
@@ -53,6 +58,26 @@ export default async function SinglePostPage(
       <PostViewTracker slug={post.slug} title={post.title} />
 
       <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-700 fade-in pb-24">
+        {/* Preview Mode Banner */}
+        {isDraftMode && (
+          <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/10 p-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-amber-400 text-lg">⚠️</span>
+                <span className="text-amber-200 font-medium">
+                  Preview Mode — You are viewing draft content
+                </span>
+              </div>
+              <a
+                href="/api/draft/disable"
+                className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-[8px] text-sm font-semibold transition-colors"
+              >
+                Exit Preview
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Breadcrumbs */}
         <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] text-zinc-500 py-2 border-b border-white/5">
           <Link href="/dashboard/posts" className="flex items-center gap-2 hover:text-white transition-colors uppercase">
@@ -72,6 +97,11 @@ export default async function SinglePostPage(
             {post.featured && (
               <Badge className="bg-[#6154f0]/20 text-[#766bf3] text-[9px] uppercase font-bold tracking-widest border border-transparent">
                 Featured
+              </Badge>
+            )}
+            {isDraftMode && (
+              <Badge className="bg-amber-500/20 text-amber-400 text-[9px] uppercase font-bold tracking-widest border border-transparent">
+                Draft
               </Badge>
             )}
           </div>

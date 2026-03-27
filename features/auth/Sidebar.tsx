@@ -3,12 +3,14 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Settings, CreditCard, Menu, X, BookOpen, LifeBuoy, SquareTerminal } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { LayoutDashboard, FileText, Settings, CreditCard, Menu, SquareTerminal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
+import type { Post } from '@/types';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -21,7 +23,18 @@ function SidebarContent() {
   const pathname = usePathname();
   const setActivePath = useUIStore((state) => state.setActivePath);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
-  const { profile, loading } = useUser();
+  const { profile, loading, error, refetch } = useUser();
+
+  const { data: posts } = useQuery<Post[]>({
+    queryKey: ['posts'],
+    queryFn: async () => {
+      const response = await fetch('/api/posts');
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   useEffect(() => {
     setActivePath(pathname);
@@ -71,9 +84,9 @@ function SidebarContent() {
               {sidebarOpen && (
                 <span className="truncate">{item.name}</span>
               )}
-              {sidebarOpen && item.name === 'Posts' && (
+              {sidebarOpen && item.name === 'Posts' && posts && (
                 <span className="ml-auto inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">
-                  12
+                  {posts.length}
                 </span>
               )}
             </Link>
@@ -91,7 +104,7 @@ function SidebarContent() {
           )}
           title={!sidebarOpen ? 'Documentation' : undefined}
         >
-          <BookOpen className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")} />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
           {sidebarOpen && "Documentation"}
         </Link>
         <Link
@@ -102,7 +115,7 @@ function SidebarContent() {
           )}
           title={!sidebarOpen ? 'Support' : undefined}
         >
-          <LifeBuoy className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")} />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
           {sidebarOpen && "Support"}
         </Link>
       </div>
@@ -129,8 +142,24 @@ function SidebarContent() {
           {sidebarOpen && (
             <div className="ml-3 flex flex-col overflow-hidden">
               <span className="truncate text-[13px] font-semibold text-white">
-                {loading ? 'Loading...' : profile?.displayName || 'Unknown User'}
+                {loading ? (
+                  <span className="text-zinc-500">Loading...</span>
+                ) : error ? (
+                  <span className="text-red-400 text-xs">Error loading profile</span>
+                ) : profile?.displayName ? (
+                  profile.displayName
+                ) : (
+                  'Unknown User'
+                )}
               </span>
+              {error && sidebarOpen && (
+                <button 
+                  onClick={refetch}
+                  className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left"
+                >
+                  Retry
+                </button>
+              )}
               <span className="truncate text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                 {profile?.role || 'USER'} &middot; {profile?.subscriptionTier || 'FREE'}
               </span>

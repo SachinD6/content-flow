@@ -5,6 +5,17 @@ import { POSTS_COUNT_QUERY } from '@/lib/sanity/queries';
 import { FileText, Award, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Profile } from '@/types';
+import type { Database } from '@/types/supabase';
+
+interface RecentPost {
+  _id: string;
+  title: string;
+  slug: string;
+  publishedAt: string;
+  author: string;
+}
+
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 export default async function DashboardHomePage() {
   const supabase = await createClient();
@@ -30,22 +41,35 @@ export default async function DashboardHomePage() {
   const [{ data: profileData }, totalPosts, recentPosts, postsThisWeek] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     sanityClient.fetch<number>(POSTS_COUNT_QUERY),
-    sanityClient.fetch(RECENT_POSTS_QUERY),
+    sanityClient.fetch<RecentPost[]>(RECENT_POSTS_QUERY),
     sanityClient.fetch<number>(WEEK_POSTS_COUNT_QUERY)
   ]);
 
-  const profile = profileData as unknown as Profile;
-  const rawProfileData = profileData as Record<string, unknown> | null;
+  // Map Supabase snake_case to Profile camelCase
+  const rawProfile = profileData as ProfileRow | null;
+  const profile: Profile | null = rawProfile ? {
+    id: rawProfile.id,
+    email: rawProfile.email,
+    displayName: rawProfile.display_name || '',
+    bio: rawProfile.bio || '',
+    website: rawProfile.website || '',
+    avatarUrl: rawProfile.avatar_url || '',
+    subscriptionTier: rawProfile.subscription_tier || 'free',
+    role: rawProfile.role || 'user',
+    stripeCustomerId: rawProfile.stripe_customer_id || undefined,
+    stripeSubscriptionId: rawProfile.stripe_subscription_id || undefined,
+    createdAt: rawProfile.created_at,
+  } : null;
 
   // Calculate completion percentage safely
-  const fields = ['display_name', 'email', 'bio', 'website', 'avatar_url'];
-  const filledFields = fields.filter((field) => Boolean(rawProfileData?.[field]));
+  const fields = ['display_name', 'email', 'bio', 'website', 'avatar_url'] as const;
+  const filledFields = fields.filter((field) => Boolean(rawProfile?.[field]));
   const profileCompletion = Math.round((filledFields.length / fields.length) * 100);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <PageHeader
-        title={`Welcome back, ${rawProfileData?.display_name || 'Architect'}`}
+        title={`Welcome back, ${rawProfile?.display_name || 'Architect'}`}
         description="Here is what is happening across your content ecosystem today."
       />
 
@@ -119,7 +143,7 @@ export default async function DashboardHomePage() {
                 </tr>
               </thead>
               <tbody>
-                {recentPosts.map((post: any) => (
+                {recentPosts.map((post) => (
                   <tr key={post._id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4">
                       <a href={`/dashboard/posts/${post.slug}`} className="text-sm font-semibold text-zinc-200 hover:text-[#6154f0] transition-colors">

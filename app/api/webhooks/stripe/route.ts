@@ -1,18 +1,18 @@
-import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
 import Stripe from 'stripe';
+import { stripe } from '@/lib/stripe';
 import { headers } from 'next/headers';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { PostHog } from 'posthog-node';
 
 export async function POST(request: Request) {
+  // CRITICAL: Must use raw text — json() will break signature verification
   const body = await request.text();
-  const headersList = await headers();
-  const signature = headersList.get('stripe-signature');
+  const headerList = await headers();
+  const sig = headerList.get('stripe-signature');
 
-  if (!signature) {
-    return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
-      { status: 400 }
-    );
+  if (!sig) {
+    console.error('No Stripe signature found');
+    return new Response('No signature', { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -20,29 +20,87 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(
       body,
-      signature,
+      sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Webhook signature verification failed';
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Webhook signature verification failed:', message);
+    return new Response(`Webhook Error: ${message}`, { status: 400 });
   }
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      // Handle successful checkout
-      // const session = event.data.object as Stripe.Checkout.Session;
-      // Update user subscription in database
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId;
+
+      if (!userId) {
+        console.error('No userId in session metadata');
+        return new Response('No userId in metadata', { status: 400 });
+      }
+
+      // Use service role to bypass RLS
+      const supabase = createServiceRoleClient();
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_tier: 'pro',
+          stripe_subscription_id: session.subscription as string,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Failed to update subscription in Supabase:', error);
+        return new Response('Database update failed', { status: 500 });
+      }
+
+      // PostHog server-side event
+      const posthogClient = new PostHog(
+        process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+        { host: process.env.NEXT_PUBLIC_POSTHOG_HOST }
+      );
+      posthogClient.capture({
+        distinctId: userId,
+        event: 'upgrade_completed',
+        properties: {
+          plan: 'pro',
+          userId,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      await posthogClient.shutdown();
+
+      console.log(`Successfully upgraded user ${userId} to Pro`);
       break;
     }
-    case 'customer.subscription.updated':
+
     case 'customer.subscription.deleted': {
-      // Handle subscription changes
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      const supabase = createServiceRoleClient();
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_tier: 'free',
+          stripe_subscription_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_customer_id', customerId);
+
+      if (error) {
+        console.error('Failed to downgrade subscription:', error);
+      }
       break;
     }
+
     default:
-      break;
+      console.log(`Unhandled Stripe event: ${event.type}`);
   }
 
-  return NextResponse.json({ received: true });
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
