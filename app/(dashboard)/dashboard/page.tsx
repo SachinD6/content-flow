@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
 import { POSTS_COUNT_QUERY } from '@/lib/sanity/queries';
 import { FileText, Award, UserCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Profile } from '@/types';
 
 export default async function DashboardHomePage() {
@@ -13,15 +14,29 @@ export default async function DashboardHomePage() {
     return null; // Will be redirected by layout
   }
 
-  // Fetch Profile and Posts count
-  const [{ data: profileData }, totalPosts] = await Promise.all([
+  // Fetch Stats and Recent Content
+  const RECENT_POSTS_QUERY = `*[_type == 'post'] | order(publishedAt desc)[0...3] {
+    _id,
+    title,
+    'slug': slug.current,
+    publishedAt,
+    'author': author->name
+  }`;
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const WEEK_POSTS_COUNT_QUERY = `count(*[_type == 'post' && publishedAt > "${oneWeekAgo.toISOString()}"])`;
+
+  const [{ data: profileData }, totalPosts, recentPosts, postsThisWeek] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
-    sanityClient.fetch<number>(POSTS_COUNT_QUERY)
+    sanityClient.fetch<number>(POSTS_COUNT_QUERY),
+    sanityClient.fetch(RECENT_POSTS_QUERY),
+    sanityClient.fetch<number>(WEEK_POSTS_COUNT_QUERY)
   ]);
 
   const profile = profileData as unknown as Profile;
   const rawProfileData = profileData as Record<string, unknown> | null;
-  
+
   // Calculate completion percentage safely
   const fields = ['display_name', 'email', 'bio', 'website', 'avatar_url'];
   const filledFields = fields.filter((field) => Boolean(rawProfileData?.[field]));
@@ -29,8 +44,8 @@ export default async function DashboardHomePage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <PageHeader 
-        title={`Welcome back, ${rawProfileData?.display_name || 'Architect'}`} 
+      <PageHeader
+        title={`Welcome back, ${rawProfileData?.display_name || 'Architect'}`}
         description="Here is what is happening across your content ecosystem today."
       />
 
@@ -42,7 +57,12 @@ export default async function DashboardHomePage() {
           </div>
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-4xl font-bold tracking-tight">{totalPosts || 0}</span>
-            <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">+2 this week</span>
+            <span className={cn(
+              "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+              postsThisWeek > 0 ? "text-emerald-500 bg-emerald-500/10" : "text-zinc-500 bg-white/5"
+            )}>
+              {postsThisWeek > 0 ? `+${postsThisWeek}` : postsThisWeek} this week
+            </span>
           </div>
         </div>
 
@@ -69,8 +89,8 @@ export default async function DashboardHomePage() {
               <span className="text-3xl font-bold tracking-tight">{profileCompletion}%</span>
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out" 
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out"
                 style={{ width: `${profileCompletion}%` }}
               />
             </div>
@@ -78,16 +98,50 @@ export default async function DashboardHomePage() {
         </div>
       </div>
 
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-1 shadow-2xl">
-        <div className="flex h-64 flex-col items-center justify-center rounded-[12px] bg-[#0b0c10] border border-white/5 border-dashed">
-          <p className="text-sm font-medium text-zinc-500 flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Initializing Content Database Connection...
-          </p>
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Recent Content Activity</h3>
+          <a href="/dashboard/dashboard/posts" className="text-[11px] font-bold text-[#6154f0] hover:text-[#584acf] transition-colors">View all architecture</a>
         </div>
+
+        {(!recentPosts || recentPosts.length === 0) ? (
+          <div className="flex h-48 flex-col items-center justify-center bg-[#0b0c10]">
+            <p className="text-sm text-zinc-500 font-medium">No recent architectural entries recorded yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.02]">
+                  <th className="px-6 py-4 text-[10px] uppercase font-bold tracking-widest text-zinc-500">Node Title</th>
+                  <th className="px-6 py-4 text-[10px] uppercase font-bold tracking-widest text-zinc-500">Architect</th>
+                  <th className="px-6 py-4 text-[10px] uppercase font-bold tracking-widest text-zinc-500">Publication Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPosts.map((post: any) => (
+                  <tr key={post._id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4">
+                      <a href={`/dashboard/posts/${post.slug}`} className="text-sm font-semibold text-zinc-200 hover:text-[#6154f0] transition-colors">
+                        {post.title}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-zinc-400 font-mono">{post.author || 'Generic System'}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-zinc-500">
+                        {post.publishedAt
+                          ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          : 'Draft Stage'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
