@@ -21,16 +21,22 @@ import type { Post } from '@/types';
 interface PostsPageClientProps {
   showBanner: boolean;
   featuredPost: Post | null;
+  initialPosts: Post[];
 }
 
-export function PostsPageClient({ showBanner, featuredPost }: PostsPageClientProps) {
+export function PostsPageClient({ showBanner, featuredPost, initialPosts }: PostsPageClientProps) {
   const posthog = usePostHog();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: posts, isLoading, isError, refetch } = useQuery<Post[]>({
     queryKey: ['posts'],
-    queryFn: () => sanityClient.fetch(ALL_POSTS_QUERY),
+    queryFn: async () => {
+      const response = await fetch('/api/posts');
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    },
+    initialData: initialPosts,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
