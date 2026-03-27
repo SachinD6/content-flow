@@ -22,6 +22,8 @@ export interface Database {
           avatar_url: string;
           subscription_tier: 'free' | 'pro';
           role: 'user' | 'admin';
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -33,6 +35,8 @@ export interface Database {
           avatar_url?: string;
           subscription_tier?: 'free' | 'pro';
           role?: 'user' | 'admin';
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -44,6 +48,8 @@ export interface Database {
           avatar_url?: string;
           subscription_tier?: 'free' | 'pro';
           role?: 'user' | 'admin';
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           created_at?: string;
         };
         Relationships: [];

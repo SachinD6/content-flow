@@ -27,6 +27,8 @@ export interface Profile {
   avatarUrl: string;
   subscriptionTier: 'free' | 'pro';
   role: 'user' | 'admin';
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   createdAt: string;
 }
 

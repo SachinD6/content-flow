@@ -22,9 +22,10 @@ interface PostsPageClientProps {
   showBanner: boolean;
   featuredPost: Post | null;
   initialPosts: Post[];
+  isDraftMode?: boolean;
 }
 
-export function PostsPageClient({ showBanner, featuredPost, initialPosts }: PostsPageClientProps) {
+export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraftMode = false }: PostsPageClientProps) {
   const posthog = usePostHog();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -68,6 +69,26 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts }: Post
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Preview Mode Banner */}
+      {isDraftMode && (
+        <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/10 p-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-amber-400 text-lg">⚠️</span>
+              <span className="text-amber-200 font-medium">
+                Preview Mode — You are viewing draft content
+              </span>
+            </div>
+            <a
+              href="/api/draft/disable"
+              className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-[8px] text-sm font-semibold transition-colors"
+            >
+              Exit Preview
+            </a>
+          </div>
+        </div>
+      )}
+
       {showBanner && featuredPost && (
         <FeaturedBanner post={featuredPost} />
       )}
