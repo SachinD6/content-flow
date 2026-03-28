@@ -26,11 +26,12 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
   };
 
   return (
-    <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 shadow-xl">
+    <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 shadow-xl">
       <div className="mb-4 text-sm text-zinc-400">
         {users.length} users
       </div>
-      <Table>
+      <div className="overflow-x-auto -mx-4 px-4">
+        <Table className="min-w-[500px]">
         <TableHeader>
           <TableRow className="border-white/5 hover:bg-transparent">
             <TableHead className="text-zinc-400">Email</TableHead>
@@ -78,6 +79,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

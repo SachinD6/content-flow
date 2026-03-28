@@ -120,9 +120,9 @@ export function SettingsForm({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-6 pb-32">
       {/* Section 3 "Avatar" (moved visually up structurally to match designs usually) */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-8 shadow-xl">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 lg:p-8 shadow-xl">
         <h3 className="text-xl font-bold tracking-tight text-white mb-2">Architect Identity</h3>
         <p className="text-sm text-zinc-400 mb-8">Update your avatar. This is how you&apos;ll appear across the platform.</p>
         <AvatarUpload 
@@ -138,7 +138,7 @@ export function SettingsForm({ userId }: { userId: string }) {
         <form onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-8">
           
           {/* Section 1 "Profile Information" */}
-          <div className="rounded-[16px] border border-white/5 bg-[#121319] p-8 shadow-xl space-y-6">
+          <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 lg:p-8 shadow-xl space-y-6">
             <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500 mb-6 pb-4 border-b border-white/5">Profile Information</h3>
             
             <FormField
@@ -214,7 +214,7 @@ export function SettingsForm({ userId }: { userId: string }) {
           </div>
 
           {/* Section 2 "Account" */}
-          <div className="rounded-[16px] border border-white/5 bg-[#121319] p-8 shadow-xl space-y-6">
+          <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 lg:p-8 shadow-xl space-y-6">
             <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-500 mb-6 pb-4 border-b border-white/5">Account Parameters</h3>
             
             <FormField
@@ -241,24 +241,24 @@ export function SettingsForm({ userId }: { userId: string }) {
           </div>
 
           {/* Save Controls */}
-          <div className="flex justify-end gap-4 rounded-[16px] bg-[#121319] border border-white/5 p-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 rounded-[16px] bg-[#121319] border border-white/5 p-4 shadow-xl">
              <button
                type="button"
                disabled={!form.formState.isDirty || updateMutation.isPending}
                onClick={() => form.reset()}
-               className="px-6 py-2.5 text-[12px] uppercase font-bold tracking-widest text-zinc-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+               className="px-6 py-3 text-[12px] uppercase font-bold tracking-widest text-zinc-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
              >
                Discard
              </button>
              <button
                type="submit"
                disabled={updateMutation.isPending || !form.formState.isDirty}
-               className="flex items-center gap-2 px-8 py-2.5 rounded-[8px] bg-[#6154f0] hover:bg-[#584acf] text-[12px] uppercase font-bold tracking-widest text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#6154f0]/20"
+               className="flex items-center justify-center gap-2 px-8 py-3 rounded-[8px] bg-[#6154f0] hover:bg-[#584acf] text-[12px] uppercase font-bold tracking-widest text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#6154f0]/20 min-h-[44px]"
              >
                {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
                {updateMutation.isPending ? 'Saving...' : 'Save changes'}
              </button>
-          </div>
+           </div>
         </form>
       </Form>
     </div>

@@ -5,8 +5,8 @@ import { LoginForm } from '@/features/auth/LoginForm';
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-[#0b0c10] font-sans text-white">
-      {/* Left Pane */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between border-r border-white/5 p-16 relative">
+      {/* Left Pane - Hidden on mobile/tablet */}
+      <div className="hidden lg:flex w-1/2 flex-col justify-between border-r border-white/5 p-12 xl:p-16 relative">
         {/* Subtle glow / shadow for ambiance */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#6154f0] opacity-10 blur-[120px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2" />
         
@@ -53,29 +53,37 @@ export default function LoginPage() {
       </div>
 
       {/* Right Pane */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center relative">
+      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center relative px-4 sm:px-6">
         {/* Abstract background blur for the right side */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-[#6154f0]/10 blur-[120px] rounded-full translate-x-1/3 translate-y-1/3" />
+          <div className="absolute right-0 bottom-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#6154f0]/10 blur-[120px] rounded-full translate-x-1/3 translate-y-1/3" />
+        </div>
+
+        {/* Mobile Logo - Only show on mobile */}
+        <div className="lg:hidden absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6154f0]">
+            <SquareTerminal className="h-4 w-4 text-white" strokeWidth={2} />
+          </div>
+          <span className="text-lg font-bold text-white">ContentFlow</span>
         </div>
 
         {/* Login Card */}
-        <div className="relative z-10 w-full max-w-[420px] rounded-[24px] bg-[#121319] p-8 shadow-2xl border border-white/5">
-          <div className="flex flex-col items-center text-center mb-8">
-            <div className="flex h-12 w-14 items-center justify-center rounded-[12px] bg-[#6154f0] shadow-lg mb-6 shadow-[#6154f0]/20">
-              <Key className="h-5 w-5 text-white" strokeWidth={2.5} />
+        <div className="relative z-10 w-full max-w-[420px] rounded-[20px] sm:rounded-[24px] bg-[#121319] p-6 sm:p-8 shadow-2xl border border-white/5 mt-16 lg:mt-0">
+          <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+            <div className="flex h-10 sm:h-12 w-12 sm:w-14 items-center justify-center rounded-[10px] sm:rounded-[12px] bg-[#6154f0] shadow-lg mb-4 sm:mb-6 shadow-[#6154f0]/20">
+              <Key className="h-4 sm:h-5 w-4 sm:w-5 text-white" strokeWidth={2.5} />
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-white">Welcome back</h2>
-            <p className="mt-2 text-[13px] text-zinc-400">Sign in to your workspace</p>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">Welcome back</h2>
+            <p className="mt-2 text-xs sm:text-[13px] text-zinc-400">Sign in to your workspace</p>
           </div>
 
           <LoginForm />
         </div>
 
         {/* Footer Links */}
-        <div className="absolute bottom-10 flex gap-8 text-[9px] font-bold tracking-[0.2em] text-zinc-500">
-          <Link href="#" className="hover:text-zinc-400 transition-colors">TERMS OF SERVICE</Link>
-          <Link href="#" className="hover:text-zinc-400 transition-colors">PRIVACY POLICY</Link>
+        <div className="absolute bottom-6 sm:bottom-10 flex flex-wrap justify-center gap-4 sm:gap-8 text-[8px] sm:text-[9px] font-bold tracking-[0.2em] text-zinc-500 px-4">
+          <Link href="#" className="hover:text-zinc-400 transition-colors">TERMS</Link>
+          <Link href="#" className="hover:text-zinc-400 transition-colors">PRIVACY</Link>
           <Link href="#" className="hover:text-zinc-400 transition-colors">SECURITY</Link>
         </div>
       </div>

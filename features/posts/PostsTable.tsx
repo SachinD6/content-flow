@@ -12,7 +12,7 @@ import {
   SortingState,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { CheckSquare, Square, Star, ArrowUpDown, Pencil } from 'lucide-react';
+import { CheckSquare, Square, Star, ArrowUpDown, Pencil, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,21 +59,27 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
   const columns = [
     columnHelper.accessor('coverImage', {
       header: 'COVER',
-      cell: (info) => (
-        <div className="relative h-10 w-10 overflow-hidden rounded-[8px] border border-white/10 shrink-0">
-          {info.getValue() ? (
-            <Image
-              src={info.getValue()}
-              alt="Cover"
-              fill
-              sizes="40px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="bg-white/5 w-full h-full" />
-          )}
-        </div>
-      ),
+      cell: (info) => {
+        const coverImage = info.getValue();
+        return (
+          <div className="relative h-10 w-10 overflow-hidden rounded-[8px] border border-white/10 shrink-0 bg-zinc-800">
+            {coverImage ? (
+              <Image
+                src={coverImage}
+                alt="Cover"
+                fill
+                sizes="40px"
+                className="object-cover"
+                unoptimized={coverImage.includes('cdn.sanity.io')}
+              />
+            ) : (
+              <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-zinc-600" />
+              </div>
+            )}
+          </div>
+        );
+      },
       enableSorting: false,
     }),
     columnHelper.accessor('title', {
@@ -159,13 +165,21 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       header: 'STATUS',
       cell: (info) => {
         const isFeatured = info.getValue();
+        const post = info.row.original;
+        const isPublished = !!post.publishedAt;
+        
         return (
           <div className="flex items-center gap-2">
+             {isFeatured && (
+               <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-[0.2em] px-2 py-0 border-transparent bg-amber-500/10 text-amber-400">
+                 Featured
+               </Badge>
+             )}
              <Badge variant="outline" className={cn(
                "text-[9px] uppercase font-bold tracking-[0.2em] px-2 py-0 border-transparent",
-               isFeatured ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-zinc-500"
+               isPublished ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-zinc-500"
              )}>
-               {isFeatured ? 'Featured' : 'Draft'}
+               {isPublished ? 'Published' : 'Draft'}
              </Badge>
           </div>
         );
@@ -182,33 +196,35 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
         return (
           <div className="flex items-center gap-1">
             {isAuthor && (
-              <Link
-                href={`/dashboard/posts/${post.slug}/edit`}
-                onClick={(e) => e.stopPropagation()}
-                className={cn(
-                  "p-2 rounded-[8px] transition-all cursor-pointer",
-                  "text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10"
-                )}
-                title="Edit Post"
-              >
-                <Pencil className="h-4 w-4" strokeWidth={2} />
-              </Link>
+              <>
+                <Link
+                  href={`/dashboard/posts/${post.slug}/edit`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    "p-2 rounded-[8px] transition-all cursor-pointer",
+                    "text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10"
+                  )}
+                  title="Edit Post"
+                >
+                  <Pencil className="h-4 w-4" strokeWidth={2} />
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast(post.featured ? 'Removing from features...' : 'Marking as featured...');
+                    toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
+                  }}
+                  className={cn(
+                    "p-2 rounded-[8px] transition-all cursor-pointer",
+                    post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
+                  )}
+                  title="Toggle Featured Status"
+                >
+                  <Star className={cn("h-4 w-4", post.featured && "fill-amber-400")} strokeWidth={2.5} />
+                </button>
+              </>
             )}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toast(post.featured ? 'Removing from features...' : 'Marking as featured...');
-                toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
-              }}
-              className={cn(
-                "p-2 rounded-[8px] transition-all cursor-pointer",
-                post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
-              )}
-              title="Toggle Featured Status"
-            >
-              <Star className={cn("h-4 w-4", post.featured && "fill-amber-400")} strokeWidth={2.5} />
-            </button>
           </div>
         );
       },

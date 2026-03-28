@@ -118,16 +118,16 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Current Plan Status */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 shadow-xl">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 shadow-xl">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-100">Current Plan</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-zinc-100">Current Plan</h2>
             <div className="mt-2 flex items-center gap-3">
               <span
                 className={cn(
-                  'text-2xl font-bold',
+                  'text-xl sm:text-2xl font-bold',
                   currentPlan === 'free' ? 'text-zinc-400' : 'text-green-400'
                 )}
               >
@@ -137,7 +137,7 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
                 Active
               </Badge>
             </div>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-400">
               {currentPlan === 'free'
                 ? 'You are on the free plan. Upgrade to unlock all features.'
                 : 'You are on the Pro plan. All features unlocked.'}
@@ -147,51 +147,51 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
         {/* Free Plan Card */}
         <div className={cn(
-          "relative rounded-[16px] border p-6 shadow-xl transition-all",
+          "relative rounded-[16px] border p-4 sm:p-6 shadow-xl transition-all",
           currentPlan === 'free' 
             ? "border-[#6154f0]/50 bg-[#121319] ring-1 ring-[#6154f0]/20" 
             : "border-white/5 bg-[#121319]"
         )}>
           {currentPlan === 'free' && (
-            <div className="absolute -top-3 left-6">
+            <div className="absolute -top-3 left-4 sm:left-6">
               <Badge className="bg-[#6154f0] text-white border-none text-[10px]">
                 Current Plan
               </Badge>
             </div>
           )}
           
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 rounded-lg bg-zinc-800">
                 <Shield className="h-5 w-5 text-zinc-400" />
               </div>
-              <h3 className="text-xl font-bold text-zinc-200">Free</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-zinc-200">Free</h3>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-zinc-100">$0</span>
-              <span className="text-zinc-500">/month</span>
+              <span className="text-3xl sm:text-4xl font-bold text-zinc-100">$0</span>
+              <span className="text-zinc-500 text-sm sm:text-base">/month</span>
             </div>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-500">
               Perfect for getting started with content management.
             </p>
           </div>
 
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-4 sm:mb-6">
             {features.map((item) => (
               <div key={item.feature} className="flex items-center gap-3">
-                <div className="text-zinc-600">{item.icon}</div>
-                <span className="text-sm text-zinc-400 flex-1">{item.feature}</span>
-                <span className="text-sm text-zinc-500">{item.free}</span>
+                <div className="text-zinc-600 shrink-0">{item.icon}</div>
+                <span className="text-xs sm:text-sm text-zinc-400 flex-1">{item.feature}</span>
+                <span className="text-xs sm:text-sm text-zinc-500">{item.free}</span>
               </div>
             ))}
           </div>
 
           <Button
             disabled={currentPlan === 'free'}
-            className="w-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 cursor-default"
+            className="w-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 cursor-default min-h-[44px]"
           >
             {currentPlan === 'free' ? 'Your Current Plan' : 'Downgrade'}
           </Button>
@@ -199,13 +199,13 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
 
         {/* Pro Plan Card */}
         <div className={cn(
-          "relative rounded-[16px] border p-6 shadow-xl transition-all",
+          "relative rounded-[16px] border p-4 sm:p-6 shadow-xl transition-all",
           currentPlan === 'pro' 
             ? "border-green-500/50 bg-[#121319] ring-1 ring-green-500/20" 
             : "border-[#6154f0]/30 bg-[#121319]"
         )}>
           {currentPlan === 'pro' && (
-            <div className="absolute -top-3 left-6">
+            <div className="absolute -top-3 left-4 sm:left-6">
               <Badge className="bg-green-500 text-white border-none text-[10px]">
                 Current Plan
               </Badge>
@@ -214,35 +214,35 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
           
           {/* Popular Badge */}
           {currentPlan === 'free' && (
-            <div className="absolute -top-3 right-6">
+            <div className="absolute -top-3 right-4 sm:right-6">
               <Badge className="bg-[#6154f0] text-white border-none text-[10px]">
                 Most Popular
               </Badge>
             </div>
           )}
           
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 rounded-lg bg-[#6154f0]/20">
                 <Zap className="h-5 w-5 text-[#6154f0]" />
               </div>
-              <h3 className="text-xl font-bold text-zinc-100">Pro</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-zinc-100">Pro</h3>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-zinc-100">$9.99</span>
-              <span className="text-zinc-500">/month</span>
+              <span className="text-3xl sm:text-4xl font-bold text-zinc-100">$9.99</span>
+              <span className="text-zinc-500 text-sm sm:text-base">/month</span>
             </div>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-400">
               Unlock unlimited content and team collaboration.
             </p>
           </div>
 
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-4 sm:mb-6">
             {features.map((item) => (
               <div key={item.feature} className="flex items-center gap-3">
-                <div className="text-[#6154f0]">{item.icon}</div>
-                <span className="text-sm text-zinc-300 flex-1">{item.feature}</span>
-                <span className="text-sm text-zinc-100 font-medium">{item.pro}</span>
+                <div className="text-[#6154f0] shrink-0">{item.icon}</div>
+                <span className="text-xs sm:text-sm text-zinc-300 flex-1">{item.feature}</span>
+                <span className="text-xs sm:text-sm text-zinc-100 font-medium">{item.pro}</span>
               </div>
             ))}
           </div>
@@ -251,7 +251,7 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
             <Button
               onClick={handleUpgrade}
               disabled={isLoading}
-              className="w-full bg-[#6154f0] hover:bg-[#584acf]"
+              className="w-full bg-[#6154f0] hover:bg-[#584acf] min-h-[44px]"
             >
               {isLoading ? <LoadingSpinner size="sm" /> : 'Upgrade to Pro'}
             </Button>
@@ -260,7 +260,7 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
               variant="outline" 
               onClick={handleManage} 
               disabled={isLoading}
-              className="w-full border-zinc-600 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white"
+              className="w-full border-zinc-600 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white min-h-[44px]"
             >
               {isLoading ? <LoadingSpinner size="sm" /> : 'Manage Subscription'}
             </Button>
@@ -269,10 +269,10 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
       </div>
 
       {/* Comparison Table */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-zinc-100 mb-4">Detailed Comparison</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 shadow-xl">
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-4">Detailed Comparison</h3>
+        <div className="overflow-x-auto -mx-4 px-4">
+          <table className="w-full min-w-[400px]">
             <thead>
               <tr className="border-b border-white/5">
                 <th className="pb-3 text-left text-sm font-medium text-zinc-400">Feature</th>

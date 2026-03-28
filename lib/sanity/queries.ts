@@ -1,7 +1,7 @@
 import { groq } from 'next-sanity';
 
 export const ALL_POSTS_QUERY = groq`
-  *[_type == 'post'] | order(publishedAt desc) {
+  *[_type == 'post' && defined(publishedAt)] | order(publishedAt desc) {
     _id,
     title,
     'slug': slug.current,
@@ -11,7 +11,8 @@ export const ALL_POSTS_QUERY = groq`
     tags,
     'authorId': author._ref,
     author->{ name, 'avatar': image.asset->url },
-    'coverImage': coverImage.asset->url
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
   }
 `;
 
@@ -19,19 +20,21 @@ export const POST_BY_SLUG_QUERY = groq`
   *[_type == 'post' && slug.current == $slug][0] {
     ...,
     author->{ name, bio, 'avatar': image.asset->url },
-    'coverImage': coverImage.asset->url
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
   }
 `;
 
 export const POSTS_COUNT_QUERY = groq`count(*[_type == 'post'])`;
 
 export const FEATURED_POST_QUERY = groq`
-  *[_type == 'post' && featured == true] | order(publishedAt desc)[0] {
+  *[_type == "post" && featured == true && defined(publishedAt)] | order(publishedAt desc)[0] {
     _id,
     title,
     'slug': slug.current,
     excerpt,
-    'coverImage': coverImage.asset->url
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
   }
 `;
 
@@ -46,6 +49,7 @@ export const POST_BY_ID_QUERY = groq`
     featured,
     tags,
     'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref,
     'authorId': author._ref
   }
 `;

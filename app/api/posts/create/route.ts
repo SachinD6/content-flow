@@ -10,7 +10,13 @@ interface PostDocument {
   featured: boolean;
   tags: string[];
   author: { _type: 'reference'; _ref: string };
-  coverImage?: string;
+  coverImage?: {
+    _type: 'image';
+    asset: {
+      _type: 'reference';
+      _ref: string;
+    };
+  };
   publishedAt?: string;
 }
 
@@ -88,9 +94,15 @@ export async function POST(request: Request) {
       },
     };
 
-    // Add cover image if provided
-    if (coverImage) {
-      doc.coverImage = coverImage;
+    // Add cover image if provided (should be a Sanity asset ID)
+    if (coverImage && typeof coverImage === 'string' && coverImage.startsWith('image-')) {
+      doc.coverImage = {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: coverImage,
+        },
+      };
     }
 
     // Set publishedAt only if published

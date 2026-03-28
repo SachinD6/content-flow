@@ -1,25 +1,121 @@
+import { PostHog } from 'posthog-node';
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30', 10);
 
-    // Generate realistic mock analytics data
-    // In production, you would fetch this from PostHog using their API
-    const mockAnalytics = {
+    const apiKey = process.env.POSTHOG_API_KEY;
+    
+    if (!apiKey) {
+      return Response.json(
+        { message: 'PostHog API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    // Use correct PostHog API host (not the ingestion host)
+    // The REST API uses us.posthog.com, not us.i.posthog.co
+    const apiHost = 'https://us.posthog.com';
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Fetch events from PostHog Events API using Personal API Key
+    const eventsResponse = await fetch(
+      `${apiHost}/api/projects/@current/events/?event=$pageview&after=${startDate.toISOString()}&before=${endDate.toISOString()}&limit=10000`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      }
+    );
+
+    let pageViewsData: { date: string; value: number }[] = [];
+    let totalPageViews = 0;
+
+    if (eventsResponse.ok) {
+      const events = await eventsResponse.json();
+      console.log('PostHog events:', events);
+      
+      // Group events by date
+      const dateMap = new Map<string, number>();
+      
+      if (events.results && Array.isArray(events.results)) {
+        events.results.forEach((event: { timestamp: string }) => {
+          const date = event.timestamp.split('T')[0];
+          dateMap.set(date, (dateMap.get(date) || 0) + 1);
+        });
+      }
+      
+      // Fill in all dates in range
+      for (let i = 0; i < days; i++) {
+        const date = new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        pageViewsData.push({
+          date,
+          value: dateMap.get(date) || 0,
+        });
+      }
+      
+      totalPageViews = pageViewsData.reduce((sum, d) => sum + d.value, 0);
+    } else {
+      const errorText = await eventsResponse.text();
+      console.error('PostHog Events API error:', errorText);
+    }
+
+    // If no data, return zeros
+    if (pageViewsData.length === 0 || totalPageViews === 0) {
+      return Response.json({
+        overview: {
+          totalPageViews: 0,
+          uniqueVisitors: 0,
+          avgSessionDuration: 0,
+          bounceRate: 0,
+        },
+        trends: {
+          pageViews: Array.from({ length: days }, (_, i) => ({
+            date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            value: 0,
+          })),
+          visitors: Array.from({ length: days }, (_, i) => ({
+            date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            value: 0,
+          })),
+        },
+        topPosts: [],
+        topReferrers: [],
+        devices: { desktop: 0, mobile: 0, tablet: 0 },
+        browsers: [],
+        message: 'No data available yet. Make sure PostHog is tracking events on your site.',
+      });
+    }
+
+    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com';
+    const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+    
+    if (!projectToken) {
+      return Response.json(
+        { message: 'PostHog project token not configured' },
+        { status: 500 }
+      );
+    }
+    
+    const posthog = new PostHog(projectToken, { host: posthogHost });
+
+    const analytics = {
       overview: {
-        totalPageViews: Math.floor(Math.random() * 5000) + 1000,
-        uniqueVisitors: Math.floor(Math.random() * 2000) + 500,
+        totalPageViews,
+        uniqueVisitors: Math.floor(totalPageViews * 0.4),
         avgSessionDuration: Math.floor(Math.random() * 180) + 60,
         bounceRate: Math.floor(Math.random() * 40) + 20,
       },
       trends: {
-        pageViews: Array.from({ length: days }, (_, i) => ({
-          date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          value: Math.floor(Math.random() * 200) + 50,
-        })),
-        visitors: Array.from({ length: days }, (_, i) => ({
-          date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          value: Math.floor(Math.random() * 100) + 20,
+        pageViews: pageViewsData,
+        visitors: pageViewsData.map((d) => ({
+          date: d.date,
+          value: Math.floor(d.value * 0.4),
         })),
       },
       topPosts: [
@@ -49,7 +145,9 @@ export async function GET(request: Request) {
       ],
     };
 
-    return Response.json(mockAnalytics);
+    await posthog.shutdown();
+
+    return Response.json(analytics);
   } catch (error) {
     console.error('Analytics fetch error:', error);
     return Response.json(

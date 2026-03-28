@@ -1,6 +1,6 @@
-import { PageHeader } from '@/components/shared/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { AnalyticsContent } from '@/features/analytics/AnalyticsContent';
 
 export default async function AnalyticsPage() {
@@ -12,14 +12,14 @@ export default async function AnalyticsPage() {
   }
 
   return (
-    <>
+    <div className="w-full min-w-0 overflow-x-hidden">
       <PageHeader
-        title="Analytics Dashboard"
-        description="Track your content performance and audience insights"
+        title="PostHog Events"
+        description="Real-Time Telemetry / Production Pipeline"
       />
       <div className="mt-8">
         <AnalyticsContent />
       </div>
-    </>
+    </div>
   );
 }

@@ -22,8 +22,12 @@ export default async function DashboardGroupLayout({
       <Sidebar />
       <ClientLayoutWrapper>
         <TopHeader />
-        <main className="flex-1 p-8 overflow-y-auto">
-          <div className="mx-auto max-w-7xl">
+        <main className={cn(
+          "flex-1 overflow-y-auto overflow-x-hidden",
+          "p-4 sm:p-6 lg:p-8",
+          "pt-20 lg:pt-8"
+        )}>
+          <div className="mx-auto max-w-7xl w-full min-w-0">
             {children}
           </div>
         </main>

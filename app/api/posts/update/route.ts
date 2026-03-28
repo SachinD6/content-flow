@@ -61,9 +61,20 @@ export async function PUT(request: Request) {
       tags: tags || [],
     };
 
-    // Handle cover image
-    if (coverImage) {
-      updateDoc.coverImage = coverImage;
+    // Handle cover image (should be a Sanity asset ID)
+    if (coverImage && typeof coverImage === 'string') {
+      if (coverImage.startsWith('image-')) {
+        updateDoc.coverImage = {
+          _type: 'image',
+          asset: {
+            _type: 'reference',
+            _ref: coverImage,
+          },
+        };
+      } else if (coverImage === 'remove') {
+        // Remove cover image
+        updateDoc.coverImage = null;
+      }
     }
 
     // Handle published status

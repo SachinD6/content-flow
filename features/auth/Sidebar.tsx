@@ -4,10 +4,11 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, FileText, Settings, CreditCard, Menu, SquareTerminal, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, CreditCard, Menu, SquareTerminal, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
 import type { Post } from '@/types';
@@ -24,6 +25,7 @@ function SidebarContent() {
   const pathname = usePathname();
   const setActivePath = useUIStore((state) => state.setActivePath);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const { profile, loading, error, refetch } = useUser();
 
   const { data: posts } = useQuery<Post[]>({
@@ -43,17 +45,38 @@ function SidebarContent() {
 
   return (
     <div className="flex flex-col h-full bg-[#0b0c10] border-r border-white/5 text-zinc-400 font-sans transition-all duration-300">
-      {/* Brand Header */}
-      <div className={cn("flex items-center h-16 px-6 relative", !sidebarOpen && "justify-center px-0")}>
+      {/* Brand Header with Collapse Toggle */}
+      <div className={cn("flex items-center h-16 px-4 relative", !sidebarOpen && "justify-center px-2")}>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6154f0] shrink-0">
           <SquareTerminal className="h-4 w-4 text-white" strokeWidth={2.5} />
         </div>
         {sidebarOpen && (
-          <div className="ml-3 flex flex-col">
+          <div className="ml-3 flex flex-col flex-1 min-w-0">
             <span className="text-sm font-bold tracking-wide text-white leading-tight">ContentFlow</span>
             <span className="text-[9px] uppercase tracking-[0.2em] text-[#6154f0] font-bold">Engineering CMS</span>
           </div>
         )}
+        {/* Collapse Toggle Button - Moved to top */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+          }}
+          className={cn(
+            "hidden lg:flex items-center justify-center p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer ml-auto shrink-0",
+            !sidebarOpen && "ml-0"
+          )}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          type="button"
+          title={sidebarOpen ? "Collapse" : "Expand"}
+        >
+          {sidebarOpen ? (
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          )}
+        </button>
       </div>
 
       {/* Main Navigation */}
@@ -124,50 +147,63 @@ function SidebarContent() {
       {/* User Profile Mini */}
       <div className="p-4 border-t border-white/5">
         <div className={cn("flex items-center relative", !sidebarOpen && "justify-center")}>
-          <div className="relative h-8 w-8 rounded-full overflow-hidden bg-zinc-800 shrink-0 border border-white/10">
-            {profile?.avatarUrl ? (
-              <Image 
-                src={profile.avatarUrl} 
-                alt="Avatar" 
-                width={32}
-                height={32}
-                className="object-cover"
-              />
-            ) : (
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-white uppercase">
-                {profile?.displayName?.charAt(0) || '?'}
-              </span>
-            )}
-            <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 border border-[#0b0c10]" />
-          </div>
-          {sidebarOpen && (
-            <div className="ml-3 flex flex-col overflow-hidden">
-              <span className="truncate text-[13px] font-semibold text-white">
-                {loading ? (
-                  <span className="text-zinc-500">Loading...</span>
-                ) : error ? (
-                  <span className="text-red-400 text-xs">Error loading profile</span>
-                ) : profile?.displayName ? (
-                  profile.displayName
-                ) : (
-                  'Unknown User'
-                )}
-              </span>
-              {error && sidebarOpen && (
-                <button 
-                  onClick={refetch}
-                  className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left cursor-pointer"
-                >
-                  Retry
-                </button>
+          {loading ? (
+            <>
+              <Skeleton className="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+              {sidebarOpen && (
+                <div className="ml-3 flex flex-col gap-1.5 overflow-hidden flex-1">
+                  <Skeleton className="h-4 w-24 bg-white/10" />
+                  <Skeleton className="h-3 w-16 bg-white/10" />
+                </div>
               )}
-              <span className="truncate text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                {profile?.role || 'USER'} &middot; {profile?.subscriptionTier || 'FREE'}
-              </span>
-            </div>
+            </>
+          ) : (
+            <>
+              <div className="relative h-8 w-8 rounded-full overflow-hidden bg-zinc-800 shrink-0 border border-white/10">
+                {profile?.avatarUrl ? (
+                  <Image 
+                    src={profile.avatarUrl} 
+                    alt="Avatar" 
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-white uppercase">
+                    {profile?.displayName?.charAt(0) || '?'}
+                  </span>
+                )}
+                <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 border border-[#0b0c10]" />
+              </div>
+              {sidebarOpen && (
+                <div className="ml-3 flex flex-col overflow-hidden">
+                  <span className="truncate text-[13px] font-semibold text-white">
+                    {error ? (
+                      <span className="text-red-400 text-xs">Error loading profile</span>
+                    ) : profile?.displayName ? (
+                      profile.displayName
+                    ) : (
+                      'Unknown User'
+                    )}
+                  </span>
+                  {error && sidebarOpen && (
+                    <button 
+                      onClick={refetch}
+                      className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left cursor-pointer"
+                    >
+                      Retry
+                    </button>
+                  )}
+                  <span className="truncate text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    {profile?.role || 'USER'} &middot; {profile?.subscriptionTier || 'FREE'}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
+
     </div>
   );
 }

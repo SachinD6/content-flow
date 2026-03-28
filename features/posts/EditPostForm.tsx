@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils';
 import type { Post } from '@/types';
 
 interface EditPostFormProps {
-  post: Post & { _id: string; body?: unknown[] };
+  post: Post & { _id: string; body?: unknown[]; coverImageAssetId?: string };
 }
 
 function portableTextToPlainText(body: unknown[]): string {
@@ -69,7 +69,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
     excerpt: post.excerpt || '',
     content: portableTextToPlainText(post.body || []),
     tags: post.tags || [],
-    coverImage: post.coverImage || '',
+    coverImage: post.coverImageAssetId || '',
     published: !!post.publishedAt,
     featured: post.featured || false,
   });
@@ -178,15 +178,38 @@ export function EditPostForm({ post }: EditPostFormProps) {
     }
   };
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImagePreview(reader.result as string);
-        setFormData((prev) => ({ ...prev, coverImage: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoverImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to API
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', file);
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      setFormData((prev) => ({ ...prev, coverImage: data.assetId }));
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+      // Don't reset preview on error - keep the preview but don't save
     }
   };
 
@@ -197,9 +220,9 @@ export function EditPostForm({ post }: EditPostFormProps) {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-none lg:max-w-3xl">
       {/* Main Info Section */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 space-y-6">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
           <Type className="h-4 w-4 text-[#6154f0]" />
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Post Information</h3>
@@ -242,7 +265,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Media Section */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 space-y-6">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
           <ImageIcon className="h-4 w-4 text-[#6154f0]" />
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Media</h3>
@@ -309,7 +332,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Content Section */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 space-y-6">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
           <AlignLeft className="h-4 w-4 text-[#6154f0]" />
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Content</h3>
@@ -346,7 +369,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Tags Section */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 space-y-6">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
           <Hash className="h-4 w-4 text-[#6154f0]" />
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Tags & Categories</h3>
@@ -408,7 +431,7 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Settings Section */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 space-y-6">
+      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
           <Settings2 className="h-4 w-4 text-[#6154f0]" />
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Post Settings</h3>
@@ -419,20 +442,20 @@ export function EditPostForm({ post }: EditPostFormProps) {
           <button
             type="button"
             onClick={handleTogglePublished}
-            className="w-full flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 sm:p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className={cn(
-                "p-2.5 rounded-[10px] transition-colors",
+                "p-2 sm:p-2.5 rounded-[10px] transition-colors shrink-0",
                 formData.published ? "bg-green-500/20" : "bg-zinc-800"
               )}>
                 {formData.published ? (
-                  <Eye className="h-5 w-5 text-green-400" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                 ) : (
-                  <FileText className="h-5 w-5 text-zinc-500" />
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500" />
                 )}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-zinc-200">
                   {formData.published ? 'Published' : 'Draft'}
                 </p>
@@ -444,12 +467,12 @@ export function EditPostForm({ post }: EditPostFormProps) {
               </div>
             </div>
             <div className={cn(
-              "w-12 h-6 rounded-full relative transition-colors duration-200",
+              "w-10 sm:w-12 h-5 sm:h-6 rounded-full relative transition-colors duration-200 shrink-0",
               formData.published ? "bg-green-500" : "bg-zinc-700"
             )}>
               <div className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200",
-                formData.published ? "translate-x-6.5" : "translate-x-0.5"
+                "absolute top-0.5 w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-white shadow-md transition-transform duration-200",
+                formData.published ? "translate-x-[18px] sm:translate-x-6" : "translate-x-0.5"
               )} />
             </div>
           </button>
@@ -458,19 +481,19 @@ export function EditPostForm({ post }: EditPostFormProps) {
           <button
             type="button"
             onClick={handleToggleFeatured}
-            className="w-full flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 sm:p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className={cn(
-                "p-2.5 rounded-[10px] transition-colors",
+                "p-2 sm:p-2.5 rounded-[10px] transition-colors shrink-0",
                 formData.featured ? "bg-[#6154f0]/20" : "bg-zinc-800"
               )}>
                 <Sparkles className={cn(
-                  "h-5 w-5",
+                  "h-4 w-4 sm:h-5 sm:w-5",
                   formData.featured ? "text-[#6154f0]" : "text-zinc-500"
                 )} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-zinc-200">
                   {formData.featured ? 'Featured Post' : 'Regular Post'}
                 </p>
@@ -482,12 +505,12 @@ export function EditPostForm({ post }: EditPostFormProps) {
               </div>
             </div>
             <div className={cn(
-              "w-12 h-6 rounded-full relative transition-colors duration-200",
+              "w-10 sm:w-12 h-5 sm:h-6 rounded-full relative transition-colors duration-200 shrink-0",
               formData.featured ? "bg-[#6154f0]" : "bg-zinc-700"
             )}>
               <div className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200",
-                formData.featured ? "translate-x-6.5" : "translate-x-0.5"
+                "absolute top-0.5 w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-white shadow-md transition-transform duration-200",
+                formData.featured ? "translate-x-[18px] sm:translate-x-6" : "translate-x-0.5"
               )} />
             </div>
           </button>
@@ -495,22 +518,22 @@ export function EditPostForm({ post }: EditPostFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/5">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-4 border-t border-white/5 gap-4">
         <Button
           type="button"
           variant="outline"
           onClick={() => router.push('/dashboard/posts')}
           disabled={isLoading}
-          className="border-zinc-700 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white hover:border-zinc-600"
+          className="border-zinc-700 bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 min-h-[44px] order-2 sm:order-1"
         >
           Cancel
         </Button>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 order-1 sm:order-2">
           <Button
             type="submit"
             disabled={isLoading}
             className={cn(
-              "px-6",
+              "px-6 min-h-[44px]",
               formData.published 
                 ? "bg-[#6154f0] hover:bg-[#584acf]" 
                 : "bg-zinc-700 hover:bg-zinc-600"

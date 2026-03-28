@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { writeSanityClient } from '@/lib/sanity/client';
+import { writeSanityClient, sanityClient } from '@/lib/sanity/client';
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +16,26 @@ export async function POST(request: Request) {
 
     if (typeof postId !== 'string' || typeof featured !== 'boolean') {
       return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    // Fetch the post to verify authorship
+    const post = await sanityClient.fetch(
+      `*[_type == "post" && _id == $postId][0]{ _id, "authorId": author._ref }`,
+      { postId }
+    );
+
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Verify the current user is the author
+    // authorId format is "author-<uuid>" from Sanity
+    const expectedAuthorId = `author-${user.id}`;
+    if (post.authorId !== expectedAuthorId) {
+      return NextResponse.json(
+        { error: 'Forbidden - Only the author can mark this post as featured' },
+        { status: 403 }
+      );
     }
 
     // Server-side securely mutates the graphQL/Sanity document

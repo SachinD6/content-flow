@@ -20,29 +20,29 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#0b0c10]">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0b0c10]/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6154f0]">
-                <Sparkles className="h-4 w-4 text-white" strokeWidth={2.5} />
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-[#6154f0]">
+                <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
               </div>
-              <span className="text-lg font-bold text-white">ContentFlow</span>
+              <span className="text-base sm:text-lg font-bold text-white">ContentFlow</span>
             </div>
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-6 lg:gap-8">
               <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">Features</a>
               <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">How it Works</a>
               <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">Pricing</a>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link 
                 href="/login" 
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
+                className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 Sign In
               </Link>
               <Link 
                 href="/login" 
-                className="rounded-[8px] bg-[#6154f0] px-4 py-2 text-sm font-semibold text-white hover:bg-[#584acf] transition-colors"
+                className="rounded-[8px] bg-[#6154f0] px-3 sm:px-4 py-2 text-sm font-semibold text-white hover:bg-[#584acf] transition-colors"
               >
                 Get Started
               </Link>
@@ -52,32 +52,32 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#6154f0]/30 bg-[#6154f0]/10 px-4 py-1.5 mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#6154f0]/30 bg-[#6154f0]/10 px-3 sm:px-4 py-1.5 mb-6 sm:mb-8">
               <span className="flex h-2 w-2 rounded-full bg-[#6154f0]"></span>
-              <span className="text-sm text-[#6154f0] font-medium">Now in Public Beta</span>
+              <span className="text-xs sm:text-sm text-[#6154f0] font-medium">Now in Public Beta</span>
             </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-4 sm:mb-6">
               Create, Manage & Publish
               <span className="text-[#6154f0]"> Content</span> at Scale
             </h1>
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
+            <p className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
               The modern CMS for technical teams. Write in markdown, collaborate with your team, 
               and publish with confidence. Built for developers, loved by content creators.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link 
                 href="/login"
-                className="flex items-center gap-2 rounded-[8px] bg-[#6154f0] px-8 py-4 text-base font-semibold text-white hover:bg-[#584acf] transition-colors"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-[8px] bg-[#6154f0] px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white hover:bg-[#584acf] transition-colors"
               >
                 Start Creating Free
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <a 
                 href="#features"
-                className="flex items-center gap-2 rounded-[8px] border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-[8px] border border-white/10 bg-white/5 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white hover:bg-white/10 transition-colors"
               >
                 See How It Works
               </a>
@@ -87,24 +87,24 @@ export default function LandingPage() {
         
         {/* Gradient Background */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-[#6154f0]/20 rounded-full blur-3xl"></div>
-          <div className="absolute top-40 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-10 sm:top-20 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-[#6154f0]/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 sm:top-40 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      <section id="features" className="py-16 sm:py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
               Everything You Need to Create
             </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+            <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto px-4 sm:px-0">
               Powerful features designed for modern content workflows. From writing to publishing, we've got you covered.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <FeatureCard 
               icon={FileText}
               title="Rich Content Editor"
@@ -178,30 +178,30 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      <section id="pricing" className="py-16 sm:py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+            <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto px-4 sm:px-0">
               Start free and scale as you grow. No hidden fees, cancel anytime.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto px-4 sm:px-0">
             {/* Free Plan */}
-            <div className="rounded-[16px] border border-white/5 bg-[#121319] p-8">
+            <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="h-5 w-5 text-zinc-400" />
                 <h3 className="text-xl font-bold text-zinc-200">Free</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-white">$0</span>
+                <span className="text-3xl sm:text-4xl font-bold text-white">$0</span>
                 <span className="text-zinc-500">/month</span>
               </div>
-              <p className="text-zinc-400 mb-8">Perfect for getting started and personal blogs.</p>
-              <ul className="space-y-4 mb-8">
+              <p className="text-zinc-400 mb-6 sm:mb-8">Perfect for getting started and personal blogs.</p>
+              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 <FeatureItem text="Up to 10 blog posts" />
                 <FeatureItem text="Basic analytics" />
                 <FeatureItem text="500MB storage" />
@@ -216,7 +216,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro Plan */}
-            <div className="rounded-[16px] border border-[#6154f0]/30 bg-[#121319] p-8 relative">
+            <div className="rounded-[16px] border border-[#6154f0]/30 bg-[#121319] p-6 sm:p-8 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="bg-[#6154f0] text-white text-xs font-bold px-3 py-1 rounded-full">
                   Most Popular
@@ -227,11 +227,11 @@ export default function LandingPage() {
                 <h3 className="text-xl font-bold text-white">Pro</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-white">$9.99</span>
+                <span className="text-3xl sm:text-4xl font-bold text-white">$9.99</span>
                 <span className="text-zinc-500">/month</span>
               </div>
-              <p className="text-zinc-400 mb-8">For growing teams and professional content creators.</p>
-              <ul className="space-y-4 mb-8">
+              <p className="text-zinc-400 mb-6 sm:mb-8">For growing teams and professional content creators.</p>
+              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 <FeatureItem text="Unlimited blog posts" />
                 <FeatureItem text="Advanced analytics" />
                 <FeatureItem text="10GB storage" />
