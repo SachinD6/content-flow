@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'sonner';
 import { 
@@ -259,10 +260,12 @@ export function NewPostForm() {
             >
               {coverImagePreview ? (
                 <>
-                  <img
+                  <NextImage
                     src={coverImagePreview}
                     alt="Cover preview"
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
                     <ImageIcon className="h-8 w-8 text-white/80" />
