@@ -15,7 +15,8 @@ import {
   Hash, 
   Settings2,
   X,
-  Check
+  Check,
+  Plus
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -27,16 +28,18 @@ export function NewPostForm() {
   const router = useRouter();
   const posthog = usePostHog();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [tagInput, setTagInput] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
     excerpt: '',
     content: '',
-    tags: '',
+    tags: [] as string[],
     coverImage: '',
     published: true,
     featured: false,
@@ -73,6 +76,34 @@ export function NewPostForm() {
     setFormData((prev) => ({ ...prev, featured: !prev.featured }));
   };
 
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim().toLowerCase();
+    if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, trimmedTag] }));
+      setTagInput('');
+    }
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    } else if (e.key === 'Backspace' && tagInput === '' && formData.tags.length > 0) {
+      // Remove last tag when backspace is pressed and input is empty
+      setFormData((prev) => ({ 
+        ...prev, 
+        tags: prev.tags.slice(0, -1) 
+      }));
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -92,7 +123,7 @@ export function NewPostForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          tags: formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+          tags: formData.tags,
         }),
       });
 
@@ -292,17 +323,58 @@ export function NewPostForm() {
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Tags & Categories</h3>
         </div>
 
-        {/* Tags */}
-        <div className="space-y-2">
+        {/* Tags Input */}
+        <div className="space-y-3">
           <label className="text-sm font-medium text-zinc-300">Tags</label>
-          <Input
-            type="text"
-            value={formData.tags}
-            onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
-            placeholder="technology, tutorial, nextjs, react (comma separated)"
-            className={inputClasses}
-          />
-          <p className="text-xs text-zinc-500">Add relevant tags to help users find your content</p>
+          <div className="space-y-3">
+            {/* Tag Display Area */}
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#6154f0]/20 text-[#6154f0] text-sm font-medium border border-[#6154f0]/30"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:bg-[#6154f0]/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {/* Tag Input Field */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
+                <Input
+                  ref={tagInputRef}
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Type a tag and press Enter"
+                  className={cn(inputClasses, "pl-10")}
+                />
+              </div>
+              <Button
+                type="button"
+                onClick={handleAddTag}
+                disabled={!tagInput.trim()}
+                className="bg-[#6154f0] hover:bg-[#584acf] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-zinc-500">
+            Press Enter or click + to add a tag. Click the X to remove.
+          </p>
         </div>
       </div>
 
