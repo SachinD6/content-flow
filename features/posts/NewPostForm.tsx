@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'sonner';
@@ -20,7 +20,6 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +29,8 @@ export function NewPostForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -40,6 +41,37 @@ export function NewPostForm() {
     published: true,
     featured: false,
   });
+
+  const generateSlug = useCallback((title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]+/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }, []);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      title: newTitle,
+      slug: slugManuallyEdited ? prev.slug : generateSlug(newTitle),
+    }));
+  };
+
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlugManuallyEdited(true);
+    setFormData((prev) => ({ ...prev, slug: e.target.value }));
+  };
+
+  const handleTogglePublished = () => {
+    setFormData((prev) => ({ ...prev, published: !prev.published }));
+  };
+
+  const handleToggleFeatured = () => {
+    setFormData((prev) => ({ ...prev, featured: !prev.featured }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,13 +130,6 @@ export function NewPostForm() {
     }
   };
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
   const inputClasses = cn(
     "w-full rounded-[8px] border border-white/10 bg-[#0b0c10] px-4 py-3 text-[14px] text-zinc-200",
     "placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#6154f0]/30 focus:border-[#6154f0]/50",
@@ -128,14 +153,7 @@ export function NewPostForm() {
           <Input
             type="text"
             value={formData.title}
-            onChange={(e) => {
-              const title = e.target.value;
-              setFormData((prev) => ({
-                ...prev,
-                title,
-                slug: prev.slug || generateSlug(title),
-              }));
-            }}
+            onChange={handleTitleChange}
             placeholder="Enter an engaging post title"
             className={inputClasses}
             required
@@ -153,7 +171,7 @@ export function NewPostForm() {
             <Input
               type="text"
               value={formData.slug}
-              onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+              onChange={handleSlugChange}
               placeholder="my-awesome-post"
               className={cn(inputClasses, "pl-8 font-mono")}
               required
@@ -297,7 +315,11 @@ export function NewPostForm() {
         
         <div className="space-y-4">
           {/* Published Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5">
+          <button
+            type="button"
+            onClick={handleTogglePublished}
+            className="w-full flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
+          >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "p-2.5 rounded-[10px] transition-colors",
@@ -320,14 +342,23 @@ export function NewPostForm() {
                 </p>
               </div>
             </div>
-            <Switch
-              checked={formData.published}
-              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, published: checked }))}
-            />
-          </div>
+            <div className={cn(
+              "w-12 h-6 rounded-full relative transition-colors duration-200",
+              formData.published ? "bg-green-500" : "bg-zinc-700"
+            )}>
+              <div className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200",
+                formData.published ? "translate-x-6.5" : "translate-x-0.5"
+              )} />
+            </div>
+          </button>
 
           {/* Featured Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5">
+          <button
+            type="button"
+            onClick={handleToggleFeatured}
+            className="w-full flex items-center justify-between p-4 rounded-[12px] bg-[#0b0c10] border border-white/5 hover:border-white/10 transition-colors text-left"
+          >
             <div className="flex items-center gap-4">
               <div className={cn(
                 "p-2.5 rounded-[10px] transition-colors",
@@ -349,11 +380,16 @@ export function NewPostForm() {
                 </p>
               </div>
             </div>
-            <Switch
-              checked={formData.featured}
-              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, featured: checked }))}
-            />
-          </div>
+            <div className={cn(
+              "w-12 h-6 rounded-full relative transition-colors duration-200",
+              formData.featured ? "bg-[#6154f0]" : "bg-zinc-700"
+            )}>
+              <div className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200",
+                formData.featured ? "translate-x-6.5" : "translate-x-0.5"
+              )} />
+            </div>
+          </button>
         </div>
       </div>
 
