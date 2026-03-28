@@ -22,7 +22,7 @@ import type { Post } from '@/types';
 
 const columnHelper = createColumnHelper<Post>();
 
-export function PostsTable({ data }: { data: Post[] }) {
+export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserId: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const queryClient = useQueryClient();
 
@@ -177,19 +177,23 @@ export function PostsTable({ data }: { data: Post[] }) {
       header: 'ACTIONS',
       cell: (info) => {
         const post = info.row.original;
+        const isAuthor = post.authorId === `author-${currentUserId}`;
+        
         return (
           <div className="flex items-center gap-1">
-            <Link
-              href={`/dashboard/posts/${post.slug}/edit`}
-              onClick={(e) => e.stopPropagation()}
-              className={cn(
-                "p-2 rounded-[8px] transition-all cursor-pointer",
-                "text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10"
-              )}
-              title="Edit Post"
-            >
-              <Pencil className="h-4 w-4" strokeWidth={2} />
-            </Link>
+            {isAuthor && (
+              <Link
+                href={`/dashboard/posts/${post.slug}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className={cn(
+                  "p-2 rounded-[8px] transition-all cursor-pointer",
+                  "text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10"
+                )}
+                title="Edit Post"
+              >
+                <Pencil className="h-4 w-4" strokeWidth={2} />
+              </Link>
+            )}
             <button
               onClick={(e) => {
                 e.preventDefault();

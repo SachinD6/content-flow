@@ -69,6 +69,7 @@ export default async function PostsPage() {
           featuredPost={featuredPost}
           initialPosts={allPosts}
           isDraftMode={isDraftMode}
+          userId={user.id}
         />
       </div>
     </>
