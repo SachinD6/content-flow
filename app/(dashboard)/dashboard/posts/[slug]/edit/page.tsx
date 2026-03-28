@@ -2,7 +2,6 @@ import { notFound, redirect } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
-import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
 import { EditPostForm } from '@/features/posts/EditPostForm';
 import type { Post } from '@/types';
 

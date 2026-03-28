@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { X, Sparkles, ArrowRight, Clock, User } from 'lucide-react';
+import { X, Sparkles, ArrowRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Post } from '@/types';

@@ -12,7 +12,7 @@ import {
   SortingState,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { CheckSquare, Square, Star, ArrowUpDown, Pencil, FileText } from 'lucide-react';
+import { Star, ArrowUpDown, Pencil, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

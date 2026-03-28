@@ -1,5 +1,3 @@
-import { PostHog } from 'posthog-node';
-
 // Types for PostHog Events API response
 interface PostHogEventResult {
   id: string;

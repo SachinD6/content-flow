@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { PortableText, type PortableTextReactComponents } from '@portabletext/react';
 import { urlFor } from '@/lib/sanity/client';
-import { cn } from '@/lib/utils';
 import type { PortableTextBlock } from '@portabletext/types';
 
 interface PortableTextRendererProps {

@@ -9,7 +9,6 @@ import { deleteAccount } from '@/app/actions/deleteAccount';
 
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,

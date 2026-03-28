@@ -6,7 +6,6 @@ import { sanityClient, previewSanityClient } from '@/lib/sanity/client';
 import { FEATURED_POST_QUERY, ALL_POSTS_QUERY } from '@/lib/sanity/queries';
 import { PostsPageClient } from '@/features/posts/PostsPageClient';
 import { SyncButton } from '@/features/posts/SyncButton';
-import { PostHog } from 'posthog-node';
 import type { Post } from '@/types';
 import { Badge } from '@/components/ui/badge';
 

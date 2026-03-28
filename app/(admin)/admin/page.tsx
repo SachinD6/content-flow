@@ -2,9 +2,6 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { AdminUsersTable } from '@/features/admin/AdminUsersTable';
 import type { Profile } from '@/types';
-import type { Database } from '@/types/supabase';
-
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 interface UserQueryResult {
   id: string;

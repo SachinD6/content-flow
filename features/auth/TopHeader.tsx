@@ -7,7 +7,6 @@ import { useUser } from '@/hooks/useUser';
 import { useUIStore } from '@/stores/uiStore';
 import { LogoutButton } from '@/features/auth/LogoutButton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 
 export function TopHeader() {
   const { profile, loading, error } = useUser();

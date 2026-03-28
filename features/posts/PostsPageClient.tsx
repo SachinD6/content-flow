@@ -10,7 +10,6 @@ import { FeaturedBanner } from '@/features/posts/FeaturedBanner';
 import { PostsTable } from '@/features/posts/PostsTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
