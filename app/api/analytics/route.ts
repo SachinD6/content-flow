@@ -1,41 +1,10 @@
-import { PostHog } from 'posthog-node';
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30', 10);
 
-    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-      return Response.json(
-        { message: 'PostHog not configured' },
-        { status: 500 }
-      );
-    }
-
-    const posthog = new PostHog(
-      process.env.NEXT_PUBLIC_POSTHOG_KEY,
-      { host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com' }
-    );
-
-    // Calculate date range
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    // Fetch insights using PostHog API
-    // Note: This uses the PostHog API to get analytics data
-    const insights = await fetch(
-      `https://app.posthog.com/api/projects/@current/insights/trend/?events=[{"id":"$pageview","math":"dau"}]&date_from=${startDate.toISOString().split('T')[0]}&date_to=${endDate.toISOString().split('T')[0]}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.POSTHOG_API_KEY || process.env.NEXT_PUBLIC_POSTHOG_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    // For now, return mock data if API fails (common in development)
-    // In production, you'd use the actual PostHog API response
+    // Generate realistic mock analytics data
+    // In production, you would fetch this from PostHog using their API
     const mockAnalytics = {
       overview: {
         totalPageViews: Math.floor(Math.random() * 5000) + 1000,
@@ -79,8 +48,6 @@ export async function GET(request: Request) {
         { name: 'Edge', percentage: 8 },
       ],
     };
-
-    await posthog.shutdown();
 
     return Response.json(mockAnalytics);
   } catch (error) {
