@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'sonner';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, XIcon, Sparkles, Zap, Shield, Users, Database, LineChart, Code2, HeadphonesIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,8 @@ interface BillingContentProps {
   cancelled: boolean;
 }
 
-interface FeatureRow {
+interface PricingFeature {
+  icon: React.ReactNode;
   feature: string;
   free: string | React.ReactNode;
   pro: string | React.ReactNode;
@@ -77,33 +78,39 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
     }
   };
 
-  const features: FeatureRow[] = [
+  const features: PricingFeature[] = [
     {
+      icon: <Sparkles className="h-4 w-4" />,
       feature: 'Blog posts',
       free: 'Up to 10',
       pro: 'Unlimited',
     },
     {
+      icon: <Users className="h-4 w-4" />,
       feature: 'Team members',
-      free: '1',
-      pro: 'Up to 10',
+      free: '1 user',
+      pro: 'Up to 10 users',
     },
     {
+      icon: <LineChart className="h-4 w-4" />,
       feature: 'Analytics',
       free: 'Basic',
       pro: 'Advanced (PostHog)',
     },
     {
+      icon: <Database className="h-4 w-4" />,
       feature: 'Storage',
       free: '500MB',
       pro: '10GB',
     },
     {
+      icon: <Code2 className="h-4 w-4" />,
       feature: 'API access',
       free: <XIcon className={cn('h-4 w-4 text-red-500')} />,
       pro: <CheckIcon className={cn('h-4 w-4 text-green-500')} />,
     },
     {
+      icon: <HeadphonesIcon className="h-4 w-4" />,
       feature: 'Priority support',
       free: <XIcon className={cn('h-4 w-4 text-red-500')} />,
       pro: <CheckIcon className={cn('h-4 w-4 text-green-500')} />,
@@ -112,7 +119,7 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
 
   return (
     <div className="space-y-8">
-      {/* Current Plan Card */}
+      {/* Current Plan Status */}
       <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 shadow-xl">
         <div className="flex items-center justify-between">
           <div>
@@ -136,11 +143,115 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
                 : 'You are on the Pro plan. All features unlocked.'}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Pricing Cards */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Free Plan Card */}
+        <div className={cn(
+          "relative rounded-[16px] border p-6 shadow-xl transition-all",
+          currentPlan === 'free' 
+            ? "border-[#6154f0]/50 bg-[#121319] ring-1 ring-[#6154f0]/20" 
+            : "border-white/5 bg-[#121319]"
+        )}>
+          {currentPlan === 'free' && (
+            <div className="absolute -top-3 left-6">
+              <Badge className="bg-[#6154f0] text-white border-none text-[10px]">
+                Current Plan
+              </Badge>
+            </div>
+          )}
+          
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-lg bg-zinc-800">
+                <Shield className="h-5 w-5 text-zinc-400" />
+              </div>
+              <h3 className="text-xl font-bold text-zinc-200">Free</h3>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold text-zinc-100">$0</span>
+              <span className="text-zinc-500">/month</span>
+            </div>
+            <p className="mt-2 text-sm text-zinc-500">
+              Perfect for getting started with content management.
+            </p>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            {features.map((item) => (
+              <div key={item.feature} className="flex items-center gap-3">
+                <div className="text-zinc-600">{item.icon}</div>
+                <span className="text-sm text-zinc-400 flex-1">{item.feature}</span>
+                <span className="text-sm text-zinc-500">{item.free}</span>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            disabled={currentPlan === 'free'}
+            className="w-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 cursor-default"
+          >
+            {currentPlan === 'free' ? 'Your Current Plan' : 'Downgrade'}
+          </Button>
+        </div>
+
+        {/* Pro Plan Card */}
+        <div className={cn(
+          "relative rounded-[16px] border p-6 shadow-xl transition-all",
+          currentPlan === 'pro' 
+            ? "border-green-500/50 bg-[#121319] ring-1 ring-green-500/20" 
+            : "border-[#6154f0]/30 bg-[#121319]"
+        )}>
+          {currentPlan === 'pro' && (
+            <div className="absolute -top-3 left-6">
+              <Badge className="bg-green-500 text-white border-none text-[10px]">
+                Current Plan
+              </Badge>
+            </div>
+          )}
+          
+          {/* Popular Badge */}
+          {currentPlan === 'free' && (
+            <div className="absolute -top-3 right-6">
+              <Badge className="bg-[#6154f0] text-white border-none text-[10px]">
+                Most Popular
+              </Badge>
+            </div>
+          )}
+          
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-lg bg-[#6154f0]/20">
+                <Zap className="h-5 w-5 text-[#6154f0]" />
+              </div>
+              <h3 className="text-xl font-bold text-zinc-100">Pro</h3>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold text-zinc-100">$9.99</span>
+              <span className="text-zinc-500">/month</span>
+            </div>
+            <p className="mt-2 text-sm text-zinc-400">
+              Unlock unlimited content and team collaboration.
+            </p>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            {features.map((item) => (
+              <div key={item.feature} className="flex items-center gap-3">
+                <div className="text-[#6154f0]">{item.icon}</div>
+                <span className="text-sm text-zinc-300 flex-1">{item.feature}</span>
+                <span className="text-sm text-zinc-100 font-medium">{item.pro}</span>
+              </div>
+            ))}
+          </div>
+
           {currentPlan === 'free' ? (
             <Button
               onClick={handleUpgrade}
               disabled={isLoading}
-              className="bg-[#6154f0] hover:bg-[#584acf]"
+              className="w-full bg-[#6154f0] hover:bg-[#584acf]"
             >
               {isLoading ? <LoadingSpinner size="sm" /> : 'Upgrade to Pro'}
             </Button>
@@ -149,7 +260,7 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
               variant="outline" 
               onClick={handleManage} 
               disabled={isLoading}
-              className="border-zinc-600 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white"
+              className="w-full border-zinc-600 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:text-white"
             >
               {isLoading ? <LoadingSpinner size="sm" /> : 'Manage Subscription'}
             </Button>
@@ -157,37 +268,26 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
         </div>
       </div>
 
-      {/* Plan Comparison Table */}
+      {/* Comparison Table */}
       <div className="rounded-[16px] border border-white/5 bg-[#121319] p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-zinc-100 mb-4">Plan Comparison</h3>
+        <h3 className="text-lg font-semibold text-zinc-100 mb-4">Detailed Comparison</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/5">
                 <th className="pb-3 text-left text-sm font-medium text-zinc-400">Feature</th>
-                <th
-                  className={cn(
-                    'pb-3 text-center text-sm font-medium',
-                    currentPlan === 'free' ? 'text-[#6154f0]' : 'text-zinc-400'
-                  )}
-                >
-                  Free
-                </th>
-                <th
-                  className={cn(
-                    'pb-3 text-center text-sm font-medium',
-                    currentPlan === 'pro' ? 'text-green-400' : 'text-zinc-400'
-                  )}
-                >
-                  Pro
-                </th>
+                <th className="pb-3 text-center text-sm font-medium text-zinc-400">Free</th>
+                <th className="pb-3 text-center text-sm font-medium text-[#6154f0]">Pro</th>
               </tr>
             </thead>
             <tbody>
               {features.map((row, index) => (
                 <tr key={row.feature} className={cn(index !== features.length - 1 && 'border-b border-white/5')}>
-                  <td className="py-4 text-sm text-zinc-300">{row.feature}</td>
-                  <td className="py-4 text-center text-sm text-zinc-400">
+                  <td className="py-4 text-sm text-zinc-300 flex items-center gap-2">
+                    {row.icon}
+                    {row.feature}
+                  </td>
+                  <td className="py-4 text-center text-sm text-zinc-500">
                     {typeof row.free === 'string' ? row.free : row.free}
                   </td>
                   <td className="py-4 text-center text-sm text-zinc-100">
