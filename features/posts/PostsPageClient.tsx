@@ -23,9 +23,10 @@ interface PostsPageClientProps {
   featuredPost: Post | null;
   initialPosts: Post[];
   isDraftMode?: boolean;
+  userId: string;
 }
 
-export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraftMode = false }: PostsPageClientProps) {
+export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraftMode = false, userId }: PostsPageClientProps) {
   const posthog = usePostHog();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -135,7 +136,7 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
               />
           </div>
         ) : (
-          <PostsTable data={filteredPosts} />
+          <PostsTable data={filteredPosts} currentUserId={userId} />
         )}
       </div>
     </div>

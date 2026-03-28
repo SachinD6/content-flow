@@ -9,6 +9,7 @@ export const ALL_POSTS_QUERY = groq`
     publishedAt,
     featured,
     tags,
+    'authorId': author._ref,
     author->{ name, 'avatar': image.asset->url },
     'coverImage': coverImage.asset->url
   }

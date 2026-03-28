@@ -14,6 +14,7 @@ export interface Post {
   publishedAt: string;
   featured: boolean;
   tags: string[];
+  authorId?: string;
   author: Author;
   coverImage: string;
 }
