@@ -80,7 +80,7 @@ export function PostsTable({ data }: { data: Post[] }) {
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex flex-row items-center gap-2 hover:text-white transition-colors"
+          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           POST TITLE
           <ArrowUpDown className="h-3 w-3" />
@@ -133,7 +133,7 @@ export function PostsTable({ data }: { data: Post[] }) {
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex flex-row items-center gap-2 hover:text-white transition-colors"
+          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           LAST MODIFIED
           <ArrowUpDown className="h-3 w-3" />
@@ -186,7 +186,7 @@ export function PostsTable({ data }: { data: Post[] }) {
               toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
             }}
             className={cn(
-              "p-2 rounded-[8px] transition-all",
+              "p-2 rounded-[8px] transition-all cursor-pointer",
               post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
             )}
             title="Toggle Featured Status"

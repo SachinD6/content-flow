@@ -51,7 +51,7 @@ export function FeaturedBanner({ post }: FeaturedBannerProps) {
 
       <button
         onClick={() => setIsVisible(false)}
-        className="absolute top-4 right-4 p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors z-20"
+        className="absolute top-4 right-4 p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors z-20 cursor-pointer"
         aria-label="Dismiss banner"
       >
         <X className="h-4 w-4" strokeWidth={2.5} />

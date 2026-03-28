@@ -23,7 +23,7 @@ export function TopHeader() {
       <div className="flex items-center gap-4">
         <button
           onClick={toggleSidebar}
-          className="hidden lg:flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+          className="hidden lg:flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
         >
           <Menu className="h-[18px] w-[18px]" strokeWidth={2} />
         </button>
@@ -46,12 +46,12 @@ export function TopHeader() {
         </div>
 
         <div className="flex items-center gap-4 border-l border-white/5 pl-6">
-          <button className="text-zinc-400 hover:text-white transition-colors relative">
+          <button className="text-zinc-400 hover:text-white transition-colors relative cursor-pointer">
             <Bell className="h-5 w-5" strokeWidth={2} />
             <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-[#6154f0]" />
           </button>
           
-          <button className="text-zinc-400 hover:text-white transition-colors">
+          <button className="text-zinc-400 hover:text-white transition-colors cursor-pointer">
             <HelpCircle className="h-5 w-5" strokeWidth={2} />
           </button>
 
