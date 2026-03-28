@@ -33,3 +33,18 @@ export const FEATURED_POST_QUERY = groq`
     'coverImage': coverImage.asset->url
   }
 `;
+
+export const POST_BY_ID_QUERY = groq`
+  *[_type == 'post' && _id == $id][0] {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    body,
+    publishedAt,
+    featured,
+    tags,
+    'coverImage': coverImage.asset->url,
+    'authorId': author._ref
+  }
+`;

@@ -21,20 +21,9 @@ export default async function PostsPage() {
   // Check if draft mode is enabled
   const { isEnabled: isDraftMode } = await draftMode();
 
-  // Evaluate Server-Side Feature Flag securely
-  let showBanner = false;
-  if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    try {
-      const posthogServer = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-        host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
-      });
-      const isEnabled = await posthogServer.isFeatureEnabled('show-featured-banner', user.id);
-      showBanner = isEnabled === true;
-      await posthogServer.shutdown();
-    } catch {
-      showBanner = false;
-    }
-  }
+  // Show featured banner if there's a featured post (out of the box experience)
+  // Feature flag can be used to hide it for A/B testing if needed
+  let showBanner = true; // Default to showing featured posts
 
   // Use preview client if draft mode is enabled, otherwise use regular client
   const client = isDraftMode ? previewSanityClient : sanityClient;

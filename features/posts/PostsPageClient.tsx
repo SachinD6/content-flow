@@ -60,7 +60,7 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-[#121319] border border-white/5 rounded-[16px]">
         <p className="text-zinc-400 mb-4">Could not load your architectural data.</p>
-        <button onClick={() => refetch()} className="px-4 py-2 bg-[#6154f0] text-white rounded-[8px] text-sm font-semibold hover:bg-[#584acf] transition-colors">
+        <button onClick={() => refetch()} className="px-4 py-2 bg-[#6154f0] text-white rounded-[8px] text-sm font-semibold hover:bg-[#584acf] transition-colors cursor-pointer">
           Retry Connection
         </button>
       </div>

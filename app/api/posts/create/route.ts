@@ -1,6 +1,19 @@
 import { createClient } from '@/lib/supabase/server';
 import { writeSanityClient } from '@/lib/sanity/client';
 
+interface PostDocument {
+  _type: 'post';
+  title: string;
+  slug: { _type: 'slug'; current: string };
+  excerpt: string;
+  body: unknown[];
+  featured: boolean;
+  tags: string[];
+  author: { _type: 'reference'; _ref: string };
+  coverImage?: string;
+  publishedAt?: string;
+}
+
 export async function POST(request: Request) {
   try {
     // Check authentication
@@ -19,7 +32,7 @@ export async function POST(request: Request) {
       .single();
 
     const body = await request.json();
-    const { title, slug, excerpt, content, tags } = body;
+    const { title, slug, excerpt, content, tags, coverImage, published, featured } = body;
 
     // Validation
     if (!title || !slug || !content) {
@@ -61,14 +74,13 @@ export async function POST(request: Request) {
     });
 
     // Create post in Sanity
-    const doc = {
+    const doc: PostDocument = {
       _type: 'post',
       title,
       slug: { _type: 'slug', current: slug },
       excerpt: excerpt || '',
       body: contentBlocks,
-      publishedAt: new Date().toISOString(),
-      featured: false,
+      featured: featured || false,
       tags: tags || [],
       author: {
         _type: 'reference',
@@ -76,12 +88,22 @@ export async function POST(request: Request) {
       },
     };
 
+    // Add cover image if provided
+    if (coverImage) {
+      doc.coverImage = coverImage;
+    }
+
+    // Set publishedAt only if published
+    if (published) {
+      doc.publishedAt = new Date().toISOString();
+    }
+
     const result = await writeSanityClient.create(doc);
 
     return Response.json({ 
       success: true, 
       postId: result._id,
-      message: 'Post created successfully' 
+      message: published ? 'Post published successfully' : 'Draft saved successfully'
     });
   } catch (error) {
     console.error('Failed to create post:', error);

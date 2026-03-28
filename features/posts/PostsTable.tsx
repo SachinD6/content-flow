@@ -12,7 +12,7 @@ import {
   SortingState,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { CheckSquare, Square, Star, ArrowUpDown } from 'lucide-react';
+import { CheckSquare, Square, Star, ArrowUpDown, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -80,7 +80,7 @@ export function PostsTable({ data }: { data: Post[] }) {
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex flex-row items-center gap-2 hover:text-white transition-colors"
+          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           POST TITLE
           <ArrowUpDown className="h-3 w-3" />
@@ -133,7 +133,7 @@ export function PostsTable({ data }: { data: Post[] }) {
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex flex-row items-center gap-2 hover:text-white transition-colors"
+          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           LAST MODIFIED
           <ArrowUpDown className="h-3 w-3" />
@@ -178,21 +178,34 @@ export function PostsTable({ data }: { data: Post[] }) {
       cell: (info) => {
         const post = info.row.original;
         return (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toast(post.featured ? 'Removing from features...' : 'Marking as featured...');
-              toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
-            }}
-            className={cn(
-              "p-2 rounded-[8px] transition-all",
-              post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
-            )}
-            title="Toggle Featured Status"
-          >
-            <Star className={cn("h-4 w-4", post.featured && "fill-amber-400")} strokeWidth={2.5} />
-          </button>
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/dashboard/posts/${post.slug}/edit`}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "p-2 rounded-[8px] transition-all cursor-pointer",
+                "text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10"
+              )}
+              title="Edit Post"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </Link>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toast(post.featured ? 'Removing from features...' : 'Marking as featured...');
+                toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
+              }}
+              className={cn(
+                "p-2 rounded-[8px] transition-all cursor-pointer",
+                post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
+              )}
+              title="Toggle Featured Status"
+            >
+              <Star className={cn("h-4 w-4", post.featured && "fill-amber-400")} strokeWidth={2.5} />
+            </button>
+          </div>
         );
       },
       enableSorting: false,

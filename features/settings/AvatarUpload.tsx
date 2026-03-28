@@ -106,7 +106,7 @@ export function AvatarUpload({ currentAvatarUrl, userId, onUploadComplete }: Ava
           type="button" 
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="text-[12px] font-bold text-[#6154f0] hover:text-[#766bf3] tracking-wide transition-colors bg-white/5 py-1.5 px-4 rounded-full border border-white/10"
+          className="text-[12px] font-bold text-[#6154f0] hover:text-[#766bf3] tracking-wide transition-colors bg-white/5 py-1.5 px-4 rounded-full border border-white/10 cursor-pointer disabled:cursor-not-allowed"
         >
           Upload photo
         </button>

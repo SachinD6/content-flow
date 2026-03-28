@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'sonner';
@@ -16,33 +16,62 @@ import {
   Settings2,
   X,
   Check,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import type { Post } from '@/types';
 
-export function NewPostForm() {
+interface EditPostFormProps {
+  post: Post & { _id: string; body?: unknown[] };
+}
+
+function portableTextToPlainText(body: unknown[]): string {
+  if (!body || !Array.isArray(body)) return '';
+  
+  return body
+    .map((block: unknown) => {
+      if (typeof block === 'object' && block !== null && 'children' in block) {
+        const children = (block as { children?: unknown[] }).children;
+        if (Array.isArray(children)) {
+          return children
+            .map((child: unknown) => {
+              if (typeof child === 'object' && child !== null && 'text' in child) {
+                return (child as { text?: string }).text || '';
+              }
+              return '';
+            })
+            .join('');
+        }
+      }
+      return '';
+    })
+    .join('\n\n');
+}
+
+export function EditPostForm({ post }: EditPostFormProps) {
   const router = useRouter();
   const posthog = usePostHog();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(post.coverImage || null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(true);
   const [tagInput, setTagInput] = useState('');
   
   const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
-    content: '',
-    tags: [] as string[],
-    coverImage: '',
-    published: true,
-    featured: false,
+    title: post.title || '',
+    slug: post.slug || '',
+    excerpt: post.excerpt || '',
+    content: portableTextToPlainText(post.body || []),
+    tags: post.tags || [],
+    coverImage: post.coverImage || '',
+    published: !!post.publishedAt,
+    featured: post.featured || false,
   });
 
   const generateSlug = useCallback((title: string) => {
@@ -89,7 +118,6 @@ export function NewPostForm() {
       e.preventDefault();
       handleAddTag();
     } else if (e.key === 'Backspace' && tagInput === '' && formData.tags.length > 0) {
-      // Remove last tag when backspace is pressed and input is empty
       setFormData((prev) => ({ 
         ...prev, 
         tags: prev.tags.slice(0, -1) 
@@ -112,38 +140,39 @@ export function NewPostForm() {
       return;
     }
 
-    posthog.capture('post_create_started', {
+    posthog.capture('post_update_started', {
+      postId: post._id,
       title: formData.title,
     });
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/posts/create', {
-        method: 'POST',
+      const response = await fetch('/api/posts/update', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          postId: post._id,
           ...formData,
-          tags: formData.tags,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create post');
+        throw new Error(error.message || 'Failed to update post');
       }
 
       const data = await response.json();
       
-      posthog.capture('post_created', {
-        postId: data.postId,
+      posthog.capture('post_updated', {
+        postId: post._id,
         title: formData.title,
       });
 
-      toast.success(formData.published ? 'Post published successfully!' : 'Draft saved successfully!');
+      toast.success(data.message || 'Post updated successfully!');
       router.push('/dashboard/posts');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create post');
+      toast.error(error instanceof Error ? error.message : 'Failed to update post');
     } finally {
       setIsLoading(false);
     }
@@ -409,8 +438,8 @@ export function NewPostForm() {
                 </p>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {formData.published 
-                    ? 'Your post will be visible to everyone' 
-                    : 'Save as draft and publish later'}
+                    ? 'Your post is visible to everyone' 
+                    : 'Only you can see this draft'}
                 </p>
               </div>
             </div>
@@ -447,8 +476,8 @@ export function NewPostForm() {
                 </p>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {formData.featured 
-                    ? 'Will appear in the featured banner at the top' 
-                    : 'Will appear in the regular posts list'}
+                    ? 'Appears in the featured banner' 
+                    : 'Appears in the regular posts list'}
                 </p>
               </div>
             </div>
@@ -477,19 +506,6 @@ export function NewPostForm() {
           Cancel
         </Button>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
-            {formData.published ? (
-              <>
-                <Eye className="h-4 w-4" />
-                <span>Will be published</span>
-              </>
-            ) : (
-              <>
-                <FileText className="h-4 w-4" />
-                <span>Will be saved as draft</span>
-              </>
-            )}
-          </div>
           <Button
             type="submit"
             disabled={isLoading}
@@ -501,16 +517,14 @@ export function NewPostForm() {
             )}
           >
             {isLoading ? (
-              <LoadingSpinner size="sm" />
-            ) : formData.published ? (
               <>
-                <Check className="h-4 w-4 mr-2" />
-                Publish Post
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
               </>
             ) : (
               <>
-                <FileText className="h-4 w-4 mr-2" />
-                Save as Draft
+                <Check className="h-4 w-4 mr-2" />
+                Save Changes
               </>
             )}
           </Button>

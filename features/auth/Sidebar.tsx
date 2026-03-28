@@ -155,7 +155,7 @@ function SidebarContent() {
               {error && sidebarOpen && (
                 <button 
                   onClick={refetch}
-                  className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left"
+                  className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left cursor-pointer"
                 >
                   Retry
                 </button>
