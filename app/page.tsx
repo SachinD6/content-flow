@@ -100,7 +100,7 @@ export default function LandingPage() {
               Everything You Need to Create
             </h2>
             <p className="text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto px-4 sm:px-0">
-              Powerful features designed for modern content workflows. From writing to publishing, we've got you covered.
+              Powerful features designed for modern content workflows. From writing to publishing, wewe've got you covered.apos;ve got you covered.
             </p>
           </div>
           

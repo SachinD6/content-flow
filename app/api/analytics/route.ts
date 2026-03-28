@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       }
     );
 
-    let pageViewsData: { date: string; value: number }[] = [];
+    const pageViewsData: { date: string; value: number }[] = [];
     let totalPageViews = 0;
 
     if (eventsResponse.ok) {

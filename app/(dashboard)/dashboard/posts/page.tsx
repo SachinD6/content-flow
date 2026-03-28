@@ -23,7 +23,7 @@ export default async function PostsPage() {
 
   // Show featured banner if there's a featured post (out of the box experience)
   // Feature flag can be used to hide it for A/B testing if needed
-  let showBanner = true; // Default to showing featured posts
+  const showBanner = true; // Default to showing featured posts
 
   // Use preview client if draft mode is enabled, otherwise use regular client
   const client = isDraftMode ? previewSanityClient : sanityClient;

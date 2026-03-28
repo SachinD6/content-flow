@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
@@ -125,7 +126,7 @@ export default async function DashboardHomePage() {
       <div className="rounded-[12px] sm:rounded-[16px] border border-white/5 bg-[#121319] overflow-hidden shadow-2xl">
         <div className="p-4 sm:p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h3 className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Recent Content Activity</h3>
-          <a href="/dashboard/posts" className="text-[10px] sm:text-[11px] font-bold text-[#6154f0] hover:text-[#584acf] transition-colors">View all architecture</a>
+          <Link href="/dashboard/posts" className="text-[10px] sm:text-[11px] font-bold text-[#6154f0] hover:text-[#584acf] transition-colors">View all architecture</Link>
         </div>
 
         {(!recentPosts || recentPosts.length === 0) ? (

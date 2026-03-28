@@ -165,7 +165,7 @@ export function AnalyticsContent() {
     document.body.appendChild(linkElement);
     linkElement.click();
     document.body.removeChild(linkElement);
-  }, [analytics?.events]);
+  }, [analytics]);
 
   const { stats, events, featureFlags } = analytics || {
     stats: { eventsToday: 0, uniqueUsers: 0, avgSession: '0m 0s' },
