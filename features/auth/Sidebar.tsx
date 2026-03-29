@@ -23,9 +23,10 @@ const navItems = [
 
 interface SidebarContentProps {
   onLinkClick?: () => void;
+  isMobile?: boolean;
 }
 
-function SidebarContent({ onLinkClick }: SidebarContentProps) {
+function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) {
   const pathname = usePathname();
   const setActivePath = useUIStore((state) => state.setActivePath);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
@@ -51,14 +52,17 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
     onLinkClick?.();
   };
 
+  // Mobile sidebar should always show text regardless of desktop sidebar state
+  const showText = isMobile || sidebarOpen;
+
   return (
     <div className="flex flex-col h-full bg-[#0b0c10] border-r border-white/5 text-zinc-400 font-sans transition-all duration-300">
       {/* Brand Header with Collapse Toggle */}
-      <div className={cn("flex items-center h-16 px-4 relative", !sidebarOpen && "justify-center px-2")}>
+      <div className={cn("flex items-center h-16 px-4 relative", !showText && "justify-center px-2")}>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6154f0] shrink-0">
           <SquareTerminal className="h-4 w-4 text-white" strokeWidth={2.5} />
         </div>
-        {sidebarOpen && (
+        {showText && (
           <div className="ml-3 flex flex-col flex-1 min-w-0">
             <span className="text-sm font-bold tracking-wide text-white leading-tight">ContentFlow</span>
             <span className="text-[9px] uppercase tracking-[0.2em] text-[#6154f0] font-bold">Engineering CMS</span>
@@ -73,13 +77,13 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
           }}
           className={cn(
             "hidden lg:flex items-center justify-center p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer ml-auto shrink-0",
-            !sidebarOpen && "ml-0"
+            !showText && "ml-0"
           )}
-          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={showText ? "Collapse sidebar" : "Expand sidebar"}
           type="button"
-          title={sidebarOpen ? "Collapse" : "Expand"}
+          title={showText ? "Collapse" : "Expand"}
         >
-          {sidebarOpen ? (
+          {showText ? (
             <ChevronLeft className="h-4 w-4 shrink-0" />
           ) : (
             <ChevronRight className="h-4 w-4 shrink-0" />
@@ -104,20 +108,20 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
                   ? 'bg-[#121319] text-white border border-white/5 shadow-sm'
                   : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
               )}
-              title={!sidebarOpen ? item.name : undefined}
+              title={!showText ? item.name : undefined}
             >
               <item.icon
                 className={cn(
                   'h-[18px] w-[18px] shrink-0',
                   isActive ? 'text-[#6154f0]' : 'text-zinc-500 group-hover:text-zinc-300',
-                  sidebarOpen && 'mr-3'
+                  showText && 'mr-3'
                 )}
                 strokeWidth={2}
               />
-              {sidebarOpen && (
+              {showText && (
                 <span className="truncate">{item.name}</span>
               )}
-              {sidebarOpen && item.name === 'Posts' && posts && (
+              {showText && item.name === 'Posts' && posts && (
                 <span className="ml-auto inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">
                   {posts.length}
                 </span>
@@ -134,34 +138,34 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
           onClick={handleLinkClick}
           className={cn(
             "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
-            !sidebarOpen && "justify-center px-0"
+            !showText && "justify-center px-0"
           )}
-          title={!sidebarOpen ? 'Documentation' : undefined}
+          title={!showText ? 'Documentation' : undefined}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          {sidebarOpen && "Documentation"}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", showText && "mr-3")}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          {showText && "Documentation"}
         </Link>
         <Link
           href="/support"
           onClick={handleLinkClick}
           className={cn(
             "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
-            !sidebarOpen && "justify-center px-0"
+            !showText && "justify-center px-0"
           )}
-          title={!sidebarOpen ? 'Support' : undefined}
+          title={!showText ? 'Support' : undefined}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", sidebarOpen && "mr-3")}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-          {sidebarOpen && "Support"}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", showText && "mr-3")}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          {showText && "Support"}
         </Link>
       </div>
 
       {/* User Profile Mini */}
       <div className="p-4 border-t border-white/5">
-        <div className={cn("flex items-center relative", !sidebarOpen && "justify-center")}>
+        <div className={cn("flex items-center relative", !showText && "justify-center")}>
           {loading ? (
             <>
               <Skeleton className="h-8 w-8 rounded-full bg-white/10 shrink-0" />
-              {sidebarOpen && (
+              {showText && (
                 <div className="ml-3 flex flex-col gap-1.5 overflow-hidden flex-1">
                   <Skeleton className="h-4 w-24 bg-white/10" />
                   <Skeleton className="h-3 w-16 bg-white/10" />
@@ -186,7 +190,7 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
                 )}
                 <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 border border-[#0b0c10]" />
               </div>
-              {sidebarOpen && (
+              {showText && (
                 <div className="ml-3 flex flex-col overflow-hidden">
                   <span className="truncate text-[13px] font-semibold text-white">
                     {error ? (
@@ -197,7 +201,7 @@ function SidebarContent({ onLinkClick }: SidebarContentProps) {
                       'Unknown User'
                     )}
                   </span>
-                  {error && sidebarOpen && (
+                  {error && showText && (
                     <button 
                       onClick={refetch}
                       className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left cursor-pointer"
@@ -230,7 +234,7 @@ export function Sidebar() {
           <Menu className="h-6 w-6" />
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-72 bg-[#0b0c10] border-r-white/5 border-r">
-          <SidebarContent onLinkClick={() => setMobileOpen(false)} />
+          <SidebarContent isMobile={true} onLinkClick={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
@@ -240,7 +244,7 @@ export function Sidebar() {
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        <SidebarContent />
+        <SidebarContent isMobile={false} />
       </aside>
     </>
   );
