@@ -1,16 +1,15 @@
 'use client';
 
-import { Menu, Search, Bell, HelpCircle } from 'lucide-react';
+import { Search, Bell, HelpCircle } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
-import { useUIStore } from '@/stores/uiStore';
 import { LogoutButton } from '@/features/auth/LogoutButton';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function TopHeader() {
   const { profile, loading, error } = useUser();
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const pathname = usePathname();
 
   const paths = pathname.split('/').filter(Boolean);
@@ -19,14 +18,6 @@ export function TopHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/5 bg-[#0b0c10]/80 backdrop-blur-md px-4 sm:px-6">
       <div className="flex items-center gap-3 sm:gap-4">
-        <button
-          onClick={toggleSidebar}
-          className="lg:hidden flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer p-2"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-5 w-5" strokeWidth={2} />
-        </button>
-
         <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold tracking-[0.15em] sm:tracking-[0.2em] text-zinc-500">
           <span className="text-zinc-400 hidden sm:inline">CONTENTFLOW</span>
           <span className="text-zinc-400 sm:hidden">CF</span>
@@ -56,7 +47,7 @@ export function TopHeader() {
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 border-l border-white/5 pl-3 sm:pl-6">
-            <div className="hidden sm:flex flex-col text-right">
+            <Link href="/dashboard/settings" className="hidden sm:flex flex-col text-right hover:opacity-80 transition-opacity">
               {loading ? (
                 <Skeleton className="h-4 w-20" />
               ) : error ? (
@@ -69,9 +60,12 @@ export function TopHeader() {
               <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">
                 {profile?.role || 'USER'}
               </span>
-            </div>
+            </Link>
             
-            <div className="h-8 w-8 rounded-full overflow-hidden bg-[#121319] border border-white/10 shrink-0 relative">
+            <Link 
+              href="/dashboard/settings" 
+              className="h-8 w-8 rounded-full overflow-hidden bg-[#121319] border border-white/10 shrink-0 relative hover:ring-2 hover:ring-[#6154f0]/50 transition-all"
+            >
               {loading ? (
                 <Skeleton className="h-full w-full rounded-full bg-white/10" />
               ) : profile?.avatarUrl ? (
@@ -86,7 +80,7 @@ export function TopHeader() {
                   {profile?.displayName?.charAt(0) || '?'}
                 </span>
               )}
-            </div>
+            </Link>
 
             <div className="hidden sm:block ml-2">
               <LogoutButton />
