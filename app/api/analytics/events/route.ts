@@ -108,11 +108,20 @@ export async function GET(request: Request) {
     const apiKey = process.env.POSTHOG_API_KEY;
     
     let events: PostHogEventResult[] = [];
-    let stats = {
-      eventsToday: 247,
-      uniqueUsers: 38,
-      avgSession: '4m 12s'
+    
+    // Default stats calculated from mock events
+    const calculateMockStats = () => {
+      const uniqueUsers = new Set(mockEvents.map(e => e.distinct_id)).size;
+      const avgSessionMinutes = Math.floor(Math.random() * 8) + 2;
+      const avgSessionSeconds = Math.floor(Math.random() * 60);
+      return {
+        eventsToday: mockEvents.length,
+        uniqueUsers,
+        avgSession: `${avgSessionMinutes}m ${avgSessionSeconds}s`
+      };
     };
+    
+    let stats = calculateMockStats();
 
     if (apiKey) {
       // Use correct PostHog API host
@@ -140,10 +149,29 @@ export async function GET(request: Request) {
           
           // Calculate stats from real events
           const uniqueUsers = new Set(events.map(e => e.distinct_id)).size;
+          
+          // Calculate avg session from timestamps (synthetic based on event spacing)
+          const timestamps = events.map(e => new Date(e.timestamp).getTime()).sort((a, b) => a - b);
+          let totalSessionTime = 0;
+          let sessionCount = 0;
+          
+          for (let i = 1; i < timestamps.length; i++) {
+            const gap = timestamps[i] - timestamps[i - 1];
+            // If gap is less than 30 minutes, consider it same session
+            if (gap < 30 * 60 * 1000) {
+              totalSessionTime += gap;
+              sessionCount++;
+            }
+          }
+          
+          const avgSessionMs = sessionCount > 0 ? totalSessionTime / sessionCount : 4 * 60 * 1000; // Default 4 min
+          const avgSessionMinutes = Math.floor(avgSessionMs / (60 * 1000));
+          const avgSessionSeconds = Math.floor((avgSessionMs % (60 * 1000)) / 1000);
+          
           stats = {
             eventsToday: events.length,
             uniqueUsers,
-            avgSession: '4m 12s' // Would need session data for accurate calculation
+            avgSession: `${avgSessionMinutes}m ${avgSessionSeconds}s`
           };
         }
       } else {
@@ -152,8 +180,17 @@ export async function GET(request: Request) {
         events = mockEvents;
       }
     } else {
-      // Use mock data if no API key
+      // Use mock data if no API key - calculate stats from mock events
       events = mockEvents;
+      const uniqueUsers = new Set(events.map(e => e.distinct_id)).size;
+      // Calculate average session time from mock events (synthetic calculation)
+      const avgSessionMinutes = Math.floor(Math.random() * 8) + 2; // Random 2-10 minutes
+      const avgSessionSeconds = Math.floor(Math.random() * 60);
+      stats = {
+        eventsToday: events.length,
+        uniqueUsers,
+        avgSession: `${avgSessionMinutes}m ${avgSessionSeconds}s`
+      };
     }
 
     // Feature flags (would come from PostHog in production)
@@ -173,12 +210,16 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Analytics fetch error:', error);
     
-    // Return mock data on error
+    // Calculate stats from mock events for error fallback
+    const uniqueUsers = new Set(mockEvents.map(e => e.distinct_id)).size;
+    const avgSessionMinutes = Math.floor(Math.random() * 8) + 2;
+    const avgSessionSeconds = Math.floor(Math.random() * 60);
+    
     return Response.json({
       stats: {
-        eventsToday: 247,
-        uniqueUsers: 38,
-        avgSession: '4m 12s'
+        eventsToday: mockEvents.length,
+        uniqueUsers,
+        avgSession: `${avgSessionMinutes}m ${avgSessionSeconds}s`
       },
       events: mockEvents,
       featureFlags: [
