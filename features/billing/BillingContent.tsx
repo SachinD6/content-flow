@@ -191,7 +191,8 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
 
           <Button
             disabled={currentPlan === 'free'}
-            className="w-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 cursor-default min-h-[44px]"
+            onClick={currentPlan === 'pro' ? handleManage : undefined}
+            className="w-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 min-h-[44px]"
           >
             {currentPlan === 'free' ? 'Your Current Plan' : 'Downgrade'}
           </Button>
