@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +21,11 @@ const navItems = [
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
 ];
 
-function SidebarContent() {
+interface SidebarContentProps {
+  onLinkClick?: () => void;
+}
+
+function SidebarContent({ onLinkClick }: SidebarContentProps) {
   const pathname = usePathname();
   const setActivePath = useUIStore((state) => state.setActivePath);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
@@ -42,6 +46,10 @@ function SidebarContent() {
   useEffect(() => {
     setActivePath(pathname);
   }, [pathname, setActivePath]);
+
+  const handleLinkClick = () => {
+    onLinkClick?.();
+  };
 
   return (
     <div className="flex flex-col h-full bg-[#0b0c10] border-r border-white/5 text-zinc-400 font-sans transition-all duration-300">
@@ -89,6 +97,7 @@ function SidebarContent() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 'group flex items-center rounded-[8px] px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
                 isActive
@@ -122,6 +131,7 @@ function SidebarContent() {
       <div className="p-3 border-t border-white/5 space-y-1">
         <Link
           href="/documentation"
+          onClick={handleLinkClick}
           className={cn(
             "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
             !sidebarOpen && "justify-center px-0"
@@ -133,6 +143,7 @@ function SidebarContent() {
         </Link>
         <Link
           href="/support"
+          onClick={handleLinkClick}
           className={cn(
             "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
             !sidebarOpen && "justify-center px-0"
@@ -210,15 +221,16 @@ function SidebarContent() {
 
 export function Sidebar() {
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
-      <Sheet>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger className="lg:hidden fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#6154f0] text-white shadow-xl shadow-[#6154f0]/20 active:scale-95 transition-transform">
           <Menu className="h-6 w-6" />
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-72 bg-[#0b0c10] border-r-white/5 border-r">
-          <SidebarContent />
+          <SidebarContent onLinkClick={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
