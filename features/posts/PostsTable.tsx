@@ -12,7 +12,7 @@ import {
   SortingState,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { Star, ArrowUpDown, Pencil, FileText } from 'lucide-react';
+import { Star, ArrowUpDown, Pencil, FileText, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -56,6 +56,124 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
     },
   });
 
+  // Mobile Card Component
+  const MobilePostCard = ({ post }: { post: Post }) => {
+    const isAuthor = post.authorId === `author-${currentUserId}`;
+    const isPublished = !!post.publishedAt;
+    const author = post.author || { name: 'Unknown', avatar: undefined };
+
+    return (
+      <div className="bg-[#0b0c10] border border-white/5 rounded-[12px] p-4 space-y-3">
+        {/* Top: Cover + Title + Actions */}
+        <div className="flex items-start gap-3">
+          <div className="relative h-12 w-12 overflow-hidden rounded-[8px] border border-white/10 shrink-0 bg-zinc-800">
+            {post.coverImage ? (
+              <Image
+                src={post.coverImage}
+                alt="Cover"
+                fill
+                sizes="48px"
+                className="object-cover"
+                unoptimized={post.coverImage.includes('cdn.sanity.io')}
+              />
+            ) : (
+              <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-zinc-600" />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <Link
+              href={`/dashboard/posts/${post.slug}`}
+              className="font-bold text-white hover:text-[#6154f0] transition-colors line-clamp-2 text-sm"
+            >
+              {post.title}
+            </Link>
+            
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="relative h-5 w-5 overflow-hidden rounded-[4px] border border-white/10">
+                {author.avatar ? (
+                  <Image src={author.avatar} alt={author.name} fill sizes="20px" className="object-cover" />
+                ) : (
+                  <div className="bg-[#6154f0] w-full h-full flex items-center justify-center text-[7px] font-bold text-white uppercase">
+                    {author.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <span className="text-[11px] text-zinc-400">{author.name}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          {isAuthor && (
+            <div className="flex items-center gap-1 shrink-0">
+              <Link
+                href={`/dashboard/posts/${post.slug}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className="p-1.5 rounded-[6px] text-zinc-400 hover:text-[#6154f0] hover:bg-[#6154f0]/10 transition-all"
+              >
+                <Pencil className="h-4 w-4" strokeWidth={2} />
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toast(post.featured ? 'Removing from features...' : 'Marking as featured...');
+                  toggleFeaturedMutation.mutate({ postId: post._id, featured: !post.featured });
+                }}
+                className={cn(
+                  "p-1.5 rounded-[6px] transition-all",
+                  post.featured ? "text-amber-400 hover:bg-amber-400/10" : "text-zinc-600 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <Star className={cn("h-4 w-4", post.featured && "fill-amber-400")} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Middle: Tags */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {post.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="secondary" className="bg-[#171922] text-zinc-400 text-[9px] uppercase font-bold tracking-[0.1em] border-transparent rounded-[4px] px-1.5 py-0">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom: Date + Status */}
+        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+          <div className="flex items-center gap-1.5 text-zinc-500">
+            <Clock className="h-3 w-3" />
+            <span className="text-[10px]">
+              {post.publishedAt 
+                ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '—'
+              }
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-1.5">
+            {post.featured && (
+              <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-[0.15em] px-1.5 py-0 border-transparent bg-amber-500/10 text-amber-400">
+                Featured
+              </Badge>
+            )}
+            <Badge variant="outline" className={cn(
+              "text-[9px] uppercase font-bold tracking-[0.15em] px-1.5 py-0 border-transparent",
+              isPublished ? "bg-emerald-500/10 text-emerald-400" : "bg-white/5 text-zinc-500"
+            )}>
+              {isPublished ? 'Published' : 'Draft'}
+            </Badge>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const columns = [
     columnHelper.accessor('coverImage', {
       header: 'COVER',
@@ -95,18 +213,18 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       cell: (info) => (
         <Link
           href={`/dashboard/posts/${info.row.original.slug}`}
-          className="font-bold text-white hover:text-[#6154f0] transition-colors truncate max-w-[150px] sm:max-w-[200px] md:max-w-xs lg:max-w-sm block"
+          className="font-bold text-white hover:text-[#6154f0] transition-colors truncate max-w-[200px] lg:max-w-xs xl:max-w-sm block"
         >
           {info.getValue()}
         </Link>
       ),
     }),
     columnHelper.accessor('author', {
-      header: () => <span className="hidden lg:table-cell">AUTHOR</span>,
+      header: 'AUTHOR',
       cell: (info) => {
         const author = info.getValue() || { name: 'Unknown', avatar: undefined };
         return (
-          <div className="flex items-center gap-2 hidden lg:flex">
+          <div className="flex items-center gap-2">
             <div className="relative h-6 w-6 overflow-hidden rounded-[4px] border border-white/10">
               {author.avatar ? (
                 <Image src={author.avatar!} alt={author.name} fill sizes="24px" className="object-cover" />
@@ -123,9 +241,9 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       enableSorting: false,
     }),
     columnHelper.accessor('tags', {
-      header: () => <span className="hidden md:table-cell">TAGS</span>,
+      header: 'TAGS',
       cell: (info) => (
-        <div className="hidden md:flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1">
           {info.getValue()?.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="secondary" className="bg-[#171922] text-zinc-400 hover:text-white hover:bg-white/10 text-[9px] uppercase font-bold tracking-[0.1em] border-transparent rounded-[6px]">
               {tag}
@@ -139,7 +257,7 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="hidden sm:flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
+          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           LAST MODIFIED
           <ArrowUpDown className="h-3 w-3" />
@@ -147,10 +265,10 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       ),
       cell: (info) => {
         const dateStr = info.getValue();
-        if (!dateStr) return <span className="hidden sm:block text-zinc-600 text-[11px]">—</span>;
+        if (!dateStr) return <span className="text-zinc-600 text-[11px]">—</span>;
         const date = new Date(dateStr);
         return (
-          <div className="hidden sm:flex flex-col">
+          <div className="flex flex-col">
             <span className="text-[12px] font-medium text-zinc-300">
               {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(date)}
             </span>
@@ -242,31 +360,41 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
   });
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-      <Table className="min-w-[500px] sm:min-w-[600px] md:min-w-[700px] lg:min-w-[800px]">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="border-b border-white/5 hover:bg-transparent">
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-600 py-4">
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id} className="border-b border-white/5 bg-transparent hover:bg-white/[0.02] transition-colors">
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className="py-4 align-middle">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      {/* Mobile Cards - hidden on lg+ */}
+      <div className="lg:hidden space-y-3">
+        {data.map((post) => (
+          <MobilePostCard key={post._id} post={post} />
+        ))}
+      </div>
+
+      {/* Desktop Table - hidden on mobile */}
+      <div className="hidden lg:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="border-b border-white/5 hover:bg-transparent">
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-600 py-4">
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="border-b border-white/5 bg-transparent hover:bg-white/[0.02] transition-colors">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="py-4 align-middle">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
