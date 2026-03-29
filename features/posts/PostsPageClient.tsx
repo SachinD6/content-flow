@@ -133,9 +133,7 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
               />
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-4 sm:-mx-0">
-            <PostsTable data={filteredPosts} currentUserId={userId} />
-          </div>
+          <PostsTable data={filteredPosts} currentUserId={userId} />
         )}
       </div>
     </div>

@@ -9,7 +9,7 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
           <p className="mt-1 text-sm text-muted-foreground break-words">{description}</p>
         )}
       </div>
-      {children && <div className="flex items-center gap-2 shrink-0">{children}</div>}
+      {children && <div className="flex flex-wrap items-center gap-2 shrink-0">{children}</div>}
     </div>
   );
 }

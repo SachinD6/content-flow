@@ -95,18 +95,18 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       cell: (info) => (
         <Link
           href={`/dashboard/posts/${info.row.original.slug}`}
-          className="font-bold text-white hover:text-[#6154f0] transition-colors truncate max-w-[200px] md:max-w-xs block"
+          className="font-bold text-white hover:text-[#6154f0] transition-colors truncate max-w-[150px] sm:max-w-[200px] md:max-w-xs lg:max-w-sm block"
         >
           {info.getValue()}
         </Link>
       ),
     }),
     columnHelper.accessor('author', {
-      header: 'AUTHOR',
+      header: () => <span className="hidden lg:table-cell">AUTHOR</span>,
       cell: (info) => {
         const author = info.getValue() || { name: 'Unknown', avatar: undefined };
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 hidden lg:flex">
             <div className="relative h-6 w-6 overflow-hidden rounded-[4px] border border-white/10">
               {author.avatar ? (
                 <Image src={author.avatar!} alt={author.name} fill sizes="24px" className="object-cover" />
@@ -123,9 +123,9 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       enableSorting: false,
     }),
     columnHelper.accessor('tags', {
-      header: 'TAGS',
+      header: () => <span className="hidden md:table-cell">TAGS</span>,
       cell: (info) => (
-        <div className="flex flex-wrap gap-1">
+        <div className="hidden md:flex flex-wrap gap-1">
           {info.getValue()?.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="secondary" className="bg-[#171922] text-zinc-400 hover:text-white hover:bg-white/10 text-[9px] uppercase font-bold tracking-[0.1em] border-transparent rounded-[6px]">
               {tag}
@@ -139,7 +139,7 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       header: ({ column }) => (
         <button
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
+          className="hidden sm:flex flex-row items-center gap-2 hover:text-white transition-colors cursor-pointer"
         >
           LAST MODIFIED
           <ArrowUpDown className="h-3 w-3" />
@@ -147,10 +147,10 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
       ),
       cell: (info) => {
         const dateStr = info.getValue();
-        if (!dateStr) return <span className="text-zinc-600 text-[11px]">—</span>;
+        if (!dateStr) return <span className="hidden sm:block text-zinc-600 text-[11px]">—</span>;
         const date = new Date(dateStr);
         return (
-          <div className="flex flex-col">
+          <div className="hidden sm:flex flex-col">
             <span className="text-[12px] font-medium text-zinc-300">
               {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(date)}
             </span>
@@ -242,8 +242,8 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
   });
 
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-[800px]">
+    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <Table className="min-w-[500px] sm:min-w-[600px] md:min-w-[700px] lg:min-w-[800px]">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="border-b border-white/5 hover:bg-transparent">

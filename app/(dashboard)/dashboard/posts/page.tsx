@@ -38,7 +38,7 @@ export default async function PostsPage() {
     <>
       <PageHeader
         title={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             Blog Posts
             <Badge className="bg-white/5 border border-white/5 text-zinc-400 hover:bg-white/10 uppercase tracking-widest text-[9px]">
               via Sanity GROQ
@@ -55,10 +55,10 @@ export default async function PostsPage() {
         <SyncButton />
         <Link
           href="/dashboard/posts/new"
-          className="flex items-center gap-2 px-6 py-2 bg-[#6154f0] hover:bg-[#584acf] rounded-[8px] text-[12px] font-bold text-white transition-all shadow-lg shadow-[#6154f0]/20"
+          className="flex items-center gap-2 px-3 sm:px-6 py-2 bg-[#6154f0] hover:bg-[#584acf] rounded-[8px] text-[12px] font-bold text-white transition-all shadow-lg shadow-[#6154f0]/20"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          New Post
+          <span className="hidden sm:inline">New Post</span>
         </Link>
       </PageHeader>
       
