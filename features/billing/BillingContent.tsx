@@ -267,38 +267,6 @@ export function BillingContent({ currentPlan, userId, success, cancelled }: Bill
           )}
         </div>
       </div>
-
-      {/* Comparison Table */}
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 shadow-xl">
-        <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-4">Detailed Comparison</h3>
-        <div className="overflow-x-auto -mx-4 px-4">
-          <table className="w-full min-w-[400px]">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="pb-3 text-left text-sm font-medium text-zinc-400">Feature</th>
-                <th className="pb-3 text-center text-sm font-medium text-zinc-400">Free</th>
-                <th className="pb-3 text-center text-sm font-medium text-[#6154f0]">Pro</th>
-              </tr>
-            </thead>
-            <tbody>
-              {features.map((row, index) => (
-                <tr key={row.feature} className={cn(index !== features.length - 1 && 'border-b border-white/5')}>
-                  <td className="py-4 text-sm text-zinc-300 flex items-center gap-2">
-                    {row.icon}
-                    {row.feature}
-                  </td>
-                  <td className="py-4 text-center text-sm text-zinc-500">
-                    {typeof row.free === 'string' ? row.free : row.free}
-                  </td>
-                  <td className="py-4 text-center text-sm text-zinc-100">
-                    {typeof row.pro === 'string' ? row.pro : row.pro}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }
