@@ -44,9 +44,7 @@ export async function POST(request: Request) {
       assetId: asset._id,
       url: asset.url,
     });
-  } catch (error) {
-    console.error('Failed to upload image:', error);
-    const message = error instanceof Error ? error.message : 'Failed to upload image';
-    return Response.json({ message }, { status: 500 });
+  } catch {
+    return Response.json({ message: 'Failed to upload image' }, { status: 500 });
   }
 }

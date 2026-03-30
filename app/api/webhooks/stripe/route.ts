@@ -11,7 +11,6 @@ export async function POST(request: Request) {
   const sig = headerList.get('stripe-signature');
 
   if (!sig) {
-    console.error('No Stripe signature found');
     return new Response('No signature', { status: 400 });
   }
 
@@ -25,7 +24,6 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Webhook signature verification failed:', message);
     return new Response(`Webhook Error: ${message}`, { status: 400 });
   }
 
@@ -35,7 +33,6 @@ export async function POST(request: Request) {
       const userId = session.metadata?.userId;
 
       if (!userId) {
-        console.error('No userId in session metadata');
         return new Response('No userId in metadata', { status: 400 });
       }
 
@@ -51,7 +48,6 @@ export async function POST(request: Request) {
         .eq('id', userId);
 
       if (error) {
-        console.error('Failed to update subscription in Supabase:', error);
         return new Response('Database update failed', { status: 500 });
       }
 
@@ -71,7 +67,6 @@ export async function POST(request: Request) {
       });
       await posthogClient.shutdown();
 
-      console.log(`Successfully upgraded user ${userId} to Pro`);
       break;
     }
 
@@ -90,13 +85,13 @@ export async function POST(request: Request) {
         .eq('stripe_customer_id', customerId);
 
       if (error) {
-        console.error('Failed to downgrade subscription:', error);
+        // Silently handle error - subscription already deleted in Stripe
       }
       break;
     }
 
     default:
-      console.log(`Unhandled Stripe event: ${event.type}`);
+      // Unhandled event type
   }
 
   return new Response(JSON.stringify({ received: true }), {

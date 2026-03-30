@@ -38,7 +38,6 @@ export async function GET(request: Request) {
 
     if (eventsResponse.ok) {
       const events = await eventsResponse.json();
-      console.log('PostHog events:', events);
       
       // Group events by date
       const dateMap = new Map<string, number>();
@@ -61,8 +60,7 @@ export async function GET(request: Request) {
       
       totalPageViews = pageViewsData.reduce((sum, d) => sum + d.value, 0);
     } else {
-      const errorText = await eventsResponse.text();
-      console.error('PostHog Events API error:', errorText);
+      await eventsResponse.text();
     }
 
     // If no data, return zeros
@@ -148,8 +146,7 @@ export async function GET(request: Request) {
     await posthog.shutdown();
 
     return Response.json(analytics);
-  } catch (error) {
-    console.error('Analytics fetch error:', error);
+  } catch {
     return Response.json(
       { message: 'Failed to fetch analytics' },
       { status: 500 }

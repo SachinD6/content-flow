@@ -175,7 +175,6 @@ export async function GET(request: Request) {
           };
         }
       } else {
-        console.error('PostHog API error:', await eventsResponse.text());
         // Fall back to mock data if API fails
         events = mockEvents;
       }
@@ -207,9 +206,7 @@ export async function GET(request: Request) {
       events: events.slice(0, limit),
       featureFlags
     });
-  } catch (error) {
-    console.error('Analytics fetch error:', error);
-    
+  } catch {
     // Calculate stats from mock events for error fallback
     const uniqueUsers = new Set(mockEvents.map(e => e.distinct_id)).size;
     const avgSessionMinutes = Math.floor(Math.random() * 8) + 2;

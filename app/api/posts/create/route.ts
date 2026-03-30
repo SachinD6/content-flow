@@ -117,9 +117,7 @@ export async function POST(request: Request) {
       postId: result._id,
       message: published ? 'Post published successfully' : 'Draft saved successfully'
     });
-  } catch (error) {
-    console.error('Failed to create post:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create post';
-    return Response.json({ message }, { status: 500 });
+  } catch {
+    return Response.json({ message: 'Failed to create post' }, { status: 500 });
   }
 }

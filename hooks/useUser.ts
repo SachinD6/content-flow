@@ -25,12 +25,10 @@ export function useUser() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('Session error:', sessionError);
         throw sessionError;
       }
       
       if (!session) {
-        console.log('No session found');
         setUser(null);
         setProfile(null);
         setLoading(false);
@@ -48,7 +46,6 @@ export function useUser() {
         .single();
 
       if (profileError) {
-        console.error('Profile error:', profileError);
         // Profile doesn't exist yet
         if (profileError.code === 'PGRST116') {
           setProfile(null);
@@ -57,7 +54,6 @@ export function useUser() {
           setProfile(null);
         }
       } else if (data) {
-        console.log('Profile loaded:', data);
         const profileData = data as ProfileRow;
         setProfile({
           id: profileData.id,
@@ -72,7 +68,6 @@ export function useUser() {
         });
       }
     } catch (err) {
-      console.error('useUser error:', err);
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setProfile(null);
     } finally {
@@ -87,8 +82,6 @@ export function useUser() {
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
-        
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);

@@ -10,12 +10,10 @@ export async function POST(request: Request) {
   try {
     // Check env vars
     if (!STRIPE_PRICES.PRO) {
-      console.error('Missing STRIPE_PRO_PRICE_ID environment variable');
       return new Response('Stripe price ID not configured', { status: 500 });
     }
 
     if (!process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Missing NEXT_PUBLIC_APP_URL environment variable');
       return new Response('App URL not configured', { status: 500 });
     }
 
@@ -34,7 +32,6 @@ export async function POST(request: Request) {
       .single();
 
     if (profileError) {
-      console.error('Profile fetch error:', profileError);
       return new Response('Failed to fetch profile', { status: 500 });
     }
 
@@ -55,11 +52,9 @@ export async function POST(request: Request) {
           .eq('id', user.id);
 
         if (updateError) {
-          console.error('Failed to save stripe_customer_id:', updateError);
           // Continue anyway - we can still create the checkout session
         }
-      } catch (stripeError) {
-        console.error('Stripe customer creation error:', stripeError);
+      } catch {
         return new Response('Failed to create Stripe customer', { status: 500 });
       }
     }
@@ -77,13 +72,10 @@ export async function POST(request: Request) {
       });
 
       return Response.json({ url: session.url });
-    } catch (stripeError) {
-      console.error('Stripe checkout session error:', stripeError);
+    } catch {
       return new Response('Failed to create checkout session', { status: 500 });
     }
-  } catch (error) {
-    console.error('Checkout session error:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return new Response(message, { status: 500 });
+  } catch {
+    return new Response('Internal server error', { status: 500 });
   }
 }

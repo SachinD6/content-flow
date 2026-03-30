@@ -92,9 +92,7 @@ export async function PUT(request: Request) {
       success: true,
       message: published ? 'Post updated and published' : 'Draft updated successfully',
     });
-  } catch (error) {
-    console.error('Failed to update post:', error);
-    const message = error instanceof Error ? error.message : 'Failed to update post';
-    return Response.json({ message }, { status: 500 });
+  } catch {
+    return Response.json({ message: 'Failed to update post' }, { status: 500 });
   }
 }
