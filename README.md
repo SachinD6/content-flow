@@ -2,6 +2,8 @@
 
 A CMS-driven SaaS dashboard built for Weframetech. ContentFlow enables teams to create, manage, and publish content with subscription-based access control.
 
+Live Link-  [http://localhost:3000](https://content-flow-sxch.vercel.app)
+
 ## Features
 
 - **Authentication**: Secure auth with Supabase (email/password)
@@ -342,4 +344,5 @@ The following events are tracked in PostHog:
 | upgrade_intent | Upgrade button click | plan, userId, timestamp |
 | upgrade_completed | Stripe webhook | plan, userId, timestamp |
 
-![PostHog Dashboard](./docs/posthog-dashboard.png)
+## PostHog Dashboard <img width="1509" height="826" alt="image" src="https://github.com/user-attachments/assets/45b980d0-a4b5-4b04-9f07-5a353340fa3c" />
+
