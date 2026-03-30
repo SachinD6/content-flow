@@ -270,3 +270,76 @@ MIT License - Weframetech
 ## Support
 
 For support, email support@weframetech.com or open an issue on GitHub.
+
+---
+
+## What I Completed
+- Phase 1: Auth & Layout ✓
+- Phase 2: Sanity CMS & Posts ✓
+- Phase 3: Settings Form ✓
+- Phase 4: Stripe Billing ✓
+- Bonus B1: Sanity Live Preview ✓
+- Bonus B2: Role-based Admin Panel ✓
+- Bonus B3: PostHog Feature Flag (server-side) ✓
+- Bonus B4: Optimistic Updates with rollback ✓
+
+## What I Skipped and Why
+Nothing was skipped. All 4 phases and all 4 bonuses are complete.
+
+## Architectural Decisions
+
+1. Server actions for account deletion instead of an API route
+   deleteAccount needs SUPABASE_SERVICE_ROLE_KEY. Server actions keep 
+   sensitive keys server-only without exposing an HTTP endpoint that 
+   could be called externally by anyone.
+
+2. staleTime of 5 minutes on the posts query
+   Sanity content does not change frequently. 5 minutes prevents 
+   unnecessary refetches while keeping data reasonably fresh. The 
+   featured toggle uses optimistic updates so staleTime does not 
+   affect perceived freshness for that interaction.
+
+3. Sidebar state in Zustand instead of local component state
+   Sidebar open/close needs to persist when navigating between pages 
+   in the App Router. Local component state resets on every navigation. 
+   Zustand with the persist middleware keeps the state in localStorage 
+   so it survives both navigation and page refresh.
+
+4. request.text() in the Stripe webhook instead of request.json()
+   Stripe signature verification requires the raw request body as a 
+   plain string. If request.json() is called first it consumes the body 
+   stream and the raw bytes are lost, making signature verification 
+   impossible and leaving the webhook vulnerable.
+
+5. Dynamic import for PortableTextRenderer
+   PortableText is a heavy dependency that is only needed on the single 
+   post page. Dynamic import code-splits it into a separate chunk that 
+   only loads when a user visits a post, keeping the main bundle smaller 
+   for all other pages.
+
+6. Feature flag evaluated server-side using PostHog Node SDK
+   Evaluating the show-featured-banner flag on the server means the 
+   banner decision is made before the page reaches the client. This 
+   avoids a layout shift that would happen if the flag was checked 
+   client-side after hydration.
+
+## Local Webhook Testing
+1. Install Stripe CLI: https://stripe.com/docs/stripe-cli
+2. Run: stripe listen --forward-to localhost:3000/api/webhooks/stripe
+3. Copy the webhook signing secret printed by the CLI
+4. Paste it into .env.local as STRIPE_WEBHOOK_SECRET
+5. Trigger a test event: stripe trigger checkout.session.completed
+6. Check terminal logs — webhook should return 200
+
+## PostHog Events
+The following events are tracked in PostHog:
+
+| Event | Trigger | Properties |
+|---|---|---|
+| identify | After login | userId, email, plan |
+| posts_page_viewed | Posts page mount | totalPosts |
+| post_viewed | Single post page | slug, title |
+| upgrade_intent | Upgrade button click | plan, userId, timestamp |
+| upgrade_completed | Stripe webhook | plan, userId, timestamp |
+
+![PostHog Dashboard](./docs/posthog-dashboard.png)
