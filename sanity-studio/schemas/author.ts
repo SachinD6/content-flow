@@ -31,5 +31,18 @@ export default {
       type: 'text',
       rows: 3
     }
-  ]
+  ],
+  preview: {
+    select: {
+      title: 'name',
+      media: 'image',
+    },
+    prepare(selection) {
+      const { title, media } = selection
+      return {
+        title,
+        media: media && typeof media === 'object' ? media : undefined,
+      }
+    },
+  },
 }

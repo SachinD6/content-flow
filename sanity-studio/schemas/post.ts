@@ -61,5 +61,20 @@ export default {
       type: 'boolean',
       initialValue: false 
     },
-  ]
+  ],
+  preview: {
+    select: {
+      title: 'title',
+      author: 'author.name',
+      media: 'coverImage',
+    },
+    prepare(selection) {
+      const { title, author, media } = selection
+      return {
+        title,
+        subtitle: author ? `by ${author}` : '',
+        media: media && typeof media === 'object' ? media : undefined,
+      }
+    },
+  },
 }

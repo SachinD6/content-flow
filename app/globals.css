@@ -128,3 +128,18 @@
     @apply font-sans;
   }
 }
+@layer components {
+  .prose ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    padding-left: 0;
+  }
+  .prose ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+    padding-left: 0;
+  }
+  .prose li::marker {
+    color: #a1a1aa;
+  }
+}

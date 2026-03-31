@@ -1,5 +1,88 @@
 import { PostHog } from 'posthog-node';
 
+interface PostHogInsightResult {
+  result?: number[];
+}
+
+async function fetchInsightMetric(
+  apiHost: string,
+  apiKey: string,
+  event: string,
+  math: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<number | null> {
+  try {
+    const url = new URL(`${apiHost}/api/projects/@current/insights/trend/`);
+    url.searchParams.append('events', JSON.stringify([{ id: event, math }]));
+    url.searchParams.append('date_from', dateFrom);
+    url.searchParams.append('date_to', dateTo);
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    
+    // PostHog returns results as an array of arrays, get the average
+    if (data.result && Array.isArray(data.result) && data.result.length > 0) {
+      const values = data.result[0];
+      if (Array.isArray(values) && values.length > 0) {
+        const sum = values.reduce((a: number, b: number) => a + b, 0);
+        return sum / values.length;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchUniqueVisitors(
+  apiHost: string,
+  apiKey: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<number | null> {
+  try {
+    const url = new URL(`${apiHost}/api/projects/@current/insights/trend/`);
+    url.searchParams.append('events', JSON.stringify([{ id: '$pageview', math: 'dau' }]));
+    url.searchParams.append('date_from', dateFrom);
+    url.searchParams.append('date_to', dateTo);
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.result && Array.isArray(data.result) && data.result.length > 0) {
+      const values = data.result[0];
+      if (Array.isArray(values) && values.length > 0) {
+        // Sum up daily active users over the period
+        return values.reduce((a: number, b: number) => a + b, 0);
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,6 +105,9 @@ export async function GET(request: Request) {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    
+    const dateFrom = startDate.toISOString().split('T')[0];
+    const dateTo = endDate.toISOString().split('T')[0];
 
     // Fetch events from PostHog Events API using Personal API Key
     const eventsResponse = await fetch(
@@ -90,6 +176,15 @@ export async function GET(request: Request) {
       });
     }
 
+    // Fetch real metrics from PostHog Insights API
+    const [
+      avgSessionDuration,
+      uniqueVisitors,
+    ] = await Promise.all([
+      fetchInsightMetric(apiHost, apiKey, '$session_duration', 'avg', dateFrom, dateTo),
+      fetchUniqueVisitors(apiHost, apiKey, dateFrom, dateTo),
+    ]);
+
     const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com';
     const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
     
@@ -105,9 +200,9 @@ export async function GET(request: Request) {
     const analytics = {
       overview: {
         totalPageViews,
-        uniqueVisitors: Math.floor(totalPageViews * 0.4),
-        avgSessionDuration: Math.floor(Math.random() * 180) + 60,
-        bounceRate: Math.floor(Math.random() * 40) + 20,
+        uniqueVisitors: uniqueVisitors || Math.floor(totalPageViews * 0.4),
+        avgSessionDuration: avgSessionDuration ? Math.round(avgSessionDuration) : 0,
+        bounceRate: 0, // Would need separate calculation
       },
       trends: {
         pageViews: pageViewsData,
@@ -116,31 +211,10 @@ export async function GET(request: Request) {
           value: Math.floor(d.value * 0.4),
         })),
       },
-      topPosts: [
-        { title: 'Getting Started with Next.js', views: 1245, slug: 'getting-started-nextjs' },
-        { title: 'React Hooks Deep Dive', views: 982, slug: 'react-hooks-deep-dive' },
-        { title: 'Building a CMS with Sanity', views: 756, slug: 'building-cms-sanity' },
-        { title: 'TypeScript Best Practices', views: 643, slug: 'typescript-best-practices' },
-        { title: 'Stripe Integration Guide', views: 521, slug: 'stripe-integration-guide' },
-      ],
-      topReferrers: [
-        { source: 'Google', visitors: 2341, percentage: 45 },
-        { source: 'Direct', visitors: 1234, percentage: 24 },
-        { source: 'Twitter', visitors: 567, percentage: 11 },
-        { source: 'GitHub', visitors: 432, percentage: 8 },
-        { source: 'LinkedIn', visitors: 321, percentage: 6 },
-      ],
-      devices: {
-        desktop: 65,
-        mobile: 28,
-        tablet: 7,
-      },
-      browsers: [
-        { name: 'Chrome', percentage: 58 },
-        { name: 'Safari', percentage: 22 },
-        { name: 'Firefox', percentage: 12 },
-        { name: 'Edge', percentage: 8 },
-      ],
+      topPosts: [],
+      topReferrers: [],
+      devices: { desktop: 0, mobile: 0, tablet: 0 },
+      browsers: [],
     };
 
     await posthog.shutdown();

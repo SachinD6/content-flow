@@ -59,11 +59,35 @@ const components: Partial<PortableTextReactComponents> = {
     h2: ({ children }) => <h2 className="mt-10 mb-5 text-2xl font-bold tracking-tight text-white">{children}</h2>,
     h3: ({ children }) => <h3 className="mt-8 mb-4 text-xl font-bold tracking-tight text-white">{children}</h3>,
     h4: ({ children }) => <h4 className="mt-6 mb-4 text-lg font-bold tracking-tight text-white">{children}</h4>,
-    normal: ({ children }) => <p className="mb-6 text-[15px] leading-relaxed text-zinc-400">{children}</p>,
+    normal: ({ children }) => <p className="mb-6 text-[15px] leading-relaxed text-zinc-300">{children}</p>,
     blockquote: ({ children }) => (
       <blockquote className="my-8 italic border-l-4 border-[#6154f0]/50 bg-white/5 py-4 px-6 text-zinc-300 rounded-r-[8px]">
         {children}
       </blockquote>
+    ),
+  },
+  list: {
+    bullet: ({ children }) => (
+      <ul className="my-6 ml-6 list-disc space-y-2 text-zinc-300">
+        {children}
+      </ul>
+    ),
+    number: ({ children }) => (
+      <ol className="my-6 ml-6 list-decimal space-y-2 text-zinc-300">
+        {children}
+      </ol>
+    ),
+  },
+  listItem: {
+    bullet: ({ children }) => (
+      <li className="pl-1 text-[15px] leading-relaxed">
+        {children}
+      </li>
+    ),
+    number: ({ children }) => (
+      <li className="pl-1 text-[15px] leading-relaxed">
+        {children}
+      </li>
     ),
   },
 };

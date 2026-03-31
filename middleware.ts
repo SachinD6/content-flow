@@ -40,11 +40,32 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protect all /dashboard/* routes — redirect to /login if no user
-  if (pathname.startsWith('/dashboard') && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+  // Protect all /dashboard/* routes — require admin role
+  if (pathname.startsWith('/dashboard')) {
+    // Check user authenticated first
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    // Fetch profile to check role
+    const supabase = createServiceRoleClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    // If not admin, redirect to home page
+    if (profile?.role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    // Admin user - allow through
+    return supabaseResponse;
   }
 
   // Also protect /posts, /settings, /billing
@@ -59,10 +80,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If user exists and tries to access /login, redirect to /dashboard
+  // If user exists and tries to access /login, redirect based on role
   if (pathname === '/login' && user) {
+    // Check if user is admin
+    const supabase = createServiceRoleClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    // Admin users go to dashboard, others go to home
+    url.pathname = profile?.role === 'admin' ? '/dashboard' : '/';
     return NextResponse.redirect(url);
   }
 
