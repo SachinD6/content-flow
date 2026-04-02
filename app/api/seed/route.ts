@@ -13,10 +13,9 @@ export async function POST(request: NextRequest) {
       message: reset ? 'CMS content reset to defaults' : 'CMS content seeded successfully',
       results: {
         siteSettings: results.siteSettings,
-        navigation: results.navigation,
         homePage: results.homePage,
-        authPages: results.authPages,
-        dashboardSettings: results.dashboardSettings,
+        authPage: results.authPage,
+        dashboardPage: results.dashboardPage,
       },
       errors: results.errors.length > 0 ? results.errors : undefined,
     })
@@ -37,10 +36,9 @@ export async function GET() {
     message: 'CMS content seeded successfully',
     results: {
       siteSettings: results.siteSettings,
-      navigation: results.navigation,
       homePage: results.homePage,
-      authPages: results.authPages,
-      dashboardSettings: results.dashboardSettings,
+      authPage: results.authPage,
+      dashboardPage: results.dashboardPage,
     },
     errors: results.errors.length > 0 ? results.errors : undefined,
   })

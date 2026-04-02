@@ -1,41 +1,49 @@
 import { sanityClient } from './client'
+import { sanityFetch } from './live'
 import {
   SITE_SETTINGS_QUERY,
-  NAVIGATION_QUERY,
-  HOME_PAGE_QUERY,
+  PAGE_BY_TYPE_QUERY,
+  PAGE_BY_SLUG_QUERY,
+  ALL_PAGES_QUERY,
   HOME_PAGE_DATA_QUERY,
 } from './queries'
-import type {
-  SiteSettings,
-  Navigation,
-  HomePage,
-  NavItem,
-} from './content-types'
+import type { SiteSettings, Page } from './content-types'
+
+interface HomePagePost {
+  _id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  publishedAt: string
+  featured: boolean | null
+  tags: string[] | null
+  author: { name: string; avatar: string | null } | null
+  coverImage: string | null
+}
+
+interface HomePageData {
+  settings: SiteSettings | null
+  homePage: Page | null
+  posts: HomePagePost[]
+}
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   const data = await sanityClient.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY)
   
-  return {
-    siteName: data?.siteName ?? 'ContentFlow',
-    siteDescription: data?.siteDescription ?? 'A modern publishing platform for writers, creators, and thinkers.',
-    logo: data?.logo ?? null,
-    favicon: data?.favicon ?? null,
-    copyrightText: data?.copyrightText ?? '© 2026 ContentFlow. All rights reserved.',
-    footerDescription: data?.footerDescription ?? 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
-    socialLinks: data?.socialLinks ?? [],
-    legalLinks: data?.legalLinks ?? {
-      privacy: { label: 'Privacy Policy', href: '/privacy' },
-      terms: { label: 'Terms of Service', href: '/terms' },
-      cookies: { label: 'Cookies', href: '/cookies' },
-    },
-  }
-}
-
-export async function getNavigation(): Promise<Navigation> {
-  const data = await sanityClient.fetch<Navigation | null>(NAVIGATION_QUERY)
-  
   if (!data) {
     return {
+      siteName: 'ContentFlow',
+      siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
+      logo: null,
+      favicon: null,
+      copyrightText: '© 2026 ContentFlow. All rights reserved.',
+      footerDescription: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
+      socialLinks: [],
+      legalLinks: {
+        privacy: { label: 'Privacy Policy', href: '/privacy' },
+        terms: { label: 'Terms of Service', href: '/terms' },
+        cookies: { label: 'Cookies', href: '/cookies' },
+      },
       headerNav: [
         { label: 'Articles', href: '/posts' },
         { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
@@ -47,7 +55,6 @@ export async function getNavigation(): Promise<Navigation> {
             { label: 'Articles', href: '/posts' },
             { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
             { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
-            { label: 'Writers', href: '/writers' },
           ],
         },
         {
@@ -66,28 +73,35 @@ export async function getNavigation(): Promise<Navigation> {
         { label: 'Settings', href: '/dashboard/settings' },
         { label: 'Billing', href: '/dashboard/billing' },
       ],
-authNav: [
-      { label: 'Write a story', href: '/dashboard/posts/new', requiresAuth: true },
-      { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-      { label: 'Invite Collaborators', href: '#invite' },
-      { label: 'Settings', href: '/dashboard/settings', requiresAuth: true },
-      { label: 'Sign out', href: '#signout' },
-    ],
-    guestNav: [
-      { label: 'Sign In', href: '/login' },
-      { label: 'Get Started', href: '/signup' },
-    ],
+      authNav: [
+        { label: 'Write a story', href: '/dashboard/posts' },
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Settings', href: '/dashboard/settings' },
+      ],
+      guestNav: [
+        { label: 'Sign In', href: '/login' },
+        { label: 'Get Started', href: '/signup' },
+      ],
+    }
   }
-}
   
   return data
 }
 
-export async function getHomePage(): Promise<HomePage> {
-  const data = await sanityClient.fetch<HomePage | null>(HOME_PAGE_QUERY)
+export async function getHomePage(): Promise<Page> {
+  const result = await sanityFetch({
+    query: PAGE_BY_TYPE_QUERY,
+    params: { pageType: 'home' },
+    tags: ['page', 'home'],
+  })
+  
+  const data = result.data as Page | null
   
   if (!data) {
     return {
+      _id: 'default-home',
+      title: 'Home',
+      pageType: 'home',
       heroSection: {
         featuredLabel: 'Featured Story',
         headline: null,
@@ -123,8 +137,86 @@ export async function getHomePage(): Promise<HomePage> {
       },
       featuredPost: null,
       showFeaturedPost: true,
-      postsPerPage: 10,
-      defaultPostOrder: 'publishedAt_desc',
+    }
+  }
+  
+  return data
+}
+
+export async function getAuthPage(): Promise<Page> {
+  const result = await sanityFetch({
+    query: PAGE_BY_TYPE_QUERY,
+    params: { pageType: 'auth' },
+    tags: ['page', 'auth'],
+  })
+  
+  const data = result.data as Page | null
+  
+  if (!data) {
+    return {
+      _id: 'default-auth',
+      title: 'Auth',
+      pageType: 'auth',
+      brandName: 'ContentFlow',
+      tagline: 'CMS-driven publishing for engineering teams.',
+      features: [
+        { title: 'API-first delivery architecture' },
+        { title: 'Visual Schema Builder v2.0' },
+        { title: 'Multi-environment staging' },
+      ],
+      loginPage: {
+        title: 'Welcome back',
+        subtitle: 'Sign in to your workspace',
+        buttonText: 'Sign in',
+        alternateText: "Don't have an account?",
+        alternateLinkText: 'Sign up',
+      },
+      signupPage: {
+        title: 'Create an account',
+        subtitle: 'Sign up for your workspace',
+        buttonText: 'Sign up',
+        alternateText: 'Already have an account?',
+        alternateLinkText: 'Sign in',
+      },
+      oauthProviders: [
+        { name: 'google', enabled: true },
+      ],
+    }
+  }
+  
+  return data
+}
+
+export async function getDashboardPage(): Promise<Page> {
+  const result = await sanityFetch({
+    query: PAGE_BY_TYPE_QUERY,
+    params: { pageType: 'dashboard' },
+    tags: ['page', 'dashboard'],
+  })
+  
+  const data = result.data as Page | null
+  
+  if (!data) {
+    return {
+      _id: 'default-dashboard',
+      title: 'Dashboard',
+      pageType: 'dashboard',
+      dashboardWelcome: {
+        message: 'Welcome back, {name}',
+        description: 'Here is what is happening across your content ecosystem today.',
+      },
+      stats: {
+        totalPosts: { label: 'Total Posts', icon: 'file-text' },
+        subscription: { label: 'Subscription Plan', icon: 'credit-card', proText: 'Unlimited access to all nodes', freeText: 'Basic publishing limits active' },
+        profileComplete: { label: 'Profile Complete', icon: 'user-check' },
+      },
+      activitySection: {
+        title: 'Recent Content Activity',
+        viewAllLink: 'View all architecture',
+        emptyMessage: 'No recent architectural entries recorded yet.',
+        tableHeaders: { title: 'Node Title', author: 'Architect', date: 'Publication Date' },
+      },
+      defaultAuthor: 'Generic System',
     }
   }
   
@@ -132,24 +224,13 @@ export async function getHomePage(): Promise<HomePage> {
 }
 
 export async function getHomePageData() {
-  const data = await sanityClient.fetch<{
-    settings: SiteSettings | null
-    navigation: Navigation | null
-    homePage: HomePage | null
-    posts: Array<{
-      _id: string
-      title: string
-      slug: string
-      excerpt: string | null
-      publishedAt: string
-      featured: boolean | null
-      tags: string[] | null
-      author: { name: string; avatar: string | null } | null
-      coverImage: string | null
-    }>
-  } | null>(HOME_PAGE_DATA_QUERY)
+  const result = await sanityFetch({
+    query: HOME_PAGE_DATA_QUERY,
+    tags: ['page', 'siteSettings', 'post'],
+  })
   
-  // Default settings
+  const data = result.data as HomePageData | null
+  
   const defaultSettings: SiteSettings = {
     siteName: 'ContentFlow',
     siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
@@ -163,10 +244,6 @@ export async function getHomePageData() {
       terms: { label: 'Terms of Service', href: '/terms' },
       cookies: { label: 'Cookies', href: '/cookies' },
     },
-  }
-  
-  // Default navigation
-  const defaultNavigation: Navigation = {
     headerNav: [
       { label: 'Articles', href: '/posts' },
       { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
@@ -178,7 +255,6 @@ export async function getHomePageData() {
           { label: 'Articles', href: '/posts' },
           { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
           { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
-          { label: 'Writers', href: '/writers' },
         ],
       },
       {
@@ -208,8 +284,10 @@ export async function getHomePageData() {
     ],
   }
   
-  // Default home page
-  const defaultHomePage: HomePage = {
+  const defaultHomePage: Page = {
+    _id: 'default-home',
+    title: 'Home',
+    pageType: 'home',
     heroSection: {
       featuredLabel: 'Featured Story',
       headline: null,
@@ -245,14 +323,34 @@ export async function getHomePageData() {
     },
     featuredPost: null,
     showFeaturedPost: true,
-    postsPerPage: 10,
-    defaultPostOrder: 'publishedAt_desc',
   }
   
   return {
     settings: data?.settings ?? defaultSettings,
-    navigation: data?.navigation ?? defaultNavigation,
     homePage: data?.homePage ?? defaultHomePage,
     posts: data?.posts ?? [],
   }
+}
+
+export async function getPageBySlug(slug: string): Promise<Page | null> {
+  const result = await sanityFetch({
+    query: PAGE_BY_SLUG_QUERY,
+    params: { slug },
+    tags: ['page'],
+  })
+  
+  return result.data as Page | null
+}
+
+export async function getAllPages() {
+  const data = await sanityClient.fetch<Array<{
+    _id: string
+    title: string
+    pageType: string
+    slug: string | null
+    description: string | null
+    publishedAt: string | null
+  }>>(ALL_PAGES_QUERY)
+  
+  return data ?? []
 }

@@ -1,17 +1,15 @@
 import { writeSanityClient } from './client'
 
 const SITE_SETTINGS_ID = 'siteSettings'
-const NAVIGATION_ID = 'navigation'
-const HOME_PAGE_ID = 'homePage'
-const AUTH_PAGES_ID = 'authPages'
-const DASHBOARD_SETTINGS_ID = 'dashboardSettings'
+const HOME_PAGE_ID = 'page-home'
+const AUTH_PAGE_ID = 'page-auth'
+const DASHBOARD_PAGE_ID = 'page-dashboard'
 
 type SeedResult = {
   siteSettings: boolean
-  navigation: boolean
   homePage: boolean
-  authPages: boolean
-  dashboardSettings: boolean
+  authPage: boolean
+  dashboardPage: boolean
   errors: string[]
 }
 
@@ -28,11 +26,6 @@ const defaultSiteSettings = {
     terms: { label: 'Terms of Service', href: '/terms' },
     cookies: { label: 'Cookies', href: '/cookies' },
   },
-}
-
-const defaultNavigation = {
-  _type: 'navigation',
-  _id: NAVIGATION_ID,
   headerNav: [
     { label: 'Articles', href: '/posts', external: false, requiresAuth: false, authOnly: false, guestOnly: false },
     { label: 'Write', href: '/dashboard/posts', external: false, requiresAuth: true, authOnly: true, guestOnly: false },
@@ -77,8 +70,10 @@ const defaultNavigation = {
 }
 
 const defaultHomePage = {
-  _type: 'homePage',
+  _type: 'page',
   _id: HOME_PAGE_ID,
+  pageType: 'home',
+  title: 'Home',
   heroSection: {
     featuredLabel: 'Featured Story',
     headline: null,
@@ -113,13 +108,13 @@ const defaultHomePage = {
     ],
   },
   showFeaturedPost: true,
-  postsPerPage: 10,
-  defaultPostOrder: 'publishedAt_desc',
 }
 
-const defaultAuthPages = {
-  _type: 'authPages',
-  _id: AUTH_PAGES_ID,
+const defaultAuthPage = {
+  _type: 'page',
+  _id: AUTH_PAGE_ID,
+  pageType: 'auth',
+  title: 'Authentication',
   brandName: 'ContentFlow',
   tagline: 'CMS-driven publishing for engineering teams.',
   features: [
@@ -144,27 +139,17 @@ const defaultAuthPages = {
   oauthProviders: [
     { name: 'google', enabled: true },
   ],
-  legalLinks: {
-    terms: 'TERMS',
-    termsUrl: '/terms',
-    privacy: 'PRIVACY',
-    privacyUrl: '/privacy',
-    security: 'SECURITY',
-    securityUrl: '/security',
-  },
-  footer: {
-    backedByText: 'BACKED BY',
-    poweredByText: 'Supabase Auth',
-  },
 }
 
-const defaultDashboardSettings = {
-  _type: 'dashboardSettings',
-  _id: DASHBOARD_SETTINGS_ID,
-  brandName: 'ContentFlow',
-  tagline: 'Engineering CMS',
-  welcomeMessage: 'Welcome back, {name}',
-  welcomeDescription: 'Here is what is happening across your content ecosystem today.',
+const defaultDashboardPage = {
+  _type: 'page',
+  _id: DASHBOARD_PAGE_ID,
+  pageType: 'dashboard',
+  title: 'Dashboard',
+  dashboardWelcome: {
+    message: 'Welcome back, {name}',
+    description: 'Here is what is happening across your content ecosystem today.',
+  },
   stats: {
     totalPosts: { label: 'Total Posts', icon: 'file-text' },
     subscription: { label: 'Subscription Plan', icon: 'credit-card', proText: 'Unlimited access to all nodes', freeText: 'Basic publishing limits active' },
@@ -182,35 +167,30 @@ const defaultDashboardSettings = {
 export async function seedCMS(): Promise<SeedResult> {
   const results: SeedResult = {
     siteSettings: false,
-    navigation: false,
     homePage: false,
-    authPages: false,
-    dashboardSettings: false,
+    authPage: false,
+    dashboardPage: false,
     errors: [],
   }
 
   const documents = [
     { id: SITE_SETTINGS_ID, data: defaultSiteSettings, name: 'siteSettings' as const },
-    { id: NAVIGATION_ID, data: defaultNavigation, name: 'navigation' as const },
     { id: HOME_PAGE_ID, data: defaultHomePage, name: 'homePage' as const },
-    { id: AUTH_PAGES_ID, data: defaultAuthPages, name: 'authPages' as const },
-    { id: DASHBOARD_SETTINGS_ID, data: defaultDashboardSettings, name: 'dashboardSettings' as const },
+    { id: AUTH_PAGE_ID, data: defaultAuthPage, name: 'authPage' as const },
+    { id: DASHBOARD_PAGE_ID, data: defaultDashboardPage, name: 'dashboardPage' as const },
   ]
 
   for (const doc of documents) {
     try {
-      // Check if document exists
       const existing = await writeSanityClient.getDocument(doc.id)
       
       if (!existing) {
-        // Create new document
-        await writeSanityClient.createOrReplace(doc.data as any)
+        await writeSanityClient.createOrReplace(doc.data as { _id: string; _type: string; [key: string]: unknown })
       }
       results[doc.name] = true
     } catch {
-      // Document doesn't exist, create it
       try {
-        await writeSanityClient.createOrReplace(doc.data as any)
+        await writeSanityClient.createOrReplace(doc.data as { _id: string; _type: string; [key: string]: unknown })
         results[doc.name] = true
       } catch (createError) {
         results.errors.push(`Failed to create ${doc.name}: ${createError}`)
@@ -224,24 +204,22 @@ export async function seedCMS(): Promise<SeedResult> {
 export async function resetCMS(): Promise<SeedResult> {
   const results: SeedResult = {
     siteSettings: false,
-    navigation: false,
     homePage: false,
-    authPages: false,
-    dashboardSettings: false,
+    authPage: false,
+    dashboardPage: false,
     errors: [],
   }
 
   const documents = [
     { id: SITE_SETTINGS_ID, data: defaultSiteSettings, name: 'siteSettings' as const },
-    { id: NAVIGATION_ID, data: defaultNavigation, name: 'navigation' as const },
     { id: HOME_PAGE_ID, data: defaultHomePage, name: 'homePage' as const },
-    { id: AUTH_PAGES_ID, data: defaultAuthPages, name: 'authPages' as const },
-    { id: DASHBOARD_SETTINGS_ID, data: defaultDashboardSettings, name: 'dashboardSettings' as const },
+    { id: AUTH_PAGE_ID, data: defaultAuthPage, name: 'authPage' as const },
+    { id: DASHBOARD_PAGE_ID, data: defaultDashboardPage, name: 'dashboardPage' as const },
   ]
 
   for (const doc of documents) {
     try {
-      await writeSanityClient.createOrReplace(doc.data as any)
+      await writeSanityClient.createOrReplace(doc.data as { _id: string; _type: string; [key: string]: unknown })
       results[doc.name] = true
     } catch (error) {
       results.errors.push(`Failed to reset ${doc.name}: ${error}`)

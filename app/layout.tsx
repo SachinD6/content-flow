@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { draftMode } from 'next/headers';
 import './globals.css';
 import { PostHogProvider } from '@/app/providers/posthog-provider';
 import { QueryProvider } from '@/app/providers/query-provider';
 import { Toaster } from 'sonner';
+import { SanityLive } from '@/lib/sanity/live';
+import { VisualEditing } from 'next-sanity/visual-editing';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -17,11 +20,13 @@ export const metadata: Metadata = {
 
 import { cn } from '@/lib/utils';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { isEnabled: isDraftMode } = await draftMode();
+
   return (
     <html lang="en" className={cn('h-full antialiased', inter.variable)}>
       <body className="min-h-full flex flex-col font-sans">
@@ -29,6 +34,8 @@ export default function RootLayout({
           <QueryProvider>{children}</QueryProvider>
         </PostHogProvider>
         <Toaster />
+        <SanityLive />
+        {isDraftMode && <VisualEditing />}
       </body>
     </html>
   );

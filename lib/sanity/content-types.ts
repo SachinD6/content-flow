@@ -1,5 +1,7 @@
 // Types for CMS content
 
+export type PageType = 'home' | 'auth' | 'dashboard' | 'generic'
+
 export interface SocialLink {
   platform: string
   url: string
@@ -9,17 +11,6 @@ export interface LegalLinks {
   privacy: { label: string; href: string }
   terms: { label: string; href: string }
   cookies: { label: string; href: string }
-}
-
-export interface SiteSettings {
-  siteName: string | null
-  siteDescription: string | null
-  logo: string | null
-  favicon: string | null
-  copyrightText: string | null
-  footerDescription: string | null
-  socialLinks: SocialLink[] | null
-  legalLinks: LegalLinks | null
 }
 
 export interface NavItem {
@@ -36,7 +27,15 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-export interface Navigation {
+export interface SiteSettings {
+  siteName: string | null
+  siteDescription: string | null
+  logo: string | null
+  favicon: string | null
+  copyrightText: string | null
+  footerDescription: string | null
+  socialLinks: SocialLink[] | null
+  legalLinks: LegalLinks | null
   headerNav: NavItem[] | null
   footerNav: NavGroup[] | null
   dashboardNav: NavItem[] | null
@@ -52,10 +51,12 @@ export interface CTAButton {
   requiresAuth?: boolean
 }
 
+// Page Types
+
 export interface HeroSection {
-  featuredLabel: string | null
-  headline: string | null
-  subheadline: string | null
+  featuredLabel?: string | null
+  headline?: string | null
+  subheadline?: string | null
 }
 
 export interface BlogSection {
@@ -82,7 +83,7 @@ export interface FooterCTA {
   buttons: CTAButton[] | null
 }
 
-export interface HomePage {
+export interface HomePageContent {
   heroSection: HeroSection | null
   ctaButtons: CTAButton[] | null
   blogSection: BlogSection | null
@@ -94,46 +95,37 @@ export interface HomePage {
     slug: string
     excerpt: string | null
     coverImage: string | null
+    author: { name: string; avatar: string | null } | null
   } | null
   showFeaturedPost: boolean | null
-  postsPerPage: number | null
-  defaultPostOrder: string | null
 }
 
-export interface AuthPage {
-  title: string | null
-  subtitle: string | null
-  buttonText: string | null
-  alternateText: string | null
-  alternateLinkText: string | null
-}
-
-export interface AuthPages {
+export interface AuthPageContent {
   brandName: string | null
   tagline: string | null
   features: Array<{ title: string; description?: string; icon?: string }> | null
-  loginPage: AuthPage | null
-  signupPage: AuthPage | null
+  loginPage: {
+    title: string | null
+    subtitle: string | null
+    buttonText: string | null
+    alternateText: string | null
+    alternateLinkText: string | null
+  } | null
+  signupPage: {
+    title: string | null
+    subtitle: string | null
+    buttonText: string | null
+    alternateText: string | null
+    alternateLinkText: string | null
+  } | null
   oauthProviders: Array<{ name: string; enabled: boolean }> | null
-  legalLinks: {
-    terms: string | null
-    termsUrl: string | null
-    privacy: string | null
-    privacyUrl: string | null
-    security: string | null
-    securityUrl: string | null
-  } | null
-  footer: {
-    backedByText: string | null
-    poweredByText: string | null
-  } | null
 }
 
-export interface DashboardSettings {
-  brandName: string | null
-  tagline: string | null
-  welcomeMessage: string | null
-  welcomeDescription: string | null
+export interface DashboardPageContent {
+  dashboardWelcome: {
+    message: string | null
+    description: string | null
+  } | null
   stats: {
     totalPosts: { label: string; icon: string } | null
     subscription: { label: string; icon: string; proText: string; freeText: string } | null
@@ -146,6 +138,81 @@ export interface DashboardSettings {
     tableHeaders: { title: string; author: string; date: string } | null
   } | null
   defaultAuthor: string | null
+}
+
+export interface GenericPageContent {
+  content: Array<unknown> | null
+}
+
+export interface Page {
+  _id: string
+  title: string
+  pageType: PageType
+  slug?: { current: string } | string | null
+  description?: string | null
+  seo?: {
+    metaTitle?: string | null
+    metaDescription?: string | null
+    ogImage?: string | null
+  } | null
+  publishedAt?: string | null
+  
+  // Home page fields
+  heroSection?: HeroSection | null
+  ctaButtons?: CTAButton[] | null
+  blogSection?: BlogSection | null
+  newsletterSection?: NewsletterSection | null
+  footerCTA?: FooterCTA | null
+  featuredPost?: {
+    _id: string
+    title: string
+    slug: string
+    excerpt: string | null
+    coverImage: string | null
+    author: { name: string; avatar: string | null } | null
+  } | null
+  showFeaturedPost?: boolean | null
+  
+  // Auth page fields
+  brandName?: string | null
+  tagline?: string | null
+  features?: Array<{ title: string; description?: string; icon?: string }> | null
+  loginPage?: {
+    title: string | null
+    subtitle: string | null
+    buttonText: string | null
+    alternateText: string | null
+    alternateLinkText: string | null
+  } | null
+  signupPage?: {
+    title: string | null
+    subtitle: string | null
+    buttonText: string | null
+    alternateText: string | null
+    alternateLinkText: string | null
+  } | null
+  oauthProviders?: Array<{ name: string; enabled: boolean }> | null
+  
+  // Dashboard fields
+  dashboardWelcome?: {
+    message: string | null
+    description: string | null
+  } | null
+  stats?: {
+    totalPosts: { label: string; icon: string } | null
+    subscription: { label: string; icon: string; proText: string; freeText: string } | null
+    profileComplete: { label: string; icon: string } | null
+  } | null
+  activitySection?: {
+    title: string | null
+    viewAllLink: string | null
+    emptyMessage: string | null
+    tableHeaders: { title: string; author: string; date: string } | null
+  } | null
+  defaultAuthor?: string | null
+  
+  // Generic page fields
+  content?: Array<unknown> | null
 }
 
 // Default fallback values
@@ -162,9 +229,6 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     terms: { label: 'Terms of Service', href: '/terms' },
     cookies: { label: 'Cookies', href: '/cookies' },
   },
-}
-
-export const DEFAULT_NAVIGATION: Navigation = {
   headerNav: [
     { label: 'Articles', href: '/posts' },
     { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
@@ -205,7 +269,7 @@ export const DEFAULT_NAVIGATION: Navigation = {
   ],
 }
 
-export const DEFAULT_HOME_PAGE: HomePage = {
+export const DEFAULT_HOME_PAGE: HomePageContent = {
   heroSection: {
     featuredLabel: 'Featured Story',
     headline: null,
@@ -241,11 +305,9 @@ export const DEFAULT_HOME_PAGE: HomePage = {
   },
   featuredPost: null,
   showFeaturedPost: true,
-  postsPerPage: 10,
-  defaultPostOrder: 'publishedAt_desc',
 }
 
-export const DEFAULT_AUTH_PAGES: AuthPages = {
+export const DEFAULT_AUTH_PAGE: AuthPageContent = {
   brandName: 'ContentFlow',
   tagline: 'CMS-driven publishing for engineering teams.',
   features: [
@@ -270,25 +332,13 @@ export const DEFAULT_AUTH_PAGES: AuthPages = {
   oauthProviders: [
     { name: 'google', enabled: true },
   ],
-  legalLinks: {
-    terms: 'TERMS',
-    termsUrl: '/terms',
-    privacy: 'PRIVACY',
-    privacyUrl: '/privacy',
-    security: 'SECURITY',
-    securityUrl: '/security',
-  },
-  footer: {
-    backedByText: 'BACKED BY',
-    poweredByText: 'Supabase Auth',
-  },
 }
 
-export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
-  brandName: 'ContentFlow',
-  tagline: 'Engineering CMS',
-  welcomeMessage: 'Welcome back, {name}',
-  welcomeDescription: 'Here is what is happening across your content ecosystem today.',
+export const DEFAULT_DASHBOARD_PAGE: DashboardPageContent = {
+  dashboardWelcome: {
+    message: 'Welcome back, {name}',
+    description: 'Here is what is happening across your content ecosystem today.',
+  },
   stats: {
     totalPosts: { label: 'Total Posts', icon: 'file-text' },
     subscription: { label: 'Subscription Plan', icon: 'credit-card', proText: 'Unlimited access to all nodes', freeText: 'Basic publishing limits active' },

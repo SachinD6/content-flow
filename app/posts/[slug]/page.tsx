@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 
 import { sanityClient, previewSanityClient } from '@/lib/sanity/client';
 import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
-import { getSiteSettings, getNavigation, getHomePage } from '@/lib/sanity/content';
+import { getSiteSettings, getHomePage } from '@/lib/sanity/content';
 import { createClient } from '@/lib/supabase/server';
 import { Header, Footer } from '@/features/layout';
 import { Badge } from '@/components/ui/badge';
@@ -51,10 +51,9 @@ export default async function PublicPostPage(
   const client = isDraftMode ? previewSanityClient : sanityClient;
   
   // Fetch CMS data in parallel
-  const [post, settings, navigation, homePage] = await Promise.all([
+  const [post, settings, homePage] = await Promise.all([
     client.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug }),
     getSiteSettings(),
-    getNavigation(),
     getHomePage(),
   ]);
 
@@ -95,9 +94,9 @@ export default async function PublicPostPage(
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
-        headerNav={navigation?.headerNav ?? undefined}
-        guestNav={navigation?.guestNav ?? undefined}
-        authNav={navigation?.authNav ?? undefined}
+        headerNav={settings?.headerNav ?? undefined}
+        guestNav={settings?.guestNav ?? undefined}
+        authNav={settings?.authNav ?? undefined}
         user={userProfile}
       />
 
@@ -230,7 +229,7 @@ export default async function PublicPostPage(
         footerDescription={settings?.footerDescription}
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
-        footerNav={navigation?.footerNav ?? undefined}
+        footerNav={settings?.footerNav ?? undefined}
         footerCTAButtons={homePage.footerCTA?.buttons ?? undefined}
         newsletterSection={homePage.newsletterSection ?? undefined}
         user={userProfile}

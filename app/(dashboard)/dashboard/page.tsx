@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
+import { getDashboardPage } from '@/lib/sanity/content';
 import { POSTS_COUNT_QUERY } from '@/lib/sanity/queries';
 import { FileText, Award, UserCheck, Clock, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Profile } from '@/types';
 import type { Database } from '@/types/supabase';
+import type { Page } from '@/lib/sanity/content-types';
 
 interface RecentPost {
   _id: string;
@@ -18,15 +20,22 @@ interface RecentPost {
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
+const iconMap: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+  'file-text': FileText,
+  'credit-card': Award,
+  'user-check': UserCheck,
+};
+
 export default async function DashboardHomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return null; // Will be redirected by layout
+    return null;
   }
 
-  // Fetch Stats and Recent Content
+  // Fetch CMS data and stats in parallel
+  const dashboardPage = await getDashboardPage();
   const RECENT_POSTS_QUERY = `*[_type == 'post'] | order(publishedAt desc)[0...3] {
     _id,
     title,
@@ -67,19 +76,45 @@ export default async function DashboardHomePage() {
   const filledFields = fields.filter((field) => Boolean(rawProfile?.[field]));
   const profileCompletion = Math.round((filledFields.length / fields.length) * 100);
 
+  // Get CMS values with defaults
+  const welcomeMessage = dashboardPage.dashboardWelcome?.message
+    ?.replace('{name}', rawProfile?.display_name || 'Architect') 
+    ?? 'Welcome back, Architect';
+  const welcomeDescription = dashboardPage.dashboardWelcome?.description 
+    ?? 'Here is what is happening across your content ecosystem today.';
+  
+  const statsConfig = dashboardPage.stats ?? {
+    totalPosts: { label: 'Total Posts', icon: 'file-text' },
+    subscription: { label: 'Subscription Plan', icon: 'credit-card', proText: 'Unlimited access', freeText: 'Basic limits' },
+    profileComplete: { label: 'Profile Complete', icon: 'user-check' },
+  };
+  
+  const activitySection = dashboardPage.activitySection ?? {
+    title: 'Recent Content Activity',
+    viewAllLink: 'View all',
+    emptyMessage: 'No recent activity',
+    tableHeaders: { title: 'Title', author: 'Author', date: 'Date' },
+  };
+  
+  const TotalPostsIcon = iconMap[statsConfig.totalPosts?.icon ?? 'file-text'] ?? FileText;
+  const SubscriptionIcon = iconMap[statsConfig.subscription?.icon ?? 'credit-card'] ?? Award;
+  const ProfileIcon = iconMap[statsConfig.profileComplete?.icon ?? 'user-check'] ?? UserCheck;
+
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       <PageHeader
-        title={`Welcome back, ${rawProfile?.display_name || 'Architect'}`}
-        description="Here is what is happening across your content ecosystem today."
+        title={welcomeMessage}
+        description={welcomeDescription}
       />
 
       {/* Stats Cards */}
       <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="bg-[#121319] border border-white/5 shadow-xl shadow-black/20 text-white rounded-[12px] sm:rounded-[16px] p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">Total Posts</span>
-            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-[#6154f0]" />
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+              {statsConfig.totalPosts?.label ?? 'Total Posts'}
+            </span>
+            <TotalPostsIcon className="h-4 w-4 sm:h-5 sm:w-5 text-[#6154f0]" />
           </div>
           <div className="mt-3 sm:mt-4 flex items-baseline gap-2 flex-wrap">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{totalPosts || 0}</span>
@@ -94,21 +129,29 @@ export default async function DashboardHomePage() {
 
         <div className="bg-[#121319] border border-white/5 shadow-xl shadow-black/20 text-white rounded-[12px] sm:rounded-[16px] p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">Subscription Plan</span>
-            <Award className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+              {statsConfig.subscription?.label ?? 'Subscription Plan'}
+            </span>
+            <SubscriptionIcon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
           </div>
           <div className="mt-3 sm:mt-4 flex flex-col gap-1">
-            <span className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight capitalize">{profile?.subscriptionTier || 'Free'}</span>
+            <span className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight capitalize">
+              {profile?.subscriptionTier || 'Free'}
+            </span>
             <span className="text-[10px] sm:text-[11px] text-zinc-500 font-medium tracking-wide">
-              {profile?.subscriptionTier === 'pro' ? 'Unlimited access to all nodes' : 'Basic publishing limits active'}
+              {profile?.subscriptionTier === 'pro' 
+                ? (statsConfig.subscription?.proText ?? 'Unlimited access to all nodes')
+                : (statsConfig.subscription?.freeText ?? 'Basic publishing limits active')}
             </span>
           </div>
         </div>
 
         <div className="bg-[#121319] border border-white/5 shadow-xl shadow-black/20 text-white rounded-[12px] sm:rounded-[16px] p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">Profile Complete</span>
-            <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+              {statsConfig.profileComplete?.label ?? 'Profile Complete'}
+            </span>
+            <ProfileIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
           </div>
           <div className="mt-3 sm:mt-4 flex flex-col gap-2 sm:gap-3">
             <div className="flex items-baseline gap-2">
@@ -127,16 +170,18 @@ export default async function DashboardHomePage() {
       {/* Recent Content Activity */}
       <div className="rounded-[12px] sm:rounded-[16px] border border-white/5 bg-[#121319] overflow-hidden shadow-2xl">
         <div className="p-4 sm:p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Recent Content Activity</h3>
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
+            {activitySection.title}
+          </h3>
           <Link href="/dashboard/posts" className="text-[10px] sm:text-[11px] font-bold text-[#6154f0] hover:text-[#584acf] transition-colors flex items-center gap-1">
-            View all architecture
+            {activitySection.viewAllLink}
             <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
 
         {(!recentPosts || recentPosts.length === 0) ? (
           <div className="flex h-40 sm:h-48 flex-col items-center justify-center bg-[#0b0c10] px-4 text-center">
-            <p className="text-sm text-zinc-500 font-medium">No recent architectural entries recorded yet.</p>
+            <p className="text-sm text-zinc-500 font-medium">{activitySection.emptyMessage}</p>
           </div>
         ) : (
           <>
@@ -152,14 +197,15 @@ export default async function DashboardHomePage() {
                     {post.title}
                   </h4>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-zinc-400 font-mono">{post.author || 'Generic System'}</span>
+                    <span className="text-zinc-400 font-mono">
+                      {post.author || dashboardPage.defaultAuthor || 'Generic System'}
+                    </span>
                     <div className="flex items-center gap-1 text-zinc-500">
                       <Clock className="h-3 w-3" />
                       <span>
                         {post.publishedAt
                           ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                          : 'Draft Stage'
-                        }
+                          : 'Draft Stage'}
                       </span>
                     </div>
                   </div>
@@ -172,9 +218,15 @@ export default async function DashboardHomePage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-white/5 bg-white/[0.02]">
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">Node Title</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">Architect</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">Publication Date</th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">
+                      {activitySection.tableHeaders?.title ?? 'Node Title'}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">
+                      {activitySection.tableHeaders?.author ?? 'Architect'}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-zinc-500">
+                      {activitySection.tableHeaders?.date ?? 'Publication Date'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,7 +238,9 @@ export default async function DashboardHomePage() {
                         </a>
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4">
-                        <span className="text-[10px] sm:text-xs text-zinc-400 font-mono">{post.author || 'Generic System'}</span>
+                        <span className="text-[10px] sm:text-xs text-zinc-400 font-mono">
+                          {post.author || dashboardPage.defaultAuthor || 'Generic System'}
+                        </span>
                       </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <span className="text-[10px] sm:text-xs text-zinc-500">

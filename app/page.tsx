@@ -1,19 +1,16 @@
 import { draftMode } from "next/headers";
-import { sanityClient } from "@/lib/sanity/client";
-import { ALL_POSTS_QUERY } from "@/lib/sanity/queries";
 import { getHomePageData } from "@/lib/sanity/content";
 import { createClient } from "@/lib/supabase/server";
 import { Header, Footer } from "@/features/layout";
 import { BlogPostCard } from "@/features/posts/BlogPostCard";
 import { BlogContent } from "@/features/posts/BlogContent";
-import type { Post } from "@/types";
 
 export default async function BlogHomePage() {
   const { isEnabled: isDraftMode } = await draftMode();
 
   // Fetch CMS content
   const cmsData = await getHomePageData();
-  const { settings, navigation, homePage, posts } = cmsData;
+  const { settings, homePage, posts } = cmsData;
 
   // Get current user
   const supabase = await createClient();
@@ -52,9 +49,9 @@ export default async function BlogHomePage() {
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
-        headerNav={navigation?.headerNav ?? undefined}
-        guestNav={navigation?.guestNav ?? undefined}
-        authNav={navigation?.authNav ?? undefined}
+        headerNav={settings?.headerNav ?? undefined}
+        guestNav={settings?.guestNav ?? undefined}
+        authNav={settings?.authNav ?? undefined}
         user={userProfile}
       />
 
@@ -106,7 +103,7 @@ export default async function BlogHomePage() {
         footerDescription={settings?.footerDescription}
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
-        footerNav={navigation?.footerNav ?? undefined}
+        footerNav={settings?.footerNav ?? undefined}
         footerCTAButtons={homePage.footerCTA?.buttons ?? undefined}
         newsletterSection={homePage.newsletterSection ?? undefined}
         user={userProfile}

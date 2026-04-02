@@ -1,6 +1,6 @@
 import { groq } from 'next-sanity'
 
-// Site Settings
+// Site Settings (now includes navigation)
 export const SITE_SETTINGS_QUERY = groq`
   *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
     siteName,
@@ -14,13 +14,201 @@ export const SITE_SETTINGS_QUERY = groq`
       privacy { label, href },
       terms { label, href },
       cookies { label, href }
+    },
+    headerNav[] {
+      label,
+      href,
+      external,
+      requiresAuth,
+      authOnly,
+      guestOnly
+    },
+    footerNav[] {
+      title,
+      items[] {
+        label,
+        href,
+        external,
+        requiresAuth
+      }
+    },
+    dashboardNav[] {
+      label,
+      href,
+      external,
+      requiresAuth
+    },
+    authNav[] {
+      label,
+      href,
+      external,
+      requiresAuth
+    },
+    guestNav[] {
+      label,
+      href,
+      external,
+      requiresAuth
     }
   }
 `
 
-// Navigation
+// Pages (slug-based routing)
+export const PAGE_BY_TYPE_QUERY = groq`
+  *[_type == 'page' && pageType == $pageType][0] {
+    _id,
+    title,
+    pageType,
+    description,
+    seo {
+      metaTitle,
+      metaDescription,
+      'ogImage': ogImage.asset->url
+    },
+    // Home page fields
+    heroSection {
+      featuredLabel,
+      headline,
+      subheadline
+    },
+    ctaButtons[] {
+      label,
+      href,
+      variant,
+      external,
+      requiresAuth
+    },
+    blogSection {
+      title,
+      subtitle,
+      emptyMessage,
+      emptyDescription,
+      latestArticlesLabel,
+      discoverLabel
+    },
+    newsletterSection {
+      heading,
+      description,
+      placeholder,
+      buttonText,
+      enabled
+    },
+    footerCTA {
+      enabled,
+      heading,
+      description,
+      buttons[] {
+        label,
+        href,
+        variant,
+        external,
+        requiresAuth
+      }
+    },
+    featuredPost->{
+      _id,
+      title,
+      'slug': slug.current,
+      excerpt,
+      'coverImage': coverImage.asset->url,
+      author->{ name, 'avatar': image.asset->url }
+    },
+    showFeaturedPost,
+    // Auth page fields
+    brandName,
+    tagline,
+    features[] {
+      title,
+      description,
+      icon
+    },
+    loginPage {
+      title,
+      subtitle,
+      buttonText,
+      alternateText,
+      alternateLinkText
+    },
+    signupPage {
+      title,
+      subtitle,
+      buttonText,
+      alternateText,
+      alternateLinkText
+    },
+    oauthProviders[] {
+      name,
+      enabled
+    },
+    // Dashboard fields
+    dashboardWelcome {
+      message,
+      description
+    },
+    stats {
+      totalPosts { label, icon },
+      subscription { label, icon, proText, freeText },
+      profileComplete { label, icon }
+    },
+    activitySection {
+      title,
+      viewAllLink,
+      emptyMessage,
+      tableHeaders { title, author, date }
+    },
+    defaultAuthor,
+    // Generic page fields
+    'slug': slug.current,
+    content,
+    publishedAt
+  }
+`
+
+export const PAGE_BY_SLUG_QUERY = groq`
+  *[_type == 'page' && pageType == 'generic' && slug.current == $slug][0] {
+    _id,
+    title,
+    pageType,
+    'slug': slug.current,
+    description,
+    content,
+    ctaButtons[] {
+      label,
+      href,
+      variant,
+      external,
+      requiresAuth
+    },
+    newsletterSection {
+      heading,
+      description,
+      placeholder,
+      buttonText,
+      enabled
+    },
+    seo {
+      metaTitle,
+      metaDescription,
+      'ogImage': ogImage.asset->url
+    },
+    publishedAt
+  }
+`
+
+export const ALL_PAGES_QUERY = groq`
+  *[_type == 'page'] | order(title asc) {
+    _id,
+    title,
+    pageType,
+    'slug': slug.current,
+    description,
+    publishedAt
+  }
+`
+
+// Navigation (deprecated - kept for backwards compatibility)
 export const NAVIGATION_QUERY = groq`
-  *[_type == 'navigation' && _id == 'navigation'][0] {
+  *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
     headerNav[] {
       label,
       href,
@@ -287,25 +475,24 @@ export const HOME_PAGE_DATA_QUERY = groq`
       privacy { label, href },
       terms { label, href },
       cookies { label, href }
-    }
-  },
-  'navigation': *[_type == 'navigation' && _id == 'navigation'][0] {
+    },
     headerNav[] { label, href, external, requiresAuth, authOnly, guestOnly },
     footerNav[] { title, items[] { label, href, external, requiresAuth } },
     dashboardNav[] { label, href, external, requiresAuth },
     authNav[] { label, href, external, requiresAuth },
     guestNav[] { label, href, external, requiresAuth }
   },
-  'homePage': *[_type == 'homePage' && _id == 'homePage'][0] {
+  'homePage': *[_type == 'page' && pageType == 'home'][0] {
+    _id,
+    title,
+    pageType,
     heroSection { featuredLabel, headline, subheadline },
     ctaButtons[] { label, href, variant, external, requiresAuth },
     blogSection { title, subtitle, emptyMessage, emptyDescription, latestArticlesLabel, discoverLabel },
     newsletterSection { heading, description, placeholder, buttonText, enabled },
     footerCTA { enabled, heading, description, buttons[] { label, href, variant, external, requiresAuth } },
     featuredPost->{ _id, title, 'slug': slug.current, excerpt, 'coverImage': coverImage.asset->url, author->{ name, 'avatar': image.asset->url } },
-    showFeaturedPost,
-    postsPerPage,
-    defaultPostOrder
+    showFeaturedPost
   },
   'posts': *[_type == 'post' && defined(publishedAt) && showOnHome != false] | order(publishedAt desc) [0...20] {
     _id,
