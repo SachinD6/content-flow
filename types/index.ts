@@ -3,20 +3,20 @@ export interface Author {
   name: string;
   slug?: string;
   bio?: string;
-  avatar?: string;
+  avatar?: string | null;
 }
 
 export interface Post {
   _id: string;
   title: string;
   slug: string;
-  excerpt: string;
-  publishedAt: string;
-  featured: boolean;
-  tags: string[];
-  authorId?: string;
-  author: Author;
-  coverImage: string;
+  excerpt?: string | null;
+  publishedAt?: string | null;
+  featured?: boolean | null;
+  tags?: string[]| null;
+  authorId?: string | null;
+  author?: Author | null;
+  coverImage?: string | null;
 }
 
 export interface Profile {

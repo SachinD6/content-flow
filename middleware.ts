@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protect all /dashboard/* routes — require admin role
+  // Protect all /dashboard/* routes — require authentication only (not admin)
   if (pathname.startsWith('/dashboard')) {
     // Check user authenticated first
     if (!user) {
@@ -49,29 +49,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Fetch profile to check role
-    const supabase = createServiceRoleClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    // If not admin, redirect to home page
-    if (profile?.role !== 'admin') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-
-    // Admin user - allow through
+    // Any authenticated user can access dashboard
     return supabaseResponse;
   }
 
-  // Also protect /posts, /settings, /billing
+  // Also protect /settings, /billing (but NOT /posts - posts are public)
   if (
-    (pathname.startsWith('/posts') ||
-      pathname.startsWith('/settings') ||
+    (pathname.startsWith('/settings') ||
       pathname.startsWith('/billing')) &&
     !user
   ) {

@@ -3,11 +3,14 @@ import { draftMode } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Clock, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import { Metadata } from 'next';
 
 import { sanityClient, previewSanityClient } from '@/lib/sanity/client';
 import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
+import { getSiteSettings, getNavigation, getHomePage } from '@/lib/sanity/content';
+import { createClient } from '@/lib/supabase/server';
+import { Header, Footer } from '@/features/layout';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import type { Post } from '@/types';
@@ -36,7 +39,7 @@ export async function generateMetadata(
 
   return {
     title: `${post.title} | ContentFlow Blog`,
-    description: post.excerpt,
+    description: post.excerpt || undefined,
   };
 }
 
@@ -46,10 +49,42 @@ export default async function PublicPostPage(
   const { slug } = await props.params;
   const { isEnabled: isDraftMode } = await draftMode();
   const client = isDraftMode ? previewSanityClient : sanityClient;
-  const post = await client.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug });
+  
+  // Fetch CMS data in parallel
+  const [post, settings, navigation, homePage] = await Promise.all([
+    client.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug }),
+    getSiteSettings(),
+    getNavigation(),
+    getHomePage(),
+  ]);
 
   if (!post) {
     notFound();
+  }
+
+  // Get current user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Fetch user profile if logged in
+  let userProfile = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, email, display_name, avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      userProfile = {
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.display_name || undefined,
+        avatarUrl: profile.avatar_url || undefined,
+      };
+    }
   }
 
   // Calculate reading time
@@ -58,30 +93,14 @@ export default async function PublicPostPage(
 
   return (
     <div className="min-h-screen bg-[#0b0c10]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0b0c10]/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6154f0] group-hover:scale-105 transition-transform">
-                <Sparkles className="h-4 w-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold text-white tracking-tight">ContentFlow</span>
-            </Link>
-            
-            <nav className="flex items-center gap-6">
-              <Link href="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                Blog
-              </Link>
-              <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                Dashboard
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header
+        siteName={settings?.siteName}
+        headerNav={navigation?.headerNav ?? undefined}
+        guestNav={navigation?.guestNav ?? undefined}
+        authNav={navigation?.authNav ?? undefined}
+        user={userProfile}
+      />
 
-      {/* Draft Mode Banner */}
       {isDraftMode && (
         <div className="bg-amber-500/10 border-b border-amber-500/20">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-3">
@@ -104,8 +123,8 @@ export default async function PublicPostPage(
       <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Back Link */}
         <div className="mb-8">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -119,8 +138,8 @@ export default async function PublicPostPage(
           <div className="flex flex-wrap gap-2">
             {post.tags?.map((tag) => (
               <Link key={tag} href={`/?tag=${tag}`}>
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="bg-white/5 hover:bg-[#6154f0]/20 text-zinc-400 hover:text-[#6154f0] text-[10px] uppercase font-bold tracking-widest border border-white/10 rounded-full px-3 py-1 transition-colors cursor-pointer"
                 >
                   {tag}
@@ -144,10 +163,10 @@ export default async function PublicPostPage(
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/10">
                 {post.author?.avatar ? (
-                  <Image 
-                    src={post.author.avatar} 
-                    alt={post.author.name} 
-                    fill 
+                  <Image
+                    src={post.author.avatar}
+                    alt={post.author.name || 'Author'}
+                    fill
                     className="object-cover"
                   />
                 ) : (
@@ -159,10 +178,10 @@ export default async function PublicPostPage(
               <div>
                 <p className="font-medium text-white">{post.author?.name || 'Unknown Author'}</p>
                 <div className="flex items-center gap-2 text-xs">
-                  <span>{new Date(post.publishedAt || new Date()).toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                  <span>{new Date(post.publishedAt || new Date()).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}</span>
                   <span className="w-1 h-1 rounded-full bg-zinc-600" />
                   <span className="flex items-center gap-1">
@@ -196,8 +215,8 @@ export default async function PublicPostPage(
 
         {/* Navigation Footer */}
         <div className="mt-16 pt-8 border-t border-white/5">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -206,26 +225,16 @@ export default async function PublicPostPage(
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] mt-20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#6154f0]">
-                <Sparkles className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-sm font-semibold text-white">ContentFlow</span>
-            </div>
-            <p className="text-sm text-zinc-600">
-              © 2026 ContentFlow. Built for creators.
-            </p>
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-sm text-zinc-500 hover:text-white transition-colors">Blog</Link>
-              <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-white transition-colors">Dashboard</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer
+        siteName={settings?.siteName}
+        footerDescription={settings?.footerDescription}
+        copyrightText={settings?.copyrightText}
+        legalLinks={settings?.legalLinks}
+        footerNav={navigation?.footerNav ?? undefined}
+        footerCTAButtons={homePage.footerCTA?.buttons ?? undefined}
+        newsletterSection={homePage.newsletterSection ?? undefined}
+        user={userProfile}
+      />
     </div>
   );
 }

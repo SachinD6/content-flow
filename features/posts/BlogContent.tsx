@@ -10,9 +10,24 @@ interface BlogContentProps {
   posts: Post[];
   featuredPost: Post | null;
   allTags: string[];
+  title?: string;
+  subtitle?: string;
+  emptyMessage?: string;
+  emptyDescription?: string;
+  latestArticlesLabel?: string;
+  discoverLabel?: string;
 }
 
-export function BlogContent({ posts, allTags }: BlogContentProps) {
+export function BlogContent({ 
+  posts, 
+  allTags, 
+  title = 'Latest Stories', 
+  subtitle = 'Thoughts, tutorials, and insights',
+  emptyMessage = 'No stories found',
+  emptyDescription = 'Try adjusting your search',
+  latestArticlesLabel = 'Latest Articles',
+  discoverLabel = 'Discover',
+}: BlogContentProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState('all');
   
@@ -33,9 +48,6 @@ export function BlogContent({ posts, allTags }: BlogContentProps) {
     });
   }, [posts, debouncedSearchQuery, activeTag]);
 
-  const firstPost = filteredPosts[0];
-  const remainingPosts = filteredPosts.slice(1);
-
   const handleClearFilters = () => {
     setSearchQuery('');
     setActiveTag('all');
@@ -46,8 +58,8 @@ export function BlogContent({ posts, allTags }: BlogContentProps) {
       {/* Search and Tags Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Latest Stories</h2>
-          <p className="text-zinc-500 text-sm">Thoughts, tutorials, and insights</p>
+          <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
+          <p className="text-zinc-500 text-sm">{subtitle}</p>
         </div>
         
         <div className="flex items-center gap-4">
@@ -106,8 +118,8 @@ export function BlogContent({ posts, allTags }: BlogContentProps) {
           <div className="w-16 h-16 rounded-full bg-[#121319] flex items-center justify-center mx-auto mb-4">
             <Search className="h-6 w-6 text-zinc-600" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No stories found</h3>
-          <p className="text-zinc-500 mb-6">Try adjusting your search</p>
+          <h3 className="text-xl font-semibold text-white mb-2">{emptyMessage}</h3>
+          <p className="text-zinc-500 mb-6">{emptyDescription}</p>
           <button 
             onClick={handleClearFilters}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#0b0c10] rounded-full font-medium hover:bg-zinc-200 transition-colors"
@@ -120,7 +132,7 @@ export function BlogContent({ posts, allTags }: BlogContentProps) {
         <>
           {/* Section Header */}
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.04]">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Latest Articles</h3>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">{latestArticlesLabel}</h3>
             <p className="text-sm text-zinc-500">
               {filteredPosts.length} {filteredPosts.length === 1 ? 'story' : 'stories'}
             </p>
@@ -143,7 +155,7 @@ export function BlogContent({ posts, allTags }: BlogContentProps) {
             {/* Sidebar - Optional, could show trending or tags */}
             <div className="hidden lg:block lg:col-span-4">
               <div className="sticky top-24 pt-2">
-                <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wide">Discover</h3>
+                <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wide">{discoverLabel}</h3>
                 <div className="flex flex-wrap gap-2">
                   {allTags.slice(0, 10).map((tag) => (
                     <button

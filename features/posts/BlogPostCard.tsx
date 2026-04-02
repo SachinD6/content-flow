@@ -19,7 +19,7 @@ function calculateReadingTime(content?: string): number {
   return Math.ceil(words / wordsPerMinute);
 }
 
-function AuthorAvatar({ name, avatar }: { name: string; avatar?: string }) {
+function AuthorAvatar({ name, avatar }: { name: string; avatar?: string | null }) {
   return (
     <div className="relative h-6 w-6 rounded-full overflow-hidden bg-[#6154f0] flex-shrink-0">
       {avatar ? (
@@ -46,8 +46,8 @@ export function BlogPostCard({ post, featured = false, horizontal = false, isFir
       })
     : null;
 
-  const readingTime = calculateReadingTime(post.excerpt);
-  const tags = post.tags || [];
+  const readingTime = calculateReadingTime(post.excerpt ?? undefined);
+  const tags = post.tags ?? [];
 
   if (featured) {
     return (

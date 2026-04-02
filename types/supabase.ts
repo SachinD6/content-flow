@@ -54,6 +54,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      collaborations: {
+        Row: {
+          id: string;
+          owner_id: string;
+          collaborator_id: string | null;
+          collaborator_email: string;
+          permission: 'read' | 'write';
+          status: 'pending' | 'active' | 'revoked';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          collaborator_id?: string | null;
+          collaborator_email: string;
+          permission: 'read' | 'write';
+          status?: 'pending' | 'active' | 'revoked';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          collaborator_id?: string;
+          collaborator_email?: string;
+          permission?: 'read' | 'write';
+          status?: 'pending' | 'active' | 'revoked';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'collaborations_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'collaborations_collaborator_id_fkey';
+            columns: ['collaborator_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
