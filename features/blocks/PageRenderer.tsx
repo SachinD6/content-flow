@@ -3,6 +3,7 @@ import type { PortableTextBlock } from '@portabletext/types'
 
 import { HeroBlock } from './HeroBlock'
 import { PostsGridBlock } from './PostsGridBlock'
+import { PostsBlock } from './PostsBlock'
 import { CTABlock } from './CTABlock'
 import { NewsletterBlock } from './NewsletterBlock'
 import { ContentBlock } from './ContentBlock'
@@ -119,6 +120,53 @@ export function PageRenderer({
                 posts={posts.slice(0, block.limit || 6) as any[]}
                 emptyMessage={block.emptyMessage}
                 viewAllLink={block.viewAllLink}
+                lang={lang}
+              />
+            )
+          }
+
+          case 'postsBlock': {
+            const block = component as unknown as {
+              title?: string
+              description?: string
+              postSource?: 'all' | 'tags' | 'author' | 'featured'
+              tags?: string[]
+              author?: string
+              layout?: 'grid-2' | 'grid-3' | 'grid-4' | 'list' | 'featured'
+              columnsMobile?: number
+              showExcerpt?: boolean
+              showAuthor?: boolean
+              showDate?: boolean
+              showTags?: boolean
+              showReadingTime?: boolean
+              imageAspectRatio?: string
+              enablePagination?: boolean
+              paginationMode?: 'numbered' | 'infinite' | 'loadMore'
+              postsPerPage?: number
+              maxPosts?: number
+              styles?: Record<string, unknown>
+            }
+            return (
+              <PostsBlock
+                key={key}
+                title={block.title}
+                description={block.description}
+                postSource={block.postSource}
+                tags={block.tags}
+                author={block.author}
+                layout={block.layout}
+                columnsMobile={block.columnsMobile}
+                showExcerpt={block.showExcerpt}
+                showAuthor={block.showAuthor}
+                showDate={block.showDate}
+                showTags={block.showTags}
+                showReadingTime={block.showReadingTime}
+                imageAspectRatio={block.imageAspectRatio}
+                enablePagination={block.enablePagination}
+                paginationMode={block.paginationMode}
+                postsPerPage={block.postsPerPage}
+                maxPosts={block.maxPosts}
+                styles={block.styles as any}
                 lang={lang}
               />
             )

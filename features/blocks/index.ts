@@ -1,5 +1,6 @@
 export { HeroBlock } from './HeroBlock'
 export { PostsGridBlock } from './PostsGridBlock'
+export { PostsBlock } from './PostsBlock'
 export { CTABlock } from './CTABlock'
 export { NewsletterBlock } from './NewsletterBlock'
 export { ContentBlock } from './ContentBlock'
