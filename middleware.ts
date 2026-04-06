@@ -32,28 +32,34 @@ function getLanguageFromCookie(request: NextRequest): string | null {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip static paths and API routes
   const isStaticPath = pathname.startsWith('/api') ||
     pathname.startsWith('/studio') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/__')
+    pathname.startsWith('/__') ||
+    pathname.includes('.') // Skip files with extensions
 
   if (isStaticPath) {
     return NextResponse.next()
   }
 
-  const langSegment = pathname.split('/')[1]
-  const isLocalizedPath = languages.includes(langSegment)
+  // Check if this is a localized path (e.g., /en, /hi, /en/posts)
+  const pathSegments = pathname.split('/').filter(Boolean)
+  const firstSegment = pathSegments[0]
+  const isLocalizedPath = languages.includes(firstSegment)
 
+  // For localized paths, set language cookie and continue
   if (isLocalizedPath) {
     const response = NextResponse.next()
-    response.cookies.set('preferred-language', langSegment, {
+    response.cookies.set('preferred-language', firstSegment, {
       maxAge: 60 * 60 * 24 * 365,
       path: '/',
     })
     return response
   }
 
+  // Handle authentication routes
   const { supabaseResponse, user } = await updateSession(request);
 
   if (pathname.startsWith('/auth/callback')) {
@@ -114,19 +120,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect root path and /posts to localized version based on preferred language
-  if (pathname === '/' || pathname === '' || pathname === '/posts') {
+  // Redirect /posts to localized version
+  if (pathname === '/posts') {
     const preferredLanguage = getLanguageFromCookie(request) || 
       getLanguageFromHeader(request) || 
       defaultLanguage
     
     const url = request.nextUrl.clone()
-    if (pathname === '/posts') {
-      url.pathname = `/${preferredLanguage}/posts`
-    } else {
-      url.pathname = preferredLanguage === defaultLanguage ? '/' : `/${preferredLanguage}`
-    }
+    url.pathname = `/${preferredLanguage}/posts`
     return NextResponse.redirect(url)
+  }
+
+  // For root path, let app/page.tsx handle the redirect
+  // This avoids redirect loops
+  if (pathname === '/' || pathname === '') {
+    return supabaseResponse
   }
 
   return supabaseResponse;
