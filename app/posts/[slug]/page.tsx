@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 
 import { sanityClient, previewSanityClient } from '@/lib/sanity/client';
 import { POST_BY_SLUG_QUERY } from '@/lib/sanity/queries';
-import { getSiteSettings, getHomePage } from '@/lib/sanity/content';
+import { getSiteSettings } from '@/lib/sanity/content';
 import { createClient } from '@/lib/supabase/server';
 import { Header, Footer } from '@/features/layout';
 import { Badge } from '@/components/ui/badge';
@@ -50,24 +50,18 @@ export default async function PublicPostPage(
   const { isEnabled: isDraftMode } = await draftMode();
   const client = isDraftMode ? previewSanityClient : sanityClient;
   
-  // Fetch CMS data in parallel
-  const [post, settings, homePage] = await Promise.all([
+  const [post, settings] = await Promise.all([
     client.fetch<ExtendedPost | null>(POST_BY_SLUG_QUERY, { slug }),
     getSiteSettings(),
-    getHomePage(),
   ]);
 
   if (!post) {
     notFound();
   }
 
-  // Get current user
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch user profile if logged in
   let userProfile = null;
   if (user) {
     const { data: profile } = await supabase
@@ -86,7 +80,6 @@ export default async function PublicPostPage(
     }
   }
 
-  // Calculate reading time
   const wordCount = post.body ? JSON.stringify(post.body).split(/\s+/).length : 0;
   const readingTime = Math.ceil(wordCount / 200);
 
@@ -108,19 +101,18 @@ export default async function PublicPostPage(
                 <span className="text-amber-400">⚠️</span>
                 <span className="text-amber-200 text-sm font-medium">Preview Mode — Draft content visible</span>
               </div>
-              <a
+              <Link
                 href="/api/draft/disable"
                 className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors"
               >
                 Exit Preview →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
       )}
 
       <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Back Link */}
         <div className="mb-8">
           <Link
             href="/"
@@ -131,9 +123,7 @@ export default async function PublicPostPage(
           </Link>
         </div>
 
-        {/* Article Header */}
         <article className="space-y-6 sm:space-y-8">
-          {/* Tags */}
           <div className="flex flex-wrap gap-2">
             {post.tags?.map((tag) => (
               <Link key={tag} href={`/?tag=${tag}`}>
@@ -152,12 +142,10 @@ export default async function PublicPostPage(
             )}
           </div>
 
-          {/* Title */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
             {post.title}
           </h1>
 
-          {/* Meta Info */}
           <div className="flex items-center gap-4 text-sm text-zinc-400">
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-white/10">
@@ -192,7 +180,6 @@ export default async function PublicPostPage(
             </div>
           </div>
 
-          {/* Cover Image */}
           {post.coverImage && (
             <div className="relative w-full aspect-[16/9] overflow-hidden rounded-[16px] shadow-2xl">
               <Image
@@ -206,13 +193,11 @@ export default async function PublicPostPage(
             </div>
           )}
 
-          {/* Content */}
           <div className="pt-8 border-t border-white/5">
             <PortableTextRenderer value={post.body} />
           </div>
         </article>
 
-        {/* Navigation Footer */}
         <div className="mt-16 pt-8 border-t border-white/5">
           <Link
             href="/"
@@ -230,8 +215,6 @@ export default async function PublicPostPage(
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
-        footerCTAButtons={homePage.footerCTA?.buttons ?? undefined}
-        newsletterSection={homePage.newsletterSection ?? undefined}
         user={userProfile}
       />
     </div>

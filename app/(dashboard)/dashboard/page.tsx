@@ -8,7 +8,6 @@ import { FileText, Award, UserCheck, Clock, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Profile } from '@/types';
 import type { Database } from '@/types/supabase';
-import type { Page } from '@/lib/sanity/content-types';
 
 interface RecentPost {
   _id: string;

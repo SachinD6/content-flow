@@ -68,12 +68,12 @@ export default async function SinglePostPage(
                   Preview Mode — You are viewing draft content
                 </span>
               </div>
-              <a
+              <Link
                 href="/api/draft/disable"
                 className="px-3 sm:px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-[8px] text-xs sm:text-sm font-semibold transition-colors text-center"
               >
                 Exit Preview
-              </a>
+              </Link>
             </div>
           </div>
         )}

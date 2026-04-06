@@ -38,7 +38,7 @@ function AuthorAvatar({ name, avatar }: { name: string; avatar?: string | null }
   );
 }
 
-export function BlogPostCard({ post, featured = false, horizontal = false, isFirst = false }: BlogPostCardProps) {
+export function BlogPostCard({ post, featured = false, isFirst = false }: BlogPostCardProps) {
   const formattedDate = post.publishedAt 
     ? new Date(post.publishedAt).toLocaleDateString('en-US', { 
         month: 'short',

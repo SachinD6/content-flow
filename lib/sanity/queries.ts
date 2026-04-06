@@ -1,6 +1,6 @@
 import { groq } from 'next-sanity'
 
-// Site Settings (now includes navigation)
+// Site Settings
 export const SITE_SETTINGS_QUERY = groq`
   *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
     siteName,
@@ -53,7 +53,7 @@ export const SITE_SETTINGS_QUERY = groq`
   }
 `
 
-// Pages (slug-based routing)
+// Pages (by type - home, auth, dashboard)
 export const PAGE_BY_TYPE_QUERY = groq`
   *[_type == 'page' && pageType == $pageType][0] {
     _id,
@@ -65,98 +65,20 @@ export const PAGE_BY_TYPE_QUERY = groq`
       metaDescription,
       'ogImage': ogImage.asset->url
     },
-    // Home page fields
-    heroSection {
-      featuredLabel,
-      headline,
-      subheadline
-    },
-    ctaButtons[] {
-      label,
-      href,
-      variant,
-      external,
-      requiresAuth
-    },
-    blogSection {
-      title,
-      subtitle,
-      emptyMessage,
-      emptyDescription,
-      latestArticlesLabel,
-      discoverLabel
-    },
-    newsletterSection {
-      heading,
-      description,
-      placeholder,
-      buttonText,
-      enabled
-    },
-    footerCTA {
-      enabled,
-      heading,
-      description,
-      buttons[] {
-        label,
-        href,
-        variant,
-        external,
-        requiresAuth
-      }
-    },
-    featuredPost->{
-      _id,
-      title,
-      'slug': slug.current,
-      excerpt,
-      'coverImage': coverImage.asset->url,
-      author->{ name, 'avatar': image.asset->url }
-    },
-    showFeaturedPost,
+    components,
     // Auth page fields
     brandName,
     tagline,
-    features[] {
-      title,
-      description,
-      icon
-    },
-    loginPage {
-      title,
-      subtitle,
-      buttonText,
-      alternateText,
-      alternateLinkText
-    },
-    signupPage {
-      title,
-      subtitle,
-      buttonText,
-      alternateText,
-      alternateLinkText
-    },
-    oauthProviders[] {
-      name,
-      enabled
-    },
+    features[] { title, description, icon },
+    loginPage { title, subtitle, buttonText },
+    signupPage { title, subtitle, buttonText },
+    oauthProviders[] { name, enabled },
     // Dashboard fields
-    dashboardWelcome {
-      message,
-      description
-    },
+    dashboardWelcome { message, description },
     stats {
-      totalPosts { label, icon },
-      subscription { label, icon, proText, freeText },
-      profileComplete { label, icon }
+      totalPosts { label },
+      subscription { label, proText, freeText }
     },
-    activitySection {
-      title,
-      viewAllLink,
-      emptyMessage,
-      tableHeaders { title, author, date }
-    },
-    defaultAuthor,
     // Generic page fields
     'slug': slug.current,
     content,
@@ -164,6 +86,7 @@ export const PAGE_BY_TYPE_QUERY = groq`
   }
 `
 
+// Pages (by slug - generic pages)
 export const PAGE_BY_SLUG_QUERY = groq`
   *[_type == 'page' && pageType == 'generic' && slug.current == $slug][0] {
     _id,
@@ -171,21 +94,8 @@ export const PAGE_BY_SLUG_QUERY = groq`
     pageType,
     'slug': slug.current,
     description,
+    components,
     content,
-    ctaButtons[] {
-      label,
-      href,
-      variant,
-      external,
-      requiresAuth
-    },
-    newsletterSection {
-      heading,
-      description,
-      placeholder,
-      buttonText,
-      enabled
-    },
     seo {
       metaTitle,
       metaDescription,
@@ -195,6 +105,7 @@ export const PAGE_BY_SLUG_QUERY = groq`
   }
 `
 
+// All pages list
 export const ALL_PAGES_QUERY = groq`
   *[_type == 'page'] | order(title asc) {
     _id,
@@ -206,9 +117,212 @@ export const ALL_PAGES_QUERY = groq`
   }
 `
 
-// Navigation (deprecated - kept for backwards compatibility)
-export const NAVIGATION_QUERY = groq`
+// Posts
+export const ALL_POSTS_QUERY = groq`
+  *[_type == 'post' && defined(publishedAt) && showOnHome != false] | order(publishedAt desc) {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    publishedAt,
+    featured,
+    mostViewed,
+    showOnHome,
+    readingTime,
+    tags,
+    'authorId': author._ref,
+    author->{ name, 'avatar': image.asset->url },
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
+  }
+`
+
+export const POST_BY_SLUG_QUERY = groq`
+  *[_type == 'post' && slug.current == $slug][0] {
+    ...,
+    author->{ name, bio, 'avatar': image.asset->url },
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
+  }
+`
+
+export const POSTS_COUNT_QUERY = groq`count(*[_type == 'post'])`
+
+export const FEATURED_POST_QUERY = groq`
+  *[_type == 'post' && defined(publishedAt)] {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    publishedAt,
+    featured,
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref,
+    author->{ name, 'avatar': image.asset->url }
+  } | order(featured desc, publishedAt desc)[0]
+`
+
+export const MOST_VIEWED_POSTS_QUERY = groq`
+  *[_type == 'post' && mostViewed == true && defined(publishedAt)] | order(publishedAt desc) [0...5] {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    'coverImage': coverImage.asset->url,
+    author->{ name }
+  }
+`
+
+export const POST_BY_ID_QUERY = groq`
+  *[_type == 'post' && _id == $id][0] {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    body,
+    publishedAt,
+    featured,
+    mostViewed,
+    showOnHome,
+    tags,
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref,
+    'authorId': author._ref,
+    metaTitle,
+    metaDescription
+  }
+`
+
+// Authors
+export const ALL_AUTHORS_QUERY = groq`
+  *[_type == 'author'] | order(name asc) {
+    _id,
+    name,
+    'slug': slug.current,
+    bio,
+    'avatar': image.asset->url
+  }
+`
+
+// Language queries
+export const ALL_LANGUAGES_QUERY = groq`
+  *[_type == 'language'] | order(isDefault desc) {
+    _id,
+    id,
+    title,
+    nativeTitle,
+    isDefault,
+    flag
+  }
+`
+
+export const DEFAULT_LANGUAGE_QUERY = groq`
+  *[_type == 'language' && isDefault == true][0] {
+    _id,
+    id,
+    title,
+    nativeTitle,
+    isDefault,
+    flag
+  }
+`
+
+// Page by type with language filter
+export const PAGE_BY_TYPE_AND_LANGUAGE_QUERY = groq`
+  *[_type == 'page' && pageType == $pageType && (language == null || language->id == $language)][0] {
+    _id,
+    title,
+    pageType,
+    description,
+    components,
+    seo {
+      metaTitle,
+      metaDescription,
+      'ogImage': ogImage.asset->url
+    },
+    language->{ _id, id, title, nativeTitle },
+    translationOf->{ _id, title },
+    // Auth page fields
+    brandName,
+    tagline,
+    features[] { title, description, icon },
+    loginPage { title, subtitle, buttonText },
+    signupPage { title, subtitle, buttonText },
+    oauthProviders[] { name, enabled },
+    // Dashboard fields
+    dashboardWelcome { message, description },
+    stats {
+      totalPosts { label },
+      subscription { label, proText, freeText }
+    },
+    // Generic page fields
+    'slug': slug.current,
+    content,
+    publishedAt
+  }
+`
+
+// Page by slug with language filter
+export const PAGE_BY_SLUG_AND_LANGUAGE_QUERY = groq`
+  *[_type == 'page' && pageType == 'generic' && slug.current == $slug && (language == null || language->id == $language)][0] {
+    _id,
+    title,
+    pageType,
+    'slug': slug.current,
+    description,
+    components,
+    content,
+    language->{ _id, id, title, nativeTitle },
+    seo {
+      metaTitle,
+      metaDescription,
+      'ogImage': ogImage.asset->url
+    },
+    publishedAt
+  }
+`
+
+// Posts with language filter
+export const ALL_POSTS_BY_LANGUAGE_QUERY = groq`
+  *[_type == 'post' && defined(publishedAt) && showOnHome != false && (language == null || language->id == $language)] | order(publishedAt desc) {
+    _id,
+    title,
+    'slug': slug.current,
+    excerpt,
+    publishedAt,
+    featured,
+    tags,
+    language->{ _id, id, title, nativeTitle },
+    author->{ name, 'avatar': image.asset->url },
+    'coverImage': coverImage.asset->url
+  }
+`
+
+export const POST_BY_SLUG_AND_LANGUAGE_QUERY = groq`
+  *[_type == 'post' && slug.current == $slug && (language == null || language->id == $language)][0] {
+    ...,
+    language->{ _id, id, title, nativeTitle },
+    author->{ name, bio, 'avatar': image.asset->url },
+    'coverImage': coverImage.asset->url,
+    'coverImageAssetId': coverImage.asset._ref
+  }
+`
+
+// Site settings with languages
+export const SITE_SETTINGS_WITH_LANGUAGES_QUERY = groq`
   *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
+    siteName,
+    siteDescription,
+    'logo': logo.asset->url,
+    'favicon': favicon.asset->url,
+    copyrightText,
+    footerDescription,
+    socialLinks,
+    legalLinks {
+      privacy { label, href },
+      terms { label, href },
+      cookies { label, href }
+    },
     headerNav[] {
       label,
       href,
@@ -243,267 +357,58 @@ export const NAVIGATION_QUERY = groq`
       href,
       external,
       requiresAuth
+    },
+    supportedLanguages[] -> {
+      _id,
+      id,
+      title,
+      nativeTitle,
+      isDefault,
+      flag
+    },
+    defaultLanguage-> {
+      _id,
+      id,
+      title,
+      nativeTitle,
+      isDefault,
+      flag
     }
   }
 `
 
-// Home Page
-export const HOME_PAGE_QUERY = groq`
-  *[_type == 'homePage' && _id == 'homePage'][0] {
-    heroSection {
-      featuredLabel,
-      headline,
-      subheadline
+// Combined home page data
+export const HOME_PAGE_DATA_QUERY = groq`
+  {
+    'settings': *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
+      siteName,
+      siteDescription,
+      'logo': logo.asset->url,
+      copyrightText,
+      footerDescription,
+      legalLinks {
+        privacy { label, href },
+        terms { label, href }
+      },
+      headerNav[] { label, href, external, requiresAuth, authOnly, guestOnly },
+      footerNav[] { title, items[] { label, href, external, requiresAuth } },
+      guestNav[] { label, href, external, requiresAuth }
     },
-    ctaButtons[] {
-      label,
-      href,
-      variant,
-      external,
-      requiresAuth
-    },
-    blogSection {
+    'homePage': *[_type == 'page' && pageType == 'home' && (language == null || language->id == $language)][0] {
+      _id,
       title,
-      subtitle,
-      emptyMessage,
-      emptyDescription,
-      latestArticlesLabel,
-      discoverLabel
+      components
     },
-    newsletterSection {
-      heading,
-      description,
-      placeholder,
-      buttonText,
-      enabled
-    },
-    footerCTA {
-      enabled,
-      heading,
-      description,
-      buttons[] {
-        label,
-        href,
-        variant,
-        external,
-        requiresAuth
-      }
-    },
-    featuredPost->{
+    'posts': *[_type == 'post' && defined(publishedAt) && showOnHome != false && (language == null || language->id == $language)] | order(publishedAt desc) [0...20] {
       _id,
       title,
       'slug': slug.current,
       excerpt,
-      'coverImage': coverImage.asset->url,
-      author->{ name, 'avatar': image.asset->url }
-    },
-    showFeaturedPost,
-    postsPerPage,
-    defaultPostOrder
-  }
-`
-
-// Auth Pages
-export const AUTH_PAGES_QUERY = groq`
-  *[_type == 'authPages' && _id == 'authPages'][0] {
-    brandName,
-    tagline,
-    features[] {
-      title,
-      description,
-      icon
-    },
-    loginPage {
-      title,
-      subtitle,
-      buttonText,
-      alternateText,
-      alternateLinkText
-    },
-    signupPage {
-      title,
-      subtitle,
-      buttonText,
-      alternateText,
-      alternateLinkText
-    },
-    oauthProviders[] {
-      name,
-      enabled
-    },
-    legalLinks {
-      terms,
-      termsUrl,
-      privacy,
-      privacyUrl,
-      security,
-      securityUrl
-    },
-    footer {
-      backedByText,
-      poweredByText
+      publishedAt,
+      featured,
+      tags,
+      author->{ name, 'avatar': image.asset->url },
+      'coverImage': coverImage.asset->url
     }
   }
-`
-
-// Dashboard Settings
-export const DASHBOARD_SETTINGS_QUERY = groq`
-  *[_type == 'dashboardSettings' && _id == 'dashboardSettings'][0] {
-    brandName,
-    tagline,
-    welcomeMessage,
-    welcomeDescription,
-    stats {
-      totalPosts { label, icon },
-      subscription { label, icon, proText, freeText },
-      profileComplete { label, icon }
-    },
-    activitySection {
-      title,
-      viewAllLink,
-      emptyMessage,
-      tableHeaders { title, author, date }
-    },
-    defaultAuthor
-  }
-`
-
-// Posts
-export const ALL_POSTS_QUERY = groq`
-  *[_type == 'post' && defined(publishedAt) && showOnHome != false] | order(publishedAt desc) {
-    _id,
-    title,
-    'slug': slug.current,
-    excerpt,
-    publishedAt,
-    featured,
-    mostViewed,
-    showOnHome,
-    displayOrder,
-    homePageOrder,
-    readingTime,
-    tags,
-    'authorId': author._ref,
-    author->{ name, 'avatar': image.asset->url },
-    'coverImage': coverImage.asset->url,
-    'coverImageAssetId': coverImage.asset._ref
-  }
-`
-
-export const POST_BY_SLUG_QUERY = groq`
-  *[_type == 'post' && slug.current == $slug][0] {
-    ...,
-    author->{ name, bio, 'avatar': image.asset->url },
-    'coverImage': coverImage.asset->url,
-    'coverImageAssetId': coverImage.asset._ref
-  }
-`
-
-export const POSTS_COUNT_QUERY = groq`count(*[_type == 'post'])`
-
-export const FEATURED_POST_QUERY = groq`
-  *[_type == 'post' && defined(publishedAt)] {
-    _id,
-    title,
-    'slug': slug.current,
-    excerpt,
-    publishedAt,
-    featured,
-    homePageOrder,
-    displayOrder,
-    'coverImage': coverImage.asset->url,
-    'coverImageAssetId': coverImage.asset._ref,
-    author->{ name, 'avatar': image.asset->url }
-  } | order(featured desc, homePageOrder asc, publishedAt desc)[0]
-`
-
-export const MOST_VIEWED_POSTS_QUERY = groq`
-  *[_type == 'post' && mostViewed == true && defined(publishedAt)] | order(publishedAt desc) [0...5] {
-    _id,
-    title,
-    'slug': slug.current,
-    excerpt,
-    'coverImage': coverImage.asset->url,
-    author->{ name }
-  }
-`
-
-export const POST_BY_ID_QUERY = groq`
-  *[_type == 'post' && _id == $id][0] {
-    _id,
-    title,
-    'slug': slug.current,
-    excerpt,
-    body,
-    publishedAt,
-    featured,
-    mostViewed,
-    showOnHome,
-    displayOrder,
-    homePageOrder,
-    tags,
-    'coverImage': coverImage.asset->url,
-    'coverImageAssetId': coverImage.asset._ref,
-    'authorId': author._ref,
-    metaTitle,
-    metaDescription
-  }
-`
-
-// Authors
-export const ALL_AUTHORS_QUERY = groq`
-  *[_type == 'author'] | order(name asc) {
-    _id,
-    name,
-    'slug': slug.current,
-    bio,
-    'avatar': image.asset->url
-  }
-`
-
-// Combined query for home page - fetches everything in one request
-export const HOME_PAGE_DATA_QUERY = groq`
-{
-  'settings': *[_type == 'siteSettings' && _id == 'siteSettings'][0] {
-    siteName,
-    siteDescription,
-    'logo': logo.asset->url,
-    copyrightText,
-    footerDescription,
-    socialLinks,
-    legalLinks {
-      privacy { label, href },
-      terms { label, href },
-      cookies { label, href }
-    },
-    headerNav[] { label, href, external, requiresAuth, authOnly, guestOnly },
-    footerNav[] { title, items[] { label, href, external, requiresAuth } },
-    dashboardNav[] { label, href, external, requiresAuth },
-    authNav[] { label, href, external, requiresAuth },
-    guestNav[] { label, href, external, requiresAuth }
-  },
-  'homePage': *[_type == 'page' && pageType == 'home'][0] {
-    _id,
-    title,
-    pageType,
-    heroSection { featuredLabel, headline, subheadline },
-    ctaButtons[] { label, href, variant, external, requiresAuth },
-    blogSection { title, subtitle, emptyMessage, emptyDescription, latestArticlesLabel, discoverLabel },
-    newsletterSection { heading, description, placeholder, buttonText, enabled },
-    footerCTA { enabled, heading, description, buttons[] { label, href, variant, external, requiresAuth } },
-    featuredPost->{ _id, title, 'slug': slug.current, excerpt, 'coverImage': coverImage.asset->url, author->{ name, 'avatar': image.asset->url } },
-    showFeaturedPost
-  },
-  'posts': *[_type == 'post' && defined(publishedAt) && showOnHome != false] | order(publishedAt desc) [0...20] {
-    _id,
-    title,
-    'slug': slug.current,
-    excerpt,
-    publishedAt,
-    featured,
-    tags,
-    author->{ name, 'avatar': image.asset->url },
-    'coverImage': coverImage.asset->url
-  }
-}
 `

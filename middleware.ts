@@ -2,26 +2,71 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
-export async function middleware(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request);
+const defaultLanguage = 'en'
+const languages = ['en', 'hi']
 
+function getLanguageFromHeader(request: NextRequest): string | null {
+  const acceptLanguage = request.headers.get('accept-language')
+  if (!acceptLanguage) return null
+  
+  const preferredLanguages = acceptLanguage
+    .split(',')
+    .map((lang) => lang.split(';')[0].trim().substring(0, 2))
+  
+  for (const lang of preferredLanguages) {
+    if (languages.includes(lang)) {
+      return lang
+    }
+  }
+  return null
+}
+
+function getLanguageFromCookie(request: NextRequest): string | null {
+  const langCookie = request.cookies.get('preferred-language')
+  if (langCookie && languages.includes(langCookie.value)) {
+    return langCookie.value
+  }
+  return null
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow auth callback through
+  const isStaticPath = pathname.startsWith('/api') ||
+    pathname.startsWith('/studio') ||
+    pathname.startsWith('/_next') ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/__')
+
+  if (isStaticPath) {
+    return NextResponse.next()
+  }
+
+  const langSegment = pathname.split('/')[1]
+  const isLocalizedPath = languages.includes(langSegment)
+
+  if (isLocalizedPath) {
+    const response = NextResponse.next()
+    response.cookies.set('preferred-language', langSegment, {
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+    })
+    return response
+  }
+
+  const { supabaseResponse, user } = await updateSession(request);
+
   if (pathname.startsWith('/auth/callback')) {
     return supabaseResponse;
   }
 
-  // Protect all /admin/* routes
   if (pathname.startsWith('/admin')) {
-    // Check user authenticated first
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
 
-    // Fetch profile to check role
     const supabase = createServiceRoleClient();
     const { data: profile } = await supabase
       .from('profiles')
@@ -29,34 +74,26 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    // If not admin, redirect to dashboard
     if (profile?.role !== 'admin') {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
 
-    // Admin user - allow through
     return supabaseResponse;
   }
 
-  // Protect all /dashboard/* routes — require authentication only (not admin)
   if (pathname.startsWith('/dashboard')) {
-    // Check user authenticated first
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
-
-    // Any authenticated user can access dashboard
     return supabaseResponse;
   }
 
-  // Also protect /settings, /billing (but NOT /posts - posts are public)
   if (
-    (pathname.startsWith('/settings') ||
-      pathname.startsWith('/billing')) &&
+    (pathname.startsWith('/settings') || pathname.startsWith('/billing')) &&
     !user
   ) {
     const url = request.nextUrl.clone();
@@ -64,9 +101,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If user exists and tries to access /login, redirect based on role
   if (pathname === '/login' && user) {
-    // Check if user is admin
     const supabase = createServiceRoleClient();
     const { data: profile } = await supabase
       .from('profiles')
@@ -75,9 +110,23 @@ export async function middleware(request: NextRequest) {
       .single();
     
     const url = request.nextUrl.clone();
-    // Admin users go to dashboard, others go to home
     url.pathname = profile?.role === 'admin' ? '/dashboard' : '/';
     return NextResponse.redirect(url);
+  }
+
+  // Redirect root path and /posts to localized version based on preferred language
+  if (pathname === '/' || pathname === '' || pathname === '/posts') {
+    const preferredLanguage = getLanguageFromCookie(request) || 
+      getLanguageFromHeader(request) || 
+      defaultLanguage
+    
+    const url = request.nextUrl.clone()
+    if (pathname === '/posts') {
+      url.pathname = `/${preferredLanguage}/posts`
+    } else {
+      url.pathname = preferredLanguage === defaultLanguage ? '/' : `/${preferredLanguage}`
+    }
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse;

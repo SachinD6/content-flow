@@ -1,0 +1,565 @@
+{
+  "meta": {
+    "projectName": "contentflow",
+    "scannedAt": "2026-04-04T22:46:27.885Z",
+    "fileCount": 130,
+    "overallConfidence": 0.9895512820512821,
+    "version": "0.1.0"
+  },
+  "domainSummary": "Contentflow manages posts, analytics, collaborations. subscription billing via Stripe. CMS-backed public content layer. authentication with protected routes. 34 protected routes, 2 public pages",
+  "stack": [
+    {
+      "category": "framework",
+      "value": "next.js",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "typescript-strict",
+      "value": "strict",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "jsx-runtime",
+      "value": "react-jsx",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "component-library",
+      "value": "shadcn/ui",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "state-management",
+      "value": "zustand",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "data-fetching-lib",
+      "value": "tanstack-query",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "database",
+      "value": "supabase",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "styling",
+      "value": "tailwind",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "cms",
+      "value": "sanity",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "payments",
+      "value": "stripe",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "auth-service",
+      "value": "supabase-auth",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "analytics",
+      "value": "posthog",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    }
+  ],
+  "conventions": [
+    {
+      "category": "component-file-naming",
+      "value": "PascalCase",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "hook-export",
+      "value": "named",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "import-alias",
+      "value": "@/",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "hooks-location",
+      "value": "dedicated-folder",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "barrel-files",
+      "value": "used",
+      "confidence": 0.9323076923076923,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "server-actions",
+      "value": "dedicated-actions-files",
+      "confidence": 0.0876923076923077,
+      "inconsistent": false,
+      "suppressed": true
+    },
+    {
+      "category": "type-organization",
+      "value": "centralized-types-folder",
+      "confidence": 0.015384615384615385,
+      "inconsistent": false,
+      "suppressed": true
+    }
+  ],
+  "patterns": [
+    {
+      "category": "api-layer-server",
+      "value": "lib/supabase/server.ts",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "api-layer-client",
+      "value": "lib/supabase/client.ts",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "auth-guard",
+      "value": "middleware",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "data-fetching-pattern",
+      "value": "mixed-server-components-and-tanstack-query",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "state-store-location",
+      "value": "store/",
+      "confidence": 1,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "error-display",
+      "value": "custom",
+      "confidence": 0.8169230769230769,
+      "inconsistent": false,
+      "suppressed": false
+    },
+    {
+      "category": "server-client-pattern",
+      "value": "server-default-client-islands",
+      "confidence": 0.5476923076923077,
+      "inconsistent": false,
+      "suppressed": true
+    },
+    {
+      "category": "http-client",
+      "value": "direct-fetch",
+      "confidence": 0.08461538461538462,
+      "inconsistent": false,
+      "suppressed": true
+    },
+    {
+      "category": "form-pattern",
+      "value": "react-hook-form+zod",
+      "confidence": 0.023076923076923078,
+      "inconsistent": false,
+      "suppressed": true
+    },
+    {
+      "category": "auth-hook",
+      "value": "useUser",
+      "confidence": 0.015384615384615385,
+      "inconsistent": false,
+      "suppressed": true
+    }
+  ],
+  "architecture": {
+    "type": "next-app",
+    "entryPoints": [
+      "app/layout.tsx"
+    ],
+    "serverClientBoundary": "server-default-client-islands",
+    "routeList": [
+      {
+        "path": "/",
+        "type": "layout",
+        "isProtected": false
+      },
+      {
+        "path": "/",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/",
+        "type": "layout",
+        "isProtected": true
+      },
+      {
+        "path": "/",
+        "type": "layout",
+        "isProtected": true
+      },
+      {
+        "path": "/:lang",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/admin",
+        "type": "page",
+        "isProtected": false
+      },
+      {
+        "path": "/login",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/signup",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/api/analytics",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/collaborations",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/create-checkout-session",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/create-portal-session",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/posts",
+        "type": "api",
+        "isProtected": false
+      },
+      {
+        "path": "/api/seed",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/toggle-featured",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/upload-image",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/auth/callback",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/posts/:slug",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/studio/:[...tool]",
+        "type": "layout",
+        "isProtected": false
+      },
+      {
+        "path": "/studio/:[...tool]",
+        "type": "page",
+        "isProtected": false
+      },
+      {
+        "path": "/:lang/:slug",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/analytics",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/billing",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/posts",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/settings",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/api/analytics/events",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/auth/signout",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/collaborations/accept",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/collaborations/:id",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/draft/disable",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/draft/enable",
+        "type": "api",
+        "isProtected": false
+      },
+      {
+        "path": "/api/posts/create",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/posts/update",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/api/webhooks/stripe",
+        "type": "api",
+        "isProtected": true
+      },
+      {
+        "path": "/:lang/posts/:slug",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/posts/new",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/posts/:slug",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/dashboard/posts/:slug/edit",
+        "type": "page",
+        "isProtected": true
+      },
+      {
+        "path": "/",
+        "type": "middleware",
+        "isProtected": true
+      }
+    ],
+    "folderLayout": "Feature-based modules under /features/ (admin, analytics, auth, billing, collaborations, layout). Utilities and integrations under /lib/ (i18n, sanity, stripe.ts, supabase, utils.ts). Dual data sources: Supabase + Sanity. Shared hooks in /hooks/. Centralized types in /types/ (2 files). UI primitives in /components/ui/, feature components in /components/"
+  },
+  "keyFiles": [
+    {
+      "path": "lib/sanity/client.ts",
+      "reason": "Sanity CMS client - all content fetching goes through here",
+      "importance": "critical"
+    },
+    {
+      "path": "lib/supabase/server.ts",
+      "reason": "Server-side database client - all server component data access goes through here",
+      "importance": "critical"
+    },
+    {
+      "path": "types/index.ts",
+      "reason": "Central type definitions - check here before defining new types",
+      "importance": "critical"
+    },
+    {
+      "path": "types/supabase.ts",
+      "reason": "Auto-generated - never edit manually, regenerate with the appropriate CLI command",
+      "importance": "critical"
+    },
+    {
+      "path": "lib/sanity/queries.ts",
+      "reason": "Sanity GROQ queries - all CMS content queries defined here",
+      "importance": "important"
+    },
+    {
+      "path": "lib/utils.ts",
+      "reason": "Shared utility functions - imported by 30 files",
+      "importance": "important"
+    }
+  ],
+  "antiPatterns": [
+    "Never use useEffect for data fetching - use TanStack Query or server components"
+  ],
+  "hotspots": [
+    {
+      "path": "features/posts/PostsPageClient.tsx",
+      "changeCount": 9,
+      "reason": "frequently modified"
+    },
+    {
+      "path": "app/(dashboard)/dashboard/page.tsx",
+      "changeCount": 8,
+      "reason": "frequently modified"
+    },
+    {
+      "path": "app/page.tsx",
+      "changeCount": 8,
+      "reason": "frequently modified"
+    },
+    {
+      "path": "features/posts/PostsTable.tsx",
+      "changeCount": 8,
+      "reason": "frequently modified"
+    },
+    {
+      "path": "app/(dashboard)/dashboard/posts/page.tsx",
+      "changeCount": 8,
+      "reason": "frequently modified"
+    }
+  ],
+  "inconsistencies": [
+    "Imported but not declared in package.json: @portabletext/types",
+    "Potentially dead code: features/layout/Footer.tsx",
+    "Potentially dead code: features/layout/Header.tsx",
+    "Potentially dead code: features/posts/PortableTextRenderer.tsx",
+    "Git history hint: feat: add edit post functionality with author-only access",
+    "Git history hint: Merge pull request #1 from SachinD6/auth"
+  ],
+  "readmeSignals": {
+    "envVars": [
+      "NEXT_PUBLIC_APP_URL",
+      "NEXT_PUBLIC_POSTHOG_HOST",
+      "NEXT_PUBLIC_POSTHOG_KEY",
+      "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+      "NEXT_PUBLIC_SANITY_DATASET",
+      "NEXT_PUBLIC_SANITY_PROJECT_ID",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NODE_ENV",
+      "POSTHOG_API_KEY",
+      "SANITY_API_TOKEN",
+      "STRIPE_PRO_PRICE_ID",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ],
+    "testDescriptions": [],
+    "gitCommitMessages": [
+      "merge navigation into siteSettings and create unified pages collection",
+      "Integrate full CMS with Sanity Studio and make all content editable",
+      "enhance blog homepage UI with Medium-style design and fix bullet points",
+      "analytics stats calculation for unique users and avg session",
+      "profile icon links to settings, remove mobile hamburger",
+      "mobile sidebar always shows text labels",
+      "close mobile sidebar when clicking nav links",
+      "make /dashboard page fully responsive",
+      "make posts table fully responsive with card layout on mobile",
+      "make /dashboard/posts page responsive",
+      "enable downgrade button to open billing portal",
+      "remove detailed comparison table from billing page",
+      "remove unused imports and fix ESLint errors",
+      "exclude sanity-studio from TypeScript compilation",
+      "replace img tags with NextImage, audit fixes",
+      "resolve ESLint errors - replace <a> with Link, fix unescaped apostrophe, fix useCallback deps",
+      "complete responsive design and analytics overhaul",
+      "remove failing PostHog API fetch from analytics route",
+      "add comprehensive landing page",
+      "add comprehensive analytics dashboard with PostHog integration",
+      "show edit button only on user's own posts",
+      "add edit post functionality with author-only access",
+      "add interactive tag input with visual badges",
+      "slug generation and toggle visual feedback",
+      "enhance create post page UI and fix toggle buttons",
+      "enhance create post form with cover image, draft/published toggle, and featured toggle",
+      "show featured posts by default and enhance billing page with pricing cards",
+      "add loading state to sync button",
+      "add cursor-pointer to all interactive buttons",
+      "add billing with Stripe, admin panel, live preview, and post creation",
+      "integrate Sanity Studio with zero-CORS API proxy and dynamic dashboard stats (scrubbed temp files)",
+      "bypass components index barrel for EmptyState and LoadingSpinner",
+      "add settings page with profile form, avatar upload and danger zone",
+      "move dashboard routes inside dashboard directory",
+      "add posts list and single post page with optimistic updates",
+      "add dashboard shell layout and Sanity CMS setup",
+      "apply Weframetech engineering standards to existing code"
+    ],
+    "packageDescription": "",
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "eslint"
+    }
+  }
+}

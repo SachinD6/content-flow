@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
+import { t } from '@/lib/i18n/translations'
 
 interface NavItem {
   label: string
@@ -43,6 +44,35 @@ interface FooterProps {
     displayName?: string
     avatarUrl?: string
   } | null
+  lang?: string
+}
+
+const defaultLanguage = 'en'
+
+function localizePath(path: string, lang?: string): string {
+  if (!lang || lang === defaultLanguage) return path
+  return `/${lang}${path}`
+}
+
+function getLocalizedNavItem(lang?: string): NavGroup[] {
+  return [
+    {
+      title: t('platform', lang || 'en'),
+      items: [
+        { label: t('articles', lang || 'en'), href: '/posts' },
+        { label: t('dashboard', lang || 'en'), href: '/dashboard', requiresAuth: true },
+        { label: t('writeStory', lang || 'en'), href: '/dashboard/posts', requiresAuth: true },
+      ],
+    },
+    {
+      title: t('account', lang || 'en'),
+      items: [
+        { label: t('settings', lang || 'en'), href: '/dashboard/settings', requiresAuth: true },
+        { label: t('billing', lang || 'en'), href: '/dashboard/billing', requiresAuth: true },
+        { label: t('helpCenter', lang || 'en'), href: '/help' },
+      ],
+    },
+  ]
 }
 
 export function Footer({
@@ -54,27 +84,9 @@ export function Footer({
   footerCTAButtons,
   newsletterSection,
   user,
+  lang,
 }: FooterProps) {
-  const defaultFooterNav: NavGroup[] = [
-    {
-      title: 'Platform',
-      items: [
-        { label: 'Articles', href: '/posts' },
-        { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-        { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
-      ],
-    },
-    {
-      title: 'Account',
-      items: [
-        { label: 'Settings', href: '/dashboard/settings', requiresAuth: true },
-        { label: 'Billing', href: '/dashboard/billing', requiresAuth: true },
-        { label: 'Help Center', href: '/help' },
-      ],
-    },
-  ]
-
-  const navGroups = footerNav ?? defaultFooterNav
+  const navGroups = footerNav ?? getLocalizedNavItem(lang)
   const showNewsletter = newsletterSection?.enabled !== false
 
   return (
@@ -85,19 +97,19 @@ export function Footer({
           <div className="mb-16 pb-12 border-b border-white/[0.06]">
             <div className="max-w-xl">
               <h3 className="text-xl font-bold text-white mb-3">
-                {newsletterSection?.heading ?? 'Stay in the loop'}
+                {newsletterSection?.heading ?? t('stayInLoop', lang || 'en')}
               </h3>
               <p className="text-zinc-500 text-sm mb-5">
-                {newsletterSection?.description ?? 'Get the latest articles and updates delivered to your inbox.'}
+                {newsletterSection?.description ?? t('newsletterDescription', lang || 'en')}
               </p>
               <div className="flex gap-3 mb-6">
                 <input
                   type="email"
-                  placeholder={newsletterSection?.placeholder ?? 'Enter your email'}
+                  placeholder={newsletterSection?.placeholder ?? t('enterEmail', lang || 'en')}
                   className="flex-1 px-4 py-2.5 bg-[#121319] border border-white/[0.08] rounded-lg text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#6154f0]/50 transition-colors"
                 />
                 <button className="px-5 py-2.5 bg-white text-[#0b0c10] text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors">
-                  {newsletterSection?.buttonText ?? 'Subscribe'}
+                  {newsletterSection?.buttonText ?? t('subscribe', lang || 'en')}
                 </button>
               </div>
             </div>
@@ -121,8 +133,8 @@ export function Footer({
             </p>
             <div className="flex gap-4">
               {(footerCTAButtons ?? [
-                { label: 'Get Started', href: '/signup', variant: 'primary' },
-                { label: 'Learn more', href: '/posts', variant: 'secondary' },
+                { label: t('getStarted', lang || 'en'), href: '/signup', variant: 'primary' },
+                { label: t('learnMore', lang || 'en'), href: '/posts', variant: 'secondary' },
               ])
                 .filter((btn) => {
                   if (btn.requiresAuth && !user) return false
@@ -131,7 +143,7 @@ export function Footer({
                 .map((button, index) => (
                   <Link
                     key={`${button.href}-${index}`}
-                    href={button.href}
+                    href={localizePath(button.href, lang)}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                       button.variant === 'primary'
                         ? 'bg-white text-[#0b0c10] hover:bg-zinc-200'
@@ -157,7 +169,7 @@ export function Footer({
                   return (
                     <li key={`${item.href}-${itemIndex}`}>
                       <Link
-                        href={item.href}
+                        href={localizePath(item.href, lang)}
                         className="text-sm text-zinc-500 hover:text-white transition-colors"
                       >
                         {item.label}
@@ -177,22 +189,22 @@ export function Footer({
           </p>
           <div className="flex items-center gap-8">
             <Link
-              href={legalLinks?.privacy?.href ?? '/privacy'}
+              href={localizePath(legalLinks?.privacy?.href ?? '/privacy', lang)}
               className="text-sm text-zinc-500 hover:text-white transition-colors"
             >
-              {legalLinks?.privacy?.label ?? 'Privacy Policy'}
+              {legalLinks?.privacy?.label ?? t('privacyPolicy', lang || 'en')}
             </Link>
             <Link
-              href={legalLinks?.terms?.href ?? '/terms'}
+              href={localizePath(legalLinks?.terms?.href ?? '/terms', lang)}
               className="text-sm text-zinc-500 hover:text-white transition-colors"
             >
-              {legalLinks?.terms?.label ?? 'Terms of Service'}
+              {legalLinks?.terms?.label ?? t('termsOfService', lang || 'en')}
             </Link>
             <Link
-              href={legalLinks?.cookies?.href ?? '/cookies'}
+              href={localizePath(legalLinks?.cookies?.href ?? '/cookies', lang)}
               className="text-sm text-zinc-500 hover:text-white transition-colors"
             >
-              {legalLinks?.cookies?.label ?? 'Cookies'}
+              {legalLinks?.cookies?.label ?? t('cookies', lang || 'en')}
             </Link>
           </div>
         </div>

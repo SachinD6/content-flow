@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePostHog } from 'posthog-js/react';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 import { FeaturedBanner } from '@/features/posts/FeaturedBanner';
 import { PostsTable } from '@/features/posts/PostsTable';
@@ -77,12 +78,12 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
                 Preview Mode — You are viewing draft content
               </span>
             </div>
-            <a
+            <Link
               href="/api/draft/disable"
               className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-[8px] text-sm font-semibold transition-colors whitespace-nowrap"
             >
               Exit Preview
-            </a>
+            </Link>
           </div>
         </div>
       )}

@@ -4,13 +4,21 @@ export default defineType({
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
+  groups: [
+    { name: 'general', title: '🏷️ General' },
+    { name: 'languages', title: '🌐 Languages' },
+    { name: 'navigation', title: '🔗 Navigation' },
+    { name: 'footer', title: '📄 Footer' },
+  ],
   fields: [
+    // ==================== GENERAL ====================
     defineField({
       name: 'siteName',
       title: 'Site Name',
       type: 'string',
       validation: (Rule) => Rule.required(),
       initialValue: 'ContentFlow',
+      group: 'general',
     }),
     defineField({
       name: 'siteDescription',
@@ -18,66 +26,99 @@ export default defineType({
       type: 'text',
       rows: 2,
       initialValue: 'A modern publishing platform for writers, creators, and thinkers.',
+      group: 'general',
     }),
     defineField({
       name: 'logo',
       title: 'Logo',
       type: 'image',
       options: { hotspot: true },
+      group: 'general',
     }),
     defineField({
       name: 'favicon',
       title: 'Favicon',
       type: 'image',
       options: { hotspot: true },
+      group: 'general',
     }),
+
+    // ==================== LANGUAGES ====================
+    defineField({
+      name: 'supportedLanguages',
+      title: 'Supported Languages',
+      type: 'array',
+      of: [{ type: 'reference', to: [{ type: 'language' }] }],
+      description: 'Languages available for this site',
+      validation: (Rule) => Rule.min(1).error('At least one language is required'),
+      group: 'languages',
+    }),
+    defineField({
+      name: 'defaultLanguage',
+      title: 'Default Language',
+      type: 'reference',
+      to: [{ type: 'language' }],
+      description: 'The default language for the site',
+      group: 'languages',
+    }),
+
+    // ==================== NAVIGATION ====================
     defineField({
       name: 'headerNav',
       title: 'Header Navigation',
       type: 'array',
       of: [{ type: 'navItem' }],
-      description: 'Main navigation links shown in the header',
+      description: 'Main navigation shown in header',
+      group: 'navigation',
     }),
     defineField({
       name: 'footerNav',
       title: 'Footer Navigation',
       type: 'array',
       of: [{ type: 'navGroup' }],
-      description: 'Navigation groups shown in the footer',
+      description: 'Navigation groups shown in footer',
+      group: 'navigation',
     }),
     defineField({
       name: 'dashboardNav',
       title: 'Dashboard Navigation',
       type: 'array',
       of: [{ type: 'navItem' }],
-      description: 'Navigation items shown in the dashboard sidebar',
+      description: 'Links shown in dashboard sidebar',
+      group: 'navigation',
     }),
     defineField({
       name: 'authNav',
       title: 'Auth Navigation',
       type: 'array',
       of: [{ type: 'navItem' }],
-      description: 'Navigation shown when user is logged in (user menu)',
+      description: 'User menu when logged in',
+      group: 'navigation',
     }),
     defineField({
       name: 'guestNav',
       title: 'Guest Navigation',
       type: 'array',
       of: [{ type: 'navItem' }],
-      description: 'Navigation shown when user is logged out',
+      description: 'Links shown when logged out',
+      group: 'navigation',
     }),
+
+    // ==================== FOOTER ====================
     defineField({
       name: 'footerDescription',
       title: 'Footer Description',
       type: 'text',
       rows: 3,
-      initialValue: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
+      initialValue: 'A modern publishing platform for writers, creators, and thinkers.',
+      group: 'footer',
     }),
     defineField({
       name: 'copyrightText',
       title: 'Copyright Text',
       type: 'string',
       initialValue: '© 2026 ContentFlow. All rights reserved.',
+      group: 'footer',
     }),
     defineField({
       name: 'socialLinks',
@@ -87,16 +128,20 @@ export default defineType({
         {
           type: 'object',
           fields: [
-            defineField({ name: 'platform', type: 'string', options: {
-              list: [
-                { title: 'Twitter/X', value: 'twitter' },
-                { title: 'LinkedIn', value: 'linkedin' },
-                { title: 'GitHub', value: 'github' },
-                { title: 'Instagram', value: 'instagram' },
-                { title: 'YouTube', value: 'youtube' },
-                { title: 'Facebook', value: 'facebook' },
-              ]
-            }}),
+            defineField({
+              name: 'platform',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Twitter/X', value: 'twitter' },
+                  { title: 'LinkedIn', value: 'linkedin' },
+                  { title: 'GitHub', value: 'github' },
+                  { title: 'Instagram', value: 'instagram' },
+                  { title: 'YouTube', value: 'youtube' },
+                  { title: 'Facebook', value: 'facebook' },
+                ],
+              },
+            }),
             defineField({ name: 'url', type: 'url', validation: (Rule) => Rule.uri({ scheme: ['http', 'https'] }) }),
           ],
           preview: {
@@ -104,11 +149,13 @@ export default defineType({
           },
         },
       ],
+      group: 'footer',
     }),
     defineField({
       name: 'legalLinks',
       title: 'Legal Links',
       type: 'object',
+      group: 'footer',
       fields: [
         defineField({
           name: 'privacy',
@@ -126,15 +173,6 @@ export default defineType({
           fields: [
             defineField({ name: 'label', type: 'string', initialValue: 'Terms of Service' }),
             defineField({ name: 'href', type: 'string', initialValue: '/terms' }),
-          ],
-        }),
-        defineField({
-          name: 'cookies',
-          title: 'Cookies',
-          type: 'object',
-          fields: [
-            defineField({ name: 'label', type: 'string', initialValue: 'Cookies' }),
-            defineField({ name: 'href', type: 'string', initialValue: '/cookies' }),
           ],
         }),
       ],

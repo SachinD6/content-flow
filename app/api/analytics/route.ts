@@ -1,9 +1,5 @@
 import { PostHog } from 'posthog-node';
 
-interface PostHogInsightResult {
-  result?: number[];
-}
-
 async function fetchInsightMetric(
   apiHost: string,
   apiKey: string,

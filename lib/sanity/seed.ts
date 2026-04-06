@@ -1,17 +1,41 @@
 import { writeSanityClient } from './client'
 
+const ENGLISH_LANG_ID = 'language-en'
+const HINDI_LANG_ID = 'language-hi'
 const SITE_SETTINGS_ID = 'siteSettings'
-const HOME_PAGE_ID = 'page-home'
-const AUTH_PAGE_ID = 'page-auth'
-const DASHBOARD_PAGE_ID = 'page-dashboard'
+const HOME_PAGE_ID = 'page-home-en'
+const AUTH_PAGE_ID = 'page-auth-en'
+const DASHBOARD_PAGE_ID = 'page-dashboard-en'
 
 type SeedResult = {
+  languages: boolean
   siteSettings: boolean
   homePage: boolean
   authPage: boolean
   dashboardPage: boolean
   errors: string[]
 }
+
+const defaultLanguages = [
+  {
+    _type: 'language',
+    _id: ENGLISH_LANG_ID,
+    id: 'en',
+    title: 'English',
+    nativeTitle: 'English',
+    isDefault: true,
+    flag: '🇺🇸',
+  },
+  {
+    _type: 'language',
+    _id: HINDI_LANG_ID,
+    id: 'hi',
+    title: 'Hindi',
+    nativeTitle: 'हिन्दी',
+    isDefault: false,
+    flag: '🇮🇳',
+  },
+]
 
 const defaultSiteSettings = {
   _type: 'siteSettings',
@@ -26,6 +50,11 @@ const defaultSiteSettings = {
     terms: { label: 'Terms of Service', href: '/terms' },
     cookies: { label: 'Cookies', href: '/cookies' },
   },
+  supportedLanguages: [
+    { _type: 'reference', _ref: ENGLISH_LANG_ID },
+    { _type: 'reference', _ref: HINDI_LANG_ID },
+  ],
+  defaultLanguage: { _type: 'reference', _ref: ENGLISH_LANG_ID },
   headerNav: [
     { label: 'Articles', href: '/posts', external: false, requiresAuth: false, authOnly: false, guestOnly: false },
     { label: 'Write', href: '/dashboard/posts', external: false, requiresAuth: true, authOnly: true, guestOnly: false },
@@ -73,6 +102,7 @@ const defaultHomePage = {
   _type: 'page',
   _id: HOME_PAGE_ID,
   pageType: 'home',
+  language: { _type: 'reference', _ref: ENGLISH_LANG_ID },
   title: 'Home',
   heroSection: {
     featuredLabel: 'Featured Story',
@@ -114,6 +144,7 @@ const defaultAuthPage = {
   _type: 'page',
   _id: AUTH_PAGE_ID,
   pageType: 'auth',
+  language: { _type: 'reference', _ref: ENGLISH_LANG_ID },
   title: 'Authentication',
   brandName: 'ContentFlow',
   tagline: 'CMS-driven publishing for engineering teams.',
@@ -145,6 +176,7 @@ const defaultDashboardPage = {
   _type: 'page',
   _id: DASHBOARD_PAGE_ID,
   pageType: 'dashboard',
+  language: { _type: 'reference', _ref: ENGLISH_LANG_ID },
   title: 'Dashboard',
   dashboardWelcome: {
     message: 'Welcome back, {name}',
@@ -166,12 +198,23 @@ const defaultDashboardPage = {
 
 export async function seedCMS(): Promise<SeedResult> {
   const results: SeedResult = {
+    languages: false,
     siteSettings: false,
     homePage: false,
     authPage: false,
     dashboardPage: false,
     errors: [],
   }
+
+  // Seed languages first
+  for (const lang of defaultLanguages) {
+    try {
+      await writeSanityClient.createOrReplace(lang)
+    } catch (error) {
+      results.errors.push(`Failed to create language ${lang.id}: ${error}`)
+    }
+  }
+  results.languages = true
 
   const documents = [
     { id: SITE_SETTINGS_ID, data: defaultSiteSettings, name: 'siteSettings' as const },
@@ -203,12 +246,23 @@ export async function seedCMS(): Promise<SeedResult> {
 
 export async function resetCMS(): Promise<SeedResult> {
   const results: SeedResult = {
+    languages: false,
     siteSettings: false,
     homePage: false,
     authPage: false,
     dashboardPage: false,
     errors: [],
   }
+
+  // Reset languages first
+  for (const lang of defaultLanguages) {
+    try {
+      await writeSanityClient.createOrReplace(lang)
+    } catch (error) {
+      results.errors.push(`Failed to reset language ${lang.id}: ${error}`)
+    }
+  }
+  results.languages = true
 
   const documents = [
     { id: SITE_SETTINGS_ID, data: defaultSiteSettings, name: 'siteSettings' as const },

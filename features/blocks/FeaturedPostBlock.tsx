@@ -1,0 +1,82 @@
+import { BlogPostCard } from '@/features/posts/BlogPostCard'
+
+interface Post {
+  _id: string
+  title: string
+  slug: string
+  excerpt?: string
+  publishedAt?: string
+  featured?: boolean
+  mostViewed?: boolean
+  tags?: string[]
+  author?: { name: string; avatar?: string }
+  coverImage?: string
+}
+
+interface FeaturedPostBlockProps {
+  label?: string
+  post?: Post
+  autoSelect?: 'latest' | 'featured' | 'mostViewed' | 'manual'
+  showExcerpt?: boolean
+  showAuthor?: boolean
+  showDate?: boolean
+  layout?: 'large' | 'medium' | 'split'
+  posts?: Post[]
+}
+
+export function FeaturedPostBlock({
+  label = 'Featured Story',
+  post,
+  autoSelect = 'featured',
+  layout = 'large',
+  posts = [],
+}: FeaturedPostBlockProps) {
+  let featuredPost = post
+
+  if (!featuredPost && posts.length > 0) {
+    if (autoSelect === 'featured') {
+      featuredPost = posts.find((p) => p.featured) || posts[0]
+    } else if (autoSelect === 'latest') {
+      featuredPost = posts[0]
+    } else if (autoSelect === 'mostViewed') {
+      featuredPost = posts.find((p) => p.mostViewed) || posts[0]
+    } else {
+      featuredPost = posts[0]
+    }
+  }
+
+  if (!featuredPost) return null
+
+  return (
+    <section className="py-16">
+      <div className="mx-auto max-w-6xl px-12 lg:px-32">
+        <div className="mb-8">
+          <span className="text-xs font-semibold text-[#6154f0] uppercase tracking-wider">
+            {label}
+          </span>
+        </div>
+
+        {layout === 'split' ? (
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                {featuredPost.title}
+              </h2>
+              {featuredPost.excerpt && (
+                <p className="text-zinc-400 text-lg mb-6">
+                  {featuredPost.excerpt}
+                </p>
+              )}
+              <BlogPostCard post={featuredPost} horizontal />
+            </div>
+          </div>
+        ) : (
+          <BlogPostCard
+            post={featuredPost}
+            featured={layout === 'large'}
+          />
+        )}
+      </div>
+    </section>
+  )
+}

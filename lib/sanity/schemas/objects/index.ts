@@ -1,5 +1,28 @@
 import { defineType, defineField } from 'sanity'
 
+import heroBlock from './blocks/heroBlock'
+import postsGridBlock from './blocks/postsGridBlock'
+import ctaBlock from './blocks/ctaBlock'
+import newsletterBlock from './blocks/newsletterBlock'
+import contentBlock from './blocks/contentBlock'
+import imageBlock from './blocks/imageBlock'
+import featuredPostBlock from './blocks/featuredPostBlock'
+import statsBlock from './blocks/statsBlock'
+import separatorBlock from './blocks/separatorBlock'
+import testimonialBlock from './blocks/testimonialBlock'
+import featuresBlock from './blocks/featuresBlock'
+import searchBlock from './blocks/searchBlock'
+import tagsFilterBlock from './blocks/tagsFilterBlock'
+import codeBlock from './blocks/codeBlock'
+import videoBlock from './blocks/videoBlock'
+import containerBlock from './blocks/containerBlock'
+import gridBlock from './blocks/gridBlock'
+import accordionBlock from './blocks/accordionBlock'
+import pricingBlock from './blocks/pricingBlock'
+import contactFormBlock from './blocks/contactFormBlock'
+import teamBlock from './blocks/teamBlock'
+import blockStyles from './blockStyles'
+
 const navItem = defineType({
   name: 'navItem',
   title: 'Navigation Item',
@@ -123,4 +146,32 @@ export const objects = [
   navItem,
   navGroup,
   ctaButton,
+  blockStyles,
+  // Block components for page builder - Layout
+  containerBlock,
+  gridBlock,
+  separatorBlock,
+  // Block components - Content
+  heroBlock,
+  contentBlock,
+  imageBlock,
+  codeBlock,
+  videoBlock,
+  // Block components - Posts
+  postsGridBlock,
+  featuredPostBlock,
+  searchBlock,
+  tagsFilterBlock,
+  // Block components - Marketing
+  ctaBlock,
+  newsletterBlock,
+  pricingBlock,
+  // Block components - Social
+  statsBlock,
+  testimonialBlock,
+  teamBlock,
+  featuresBlock,
+  // Block components - Interactive
+  contactFormBlock,
+  accordionBlock,
 ]
