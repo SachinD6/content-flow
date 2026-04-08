@@ -92,10 +92,11 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
   const targetLang = currentLang === 'en' ? 'hi' : 'en'
   const langInfo = LANGUAGES[targetLang]
   const sourceId = id ? getPublishedId(id) : null
+  const draftSourceId = sourceId ? `drafts.${sourceId}` : null
   const translationLookupQuery = `
     *[
       _type == $type &&
-      translationOf._ref == $sourceId &&
+      translationOf._ref in [$sourceId, $draftSourceId] &&
       coalesce(language->id, language, 'en') == $targetLang
     ] | order(
       select(defined(title) && title != '' => 5, 0) desc,
@@ -118,7 +119,12 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     let cancelled = false
 
     client
-      .fetch<{ _id: string } | null>(translationLookupQuery, { type, targetLang, sourceId })
+      .fetch<{ _id: string } | null>(translationLookupQuery, {
+        type,
+        targetLang,
+        sourceId,
+        draftSourceId,
+      })
       .then((result) => {
         if (!cancelled) setExistingTranslationId(result?._id ?? null)
       })
@@ -129,7 +135,17 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     return () => {
       cancelled = true
     }
-  }, [client, currentLang, document, sourceId, targetLang, translationLookupQuery, translationOf?._ref, type])
+  }, [
+    client,
+    currentLang,
+    document,
+    draftSourceId,
+    sourceId,
+    targetLang,
+    translationLookupQuery,
+    translationOf?._ref,
+    type,
+  ])
 
   if (!document || !id || !sourceId) return null
   if (translationOf?._ref) return null
@@ -161,6 +177,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
           type,
           targetLang,
           sourceId,
+          draftSourceId,
         })
 
         if (existingTranslation?._id) {
@@ -235,13 +252,14 @@ const ViewOriginalAction: DocumentActionComponent = (props: DocumentActionProps)
   const translationOf = document?.translationOf as { _ref?: string } | undefined
 
   if (!translationOf?._ref) return null
+  const originalId = getPublishedId(translationOf._ref)
 
   return {
     label: 'View Original',
     tone: 'default',
     group: ['paneActions'],
     onHandle: () => {
-      router.navigateIntent('edit', { type, id: translationOf._ref })
+      router.navigateIntent('edit', { type, id: originalId })
       props.onComplete()
     },
   }

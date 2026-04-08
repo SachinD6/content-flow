@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown, Menu, Sparkles, X } from 'lucide-react'
 import { UserMenu } from '@/features/auth/UserMenu'
@@ -9,6 +10,7 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 
 interface NavItem {
   label: string
+  labelHindi?: string | null
   href: string
   external?: boolean
   target?: '_self' | '_blank'
@@ -21,6 +23,8 @@ interface NavItem {
 
 interface HeaderProps {
   siteName?: string | null
+  siteNameHindi?: string | null
+  logo?: string | null
   headerNav?: NavItem[] | null
   guestNav?: NavItem[] | null
   authNav?: NavItem[] | null
@@ -55,11 +59,26 @@ function isExternalHref(href: string, item?: NavItem) {
   )
 }
 
+function isNonLocalizedAppRoute(href: string) {
+  return (
+    href === '/login' ||
+    href === '/signup' ||
+    href === '/dashboard' ||
+    href.startsWith('/dashboard/') ||
+    href.startsWith('/auth/')
+  )
+}
+
 function localizeHref(href: string, lang: string, item?: NavItem) {
-  if (isExternalHref(href, item) || lang === 'en') return href
+  if (isExternalHref(href, item) || lang === 'en' || isNonLocalizedAppRoute(href)) return href
   if (href === '/') return `/${lang}`
   if (href.startsWith(`/${lang}/`) || href === `/${lang}`) return href
   return `/${lang}${href.startsWith('/') ? href : `/${href}`}`
+}
+
+function getLocalizedLabel(item: NavItem, lang: string) {
+  if (lang === 'hi' && item.labelHindi) return item.labelHindi
+  return item.label
 }
 
 function NavLink({
@@ -81,13 +100,15 @@ function NavLink({
       rel={target === '_blank' ? 'noopener noreferrer' : undefined}
       className={className}
     >
-      {item.label}
+      {getLocalizedLabel(item, lang)}
     </Link>
   )
 }
 
 export function Header({
   siteName,
+  siteNameHindi,
+  logo,
   headerNav,
   guestNav,
   authNav,
@@ -98,10 +119,11 @@ export function Header({
   user,
 }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const defaultHeaderNav: NavItem[] = [{ label: 'Articles', href: '/posts' }]
+  const localizedSiteName = lang === 'hi' ? siteNameHindi || siteName || 'ContentFlow' : siteName || 'ContentFlow'
+  const defaultHeaderNav: NavItem[] = [{ label: 'Articles', labelHindi: 'लेख', href: '/posts' }]
   const defaultGuestNav: NavItem[] = [
-    { label: 'Sign In', href: '/login' },
-    { label: 'Get Started', href: '/signup' },
+    { label: 'Sign In', labelHindi: 'साइन इन', href: '/login' },
+    { label: 'Get Started', labelHindi: 'शुरू करें', href: '/signup' },
   ]
 
   const navItems = (headerNav ?? defaultHeaderNav).filter((item) => canShowItem(item, user))
@@ -115,10 +137,22 @@ export function Header({
             href={localizeHref('/', lang)}
             className="flex items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6154f0]"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6154f0]">
-              <Sparkles className="h-4 w-4 text-white" strokeWidth={2} />
-            </div>
-            <span className="text-lg font-bold text-white">{siteName ?? 'ContentFlow'}</span>
+            {logo ? (
+              <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                <Image
+                  src={logo}
+                  alt={localizedSiteName}
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6154f0]">
+                <Sparkles className="h-4 w-4 text-white" strokeWidth={2} />
+              </div>
+            )}
+            <span className="text-lg font-bold text-white">{localizedSiteName}</span>
           </Link>
 
           <nav className="hidden items-center gap-2 md:flex" aria-label="Main navigation">
@@ -129,7 +163,7 @@ export function Header({
                 return (
                   <div key={`${item.label}-${index}`} className="group relative">
                     <button className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white">
-                      {item.label}
+                      {getLocalizedLabel(item, lang)}
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                     <div className="invisible absolute left-0 top-full min-w-52 translate-y-2 rounded-2xl border border-white/[0.08] bg-[#121319] p-2 opacity-0 shadow-2xl transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
@@ -164,7 +198,7 @@ export function Header({
             />
 
             {user ? (
-              <UserMenu user={user} authNav={authNav} />
+              <UserMenu user={user} authNav={authNav} lang={lang} />
             ) : (
               guestItems.map((item, index) => {
                 const isPrimary = item.href.includes('signup') || item.href.includes('get')

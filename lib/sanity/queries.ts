@@ -19,9 +19,12 @@ const POST_CARD_FIELDS = groq`
 
 const NAV_ITEM_FIELDS = groq`
   label,
+  labelHindi,
   linkType,
   'href': select(
     linkType == 'internal' && page->pageType == 'home' => '/',
+    linkType == 'internal' && page->pageType == 'auth' => '/login',
+    linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
     linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
     defined(href) => href,
     '#'
@@ -34,9 +37,12 @@ const NAV_ITEM_FIELDS = groq`
   guestOnly,
   children[] {
     label,
+    labelHindi,
     linkType,
     'href': select(
       linkType == 'internal' && page->pageType == 'home' => '/',
+      linkType == 'internal' && page->pageType == 'auth' => '/login',
+      linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
       linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
       defined(href) => href,
       '#'
@@ -56,6 +62,8 @@ const PAGE_COMPONENT_FIELDS = groq`
     ...,
     'href': select(
       linkType == 'internal' && page->pageType == 'home' => '/',
+      linkType == 'internal' && page->pageType == 'auth' => '/login',
+      linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
       linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
       defined(href) => href,
       '#'
@@ -67,6 +75,8 @@ const PAGE_COMPONENT_FIELDS = groq`
     ...,
     'href': select(
       linkType == 'internal' && page->pageType == 'home' => '/',
+      linkType == 'internal' && page->pageType == 'auth' => '/login',
+      linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
       linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
       defined(href) => href,
       '#'
@@ -80,6 +90,8 @@ const PAGE_COMPONENT_FIELDS = groq`
       ...,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '#'
@@ -94,6 +106,8 @@ const PAGE_COMPONENT_FIELDS = groq`
       ...,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '#'
@@ -104,6 +118,8 @@ const PAGE_COMPONENT_FIELDS = groq`
     'buttonHref': coalesce(
       select(
         buttonLink.linkType == 'internal' && buttonLink.page->pageType == 'home' => '/',
+        buttonLink.linkType == 'internal' && buttonLink.page->pageType == 'auth' => '/login',
+        buttonLink.linkType == 'internal' && buttonLink.page->pageType == 'dashboard' => '/dashboard',
         buttonLink.linkType == 'internal' && defined(buttonLink.page->slug.current) => '/' + buttonLink.page->slug.current,
         defined(buttonLink.href) => buttonLink.href,
         null
@@ -126,6 +142,8 @@ const PAGE_COMPONENT_FIELDS = groq`
       linkType,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '#'
@@ -198,7 +216,9 @@ const POST_ROUTE_FIELDS = groq`
 
 const SITE_SETTINGS_FIELDS = groq`
   siteName,
+  siteNameHindi,
   siteDescription,
+  siteDescriptionHindi,
   'logo': logo.asset->url,
   'favicon': favicon.asset->url,
   notFoundPage {
@@ -218,12 +238,16 @@ const SITE_SETTINGS_FIELDS = groq`
     }
   },
   copyrightText,
+  copyrightTextHindi,
   footerDescription,
+  footerDescriptionHindi,
   socialLinks[] {
     platform,
     linkType,
     'url': select(
       linkType == 'internal' && page->pageType == 'home' => '/',
+      linkType == 'internal' && page->pageType == 'auth' => '/login',
+      linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
       linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
       defined(href) => href,
       '#'
@@ -234,8 +258,11 @@ const SITE_SETTINGS_FIELDS = groq`
   legalLinks {
     privacy {
       label,
+      labelHindi,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '/privacy'
@@ -245,8 +272,11 @@ const SITE_SETTINGS_FIELDS = groq`
     },
     terms {
       label,
+      labelHindi,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '/terms'
@@ -256,8 +286,11 @@ const SITE_SETTINGS_FIELDS = groq`
     },
     cookies {
       label,
+      labelHindi,
       'href': select(
         linkType == 'internal' && page->pageType == 'home' => '/',
+        linkType == 'internal' && page->pageType == 'auth' => '/login',
+        linkType == 'internal' && page->pageType == 'dashboard' => '/dashboard',
         linkType == 'internal' && defined(page->slug.current) => '/' + page->slug.current,
         defined(href) => href,
         '/cookies'
@@ -269,6 +302,7 @@ const SITE_SETTINGS_FIELDS = groq`
   headerNav[] { ${NAV_ITEM_FIELDS} },
   footerNav[] {
     title,
+    titleHindi,
     items[] { ${NAV_ITEM_FIELDS} }
   },
   dashboardNav[] { ${NAV_ITEM_FIELDS} },
@@ -496,6 +530,16 @@ export const ALL_POSTS_BY_LANGUAGE_QUERY = groq`
     _type == 'post' &&
     defined(publishedAt) &&
     showOnHome != false &&
+    coalesce(language->id, language, 'en') == $language
+  ] | order(publishedAt desc) {
+    ${POST_CARD_FIELDS}
+  }
+`
+
+export const ALL_PUBLISHED_POSTS_BY_LANGUAGE_QUERY = groq`
+  *[
+    _type == 'post' &&
+    defined(publishedAt) &&
     coalesce(language->id, language, 'en') == $language
   ] | order(publishedAt desc) {
     ${POST_CARD_FIELDS}

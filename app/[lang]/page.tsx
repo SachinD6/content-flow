@@ -67,8 +67,14 @@ export async function generateMetadata({ params }: LangPageProps): Promise<Metad
   const settings = await writeSanityClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY)
   
   return {
-    title: settings?.siteName || 'ContentFlow',
-    description: settings?.siteDescription || 'A modern publishing platform',
+    title:
+      langCode === 'hi'
+        ? settings?.siteNameHindi || settings?.siteName || 'ContentFlow'
+        : settings?.siteName || 'ContentFlow',
+    description:
+      langCode === 'hi'
+        ? settings?.siteDescriptionHindi || settings?.siteDescription || 'A modern publishing platform'
+        : settings?.siteDescription || 'A modern publishing platform',
     alternates: {
       canonical: langCode === defaultLanguage ? '/' : `/${langCode}`,
       languages: {
@@ -138,6 +144,8 @@ export default async function LangHomePage({ params }: LangPageProps) {
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         headerNav={settings?.headerNav ?? undefined}
         guestNav={settings?.guestNav ?? undefined}
         authNav={settings?.authNav ?? undefined}
@@ -195,8 +203,12 @@ export default async function LangHomePage({ params }: LangPageProps) {
 
       <Footer
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         footerDescription={settings?.footerDescription}
+        footerDescriptionHindi={settings?.footerDescriptionHindi}
         copyrightText={settings?.copyrightText}
+        copyrightTextHindi={settings?.copyrightTextHindi}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
         socialLinks={settings?.socialLinks ?? undefined}

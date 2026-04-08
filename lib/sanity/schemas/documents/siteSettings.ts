@@ -1,7 +1,13 @@
 import { defineField, defineType } from 'sanity'
 
 const defineLegalLinkFields = () => [
-  defineField({ name: 'label', title: 'Label', type: 'string' }),
+  defineField({ name: 'label', title: 'Label (English)', type: 'string' }),
+  defineField({
+    name: 'labelHindi',
+    title: 'Label (Hindi)',
+    type: 'string',
+    description: 'Shown on Hindi pages. Leave blank to reuse the English label.',
+  }),
   defineField({
     name: 'linkType',
     title: 'Link Type',
@@ -96,19 +102,34 @@ export default defineType({
   fields: [
     defineField({
       name: 'siteName',
-      title: 'Site Name',
+      title: 'Site Name (English)',
       type: 'string',
       validation: (Rule) => Rule.required(),
       initialValue: 'ContentFlow',
       group: 'general',
     }),
     defineField({
+      name: 'siteNameHindi',
+      title: 'Site Name (Hindi)',
+      type: 'string',
+      description: 'Optional Hindi version shown on /hi pages.',
+      group: 'general',
+    }),
+    defineField({
       name: 'siteDescription',
-      title: 'Site Description',
+      title: 'Site Description (English)',
       type: 'text',
       rows: 2,
       initialValue:
         'A modern publishing platform for writers, creators, and thinkers.',
+      group: 'general',
+    }),
+    defineField({
+      name: 'siteDescriptionHindi',
+      title: 'Site Description (Hindi)',
+      type: 'text',
+      rows: 2,
+      description: 'Optional Hindi version used on /hi pages and metadata.',
       group: 'general',
     }),
     defineField({
@@ -221,7 +242,7 @@ export default defineType({
     }),
     defineField({
       name: 'footerDescription',
-      title: 'Footer Description',
+      title: 'Footer Description (English)',
       type: 'text',
       rows: 3,
       initialValue:
@@ -229,10 +250,25 @@ export default defineType({
       group: 'footer',
     }),
     defineField({
+      name: 'footerDescriptionHindi',
+      title: 'Footer Description (Hindi)',
+      type: 'text',
+      rows: 3,
+      description: 'Shown in the footer on Hindi pages.',
+      group: 'footer',
+    }),
+    defineField({
       name: 'copyrightText',
-      title: 'Copyright Text',
+      title: 'Copyright Text (English)',
       type: 'string',
       initialValue: '© 2026 ContentFlow. All rights reserved.',
+      group: 'footer',
+    }),
+    defineField({
+      name: 'copyrightTextHindi',
+      title: 'Copyright Text (Hindi)',
+      type: 'string',
+      description: 'Shown in the footer on Hindi pages.',
       group: 'footer',
     }),
     defineField({

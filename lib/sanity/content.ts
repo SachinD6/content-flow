@@ -7,6 +7,7 @@ import {
   ALL_PAGES_QUERY,
   HOME_PAGE_DATA_QUERY,
 } from './queries'
+import { DEFAULT_SITE_SETTINGS } from './content-types'
 import type { SiteSettings, Page } from './content-types'
 
 interface HomePagePost {
@@ -33,54 +34,36 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   if (!data) {
     return {
       siteName: 'ContentFlow',
+      siteNameHindi: DEFAULT_SITE_SETTINGS.siteNameHindi,
       siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
+      siteDescriptionHindi: DEFAULT_SITE_SETTINGS.siteDescriptionHindi,
       logo: null,
       favicon: null,
+      notFoundPage: DEFAULT_SITE_SETTINGS.notFoundPage,
       copyrightText: '© 2026 ContentFlow. All rights reserved.',
+      copyrightTextHindi: DEFAULT_SITE_SETTINGS.copyrightTextHindi,
       footerDescription: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
+      footerDescriptionHindi: DEFAULT_SITE_SETTINGS.footerDescriptionHindi,
       socialLinks: [],
       legalLinks: {
-        privacy: { label: 'Privacy Policy', href: '/privacy' },
-        terms: { label: 'Terms of Service', href: '/terms' },
-        cookies: { label: 'Cookies', href: '/cookies' },
+        privacy: DEFAULT_SITE_SETTINGS.legalLinks!.privacy,
+        terms: DEFAULT_SITE_SETTINGS.legalLinks!.terms,
+        cookies: DEFAULT_SITE_SETTINGS.legalLinks!.cookies,
       },
       headerNav: [
-        { label: 'Articles', href: '/posts' },
-        { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
+        ...DEFAULT_SITE_SETTINGS.headerNav!,
       ],
       footerNav: [
-        {
-          title: 'Platform',
-          items: [
-            { label: 'Articles', href: '/posts' },
-            { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-            { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
-          ],
-        },
-        {
-          title: 'Account',
-          items: [
-            { label: 'Settings', href: '/dashboard/settings', requiresAuth: true },
-            { label: 'Billing', href: '/dashboard/billing', requiresAuth: true },
-            { label: 'Help Center', href: '/help' },
-          ],
-        },
+        ...DEFAULT_SITE_SETTINGS.footerNav!,
       ],
       dashboardNav: [
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Posts', href: '/dashboard/posts' },
-        { label: 'Analytics', href: '/dashboard/analytics' },
-        { label: 'Settings', href: '/dashboard/settings' },
-        { label: 'Billing', href: '/dashboard/billing' },
+        ...DEFAULT_SITE_SETTINGS.dashboardNav!,
       ],
       authNav: [
-        { label: 'Write a story', href: '/dashboard/posts' },
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Settings', href: '/dashboard/settings' },
+        ...DEFAULT_SITE_SETTINGS.authNav!,
       ],
       guestNav: [
-        { label: 'Sign In', href: '/login' },
-        { label: 'Get Started', href: '/signup' },
+        ...DEFAULT_SITE_SETTINGS.guestNav!,
       ],
     }
   }
@@ -233,54 +216,36 @@ export async function getHomePageData() {
   
   const defaultSettings: SiteSettings = {
     siteName: 'ContentFlow',
+    siteNameHindi: DEFAULT_SITE_SETTINGS.siteNameHindi,
     siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
+    siteDescriptionHindi: DEFAULT_SITE_SETTINGS.siteDescriptionHindi,
     logo: null,
     favicon: null,
+    notFoundPage: DEFAULT_SITE_SETTINGS.notFoundPage,
     copyrightText: '© 2026 ContentFlow. All rights reserved.',
+    copyrightTextHindi: DEFAULT_SITE_SETTINGS.copyrightTextHindi,
     footerDescription: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
+    footerDescriptionHindi: DEFAULT_SITE_SETTINGS.footerDescriptionHindi,
     socialLinks: [],
     legalLinks: {
-      privacy: { label: 'Privacy Policy', href: '/privacy' },
-      terms: { label: 'Terms of Service', href: '/terms' },
-      cookies: { label: 'Cookies', href: '/cookies' },
+      privacy: DEFAULT_SITE_SETTINGS.legalLinks!.privacy,
+      terms: DEFAULT_SITE_SETTINGS.legalLinks!.terms,
+      cookies: DEFAULT_SITE_SETTINGS.legalLinks!.cookies,
     },
     headerNav: [
-      { label: 'Articles', href: '/posts' },
-      { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
+      ...DEFAULT_SITE_SETTINGS.headerNav!,
     ],
     footerNav: [
-      {
-        title: 'Platform',
-        items: [
-          { label: 'Articles', href: '/posts' },
-          { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-          { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
-        ],
-      },
-      {
-        title: 'Account',
-        items: [
-          { label: 'Settings', href: '/dashboard/settings', requiresAuth: true },
-          { label: 'Billing', href: '/dashboard/billing', requiresAuth: true },
-          { label: 'Help Center', href: '/help' },
-        ],
-      },
+      ...DEFAULT_SITE_SETTINGS.footerNav!,
     ],
     dashboardNav: [
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Posts', href: '/dashboard/posts' },
-      { label: 'Analytics', href: '/dashboard/analytics' },
-      { label: 'Settings', href: '/dashboard/settings' },
-      { label: 'Billing', href: '/dashboard/billing' },
+      ...DEFAULT_SITE_SETTINGS.dashboardNav!,
     ],
     authNav: [
-      { label: 'Write a story', href: '/dashboard/posts' },
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Settings', href: '/dashboard/settings' },
+      ...DEFAULT_SITE_SETTINGS.authNav!,
     ],
     guestNav: [
-      { label: 'Sign In', href: '/login' },
-      { label: 'Get Started', href: '/signup' },
+      ...DEFAULT_SITE_SETTINGS.guestNav!,
     ],
   }
   

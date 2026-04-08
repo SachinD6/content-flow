@@ -71,7 +71,7 @@ export function LanguageSwitcher({
       const targetPath = translationLinks[langId]
 
       if (!targetPath) {
-        if (contentTypeLabel === 'page') {
+        if (contentTypeLabel === 'page' || contentTypeLabel === 'post') {
           try {
             localStorage.setItem(STORAGE_KEY, langId)
           } catch {

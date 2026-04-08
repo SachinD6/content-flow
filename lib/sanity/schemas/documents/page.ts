@@ -39,7 +39,7 @@ async function isSlugUniquePerLanguage(slug: string, context: { document?: { _id
 }
 
 function validateNormalizedSlug(value: { current?: string } | undefined, pageType?: string) {
-  if (pageType === 'home') return true
+  if (pageType === 'home' || pageType === 'auth' || pageType === 'dashboard') return true
   if (!value?.current) return 'A slug is required for this page.'
 
   const normalized = sanitizeStoredSlug(value.current)
@@ -68,7 +68,13 @@ async function validateTranslationSlugMatchesSource(
 ) {
   const normalizedValidation = validateNormalizedSlug(value, context.document?.pageType)
   if (normalizedValidation !== true) return normalizedValidation
-  if (context.document?.pageType === 'home') return true
+  if (
+    context.document?.pageType === 'home' ||
+    context.document?.pageType === 'auth' ||
+    context.document?.pageType === 'dashboard'
+  ) {
+    return true
+  }
 
   const sourceId = context.document?.translationOf?._ref
   if (!sourceId) return true
@@ -135,7 +141,7 @@ export default defineType({
         }
         getClient: (options: { apiVersion: string }) => { fetch: <T>(query: string, params: Record<string, unknown>) => Promise<T> }
       })),
-      hidden: ({ document }) => document?.pageType === 'home',
+      hidden: ({ document }) => document?.pageType !== 'generic',
       readOnly: ({ document }) => isTranslationDocument(document),
       group: 'basic',
     }),
@@ -454,9 +460,13 @@ export default defineType({
       const flag = language === 'hi' ? '🇮🇳' : '🇺🇸'
       const path = pageType === 'home'
         ? language === 'hi' ? '/hi' : '/'
-        : slug
-          ? language === 'hi' ? `/hi/${slug}` : `/${slug}`
-          : 'No slug yet'
+        : pageType === 'auth'
+          ? '/login'
+          : pageType === 'dashboard'
+            ? '/dashboard'
+            : slug
+              ? language === 'hi' ? `/hi/${slug}` : `/${slug}`
+              : 'No slug yet'
       const translationLabel = translationOf ? 'translation' : 'original'
 
       return {

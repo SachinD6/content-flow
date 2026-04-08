@@ -6,7 +6,6 @@ import dynamicImport from 'next/dynamic'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { Metadata } from 'next'
 
-import { sanityFetch } from '@/lib/sanity/live'
 import { POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY } from '@/lib/sanity/queries'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
@@ -14,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
 import { isValidLanguage } from '@/lib/i18n'
 import { buildAlternateLanguageEntries, buildTranslationLinks, getLocalizedPath, getPostPath } from '@/lib/i18n/content-routing'
+import { previewSanityClient, writeSanityClient } from '@/lib/sanity/client'
 import type { PortableTextBlock } from '@portabletext/types'
 
 export const dynamic = 'force-dynamic'
@@ -60,11 +60,10 @@ export async function generateMetadata(props: { params: Promise<PostPageParams> 
   
   const langCode = lang
   
-  const postResult = await sanityFetch({ 
-    query: POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, 
-    params: { slug, language: langCode }
-  })
-  const post = postResult.data as ExtendedPost | null
+  const post = await writeSanityClient.fetch(
+    POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY,
+    { slug, language: langCode }
+  ) as ExtendedPost | null
 
   if (!post) {
     return { title: 'Post Not Found' }
@@ -93,13 +92,11 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
   const langCode = lang
   const { isEnabled: isDraftMode } = await draftMode()
   
-  const [postResult, settingsResult] = await Promise.all([
-    sanityFetch({ query: POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
-    sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
+  const cmsClient = isDraftMode ? previewSanityClient : writeSanityClient
+  const [post, settings] = await Promise.all([
+    cmsClient.fetch(POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, { slug, language: langCode }),
+    cmsClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY),
   ])
-
-  const post = postResult.data as ExtendedPost | null
-  const settings = settingsResult.data
 
   if (!post) {
     notFound()
@@ -146,6 +143,8 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         headerNav={settings?.headerNav ?? undefined}
         guestNav={settings?.guestNav ?? undefined}
         authNav={settings?.authNav ?? undefined}
@@ -188,7 +187,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
 
         <article className="space-y-6 sm:space-y-8">
           <div className="flex flex-wrap gap-2">
-            {post.tags?.map((tag) => (
+            {post.tags?.map((tag: string) => (
               <Link key={tag} href={getLocalizedPath(`/?tag=${tag}`, langCode)}>
                 <Badge
                   variant="secondary"
@@ -274,8 +273,12 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
 
       <Footer
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         footerDescription={settings?.footerDescription}
+        footerDescriptionHindi={settings?.footerDescriptionHindi}
         copyrightText={settings?.copyrightText}
+        copyrightTextHindi={settings?.copyrightTextHindi}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
         socialLinks={settings?.socialLinks ?? undefined}

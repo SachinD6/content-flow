@@ -30,9 +30,15 @@ const navChildItem = defineType({
   fields: [
     defineField({
       name: 'label',
-      title: 'Label',
+      title: 'Label (English)',
       type: 'string',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'labelHindi',
+      title: 'Label (Hindi)',
+      type: 'string',
+      description: 'Shown on Hindi pages. Leave blank to reuse the English label.',
     }),
     defineField({
       name: 'linkType',
@@ -158,10 +164,16 @@ const navItem = defineType({
   fields: [
     defineField({
       name: 'label',
-      title: 'Label',
+      title: 'Label (English)',
       type: 'string',
       description: 'The text visitors click.',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'labelHindi',
+      title: 'Label (Hindi)',
+      type: 'string',
+      description: 'Shown on Hindi pages. Leave blank to reuse the English label.',
     }),
     defineField({
       name: 'linkType',
@@ -262,9 +274,15 @@ const navGroup = defineType({
   fields: [
     defineField({
       name: 'title',
-      title: 'Group Title',
+      title: 'Group Title (English)',
       type: 'string',
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'titleHindi',
+      title: 'Group Title (Hindi)',
+      type: 'string',
+      description: 'Shown on Hindi pages. Leave blank to reuse the English title.',
     }),
     defineField({
       name: 'items',

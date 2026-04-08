@@ -2,13 +2,16 @@ import { notFound } from 'next/navigation'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { Metadata } from 'next'
-import { sanityFetch } from '@/lib/sanity/live'
-import { SITE_SETTINGS_WITH_LANGUAGES_QUERY, ALL_POSTS_BY_LANGUAGE_QUERY } from '@/lib/sanity/queries'
+import {
+  SITE_SETTINGS_WITH_LANGUAGES_QUERY,
+  ALL_PUBLISHED_POSTS_BY_LANGUAGE_QUERY,
+} from '@/lib/sanity/queries'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
 import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
 import { t, getLocalizedPath } from '@/lib/i18n/translations'
 import { BlogPostCard } from '@/features/posts/BlogPostCard'
+import { previewSanityClient, writeSanityClient } from '@/lib/sanity/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,17 +73,13 @@ export default async function PostsPage({ params }: PostsPageProps) {
   
   const langCode = lang
   const { isEnabled: isDraftMode } = await draftMode()
-  
-  const [settingsResult, postsResult] = await Promise.all([
-    sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
-    sanityFetch({ 
-      query: ALL_POSTS_BY_LANGUAGE_QUERY, 
-      params: { language: langCode }
-    }),
-  ])
 
-  const settings = settingsResult.data
-  const posts: Post[] = postsResult.data || []
+  const cmsClient = isDraftMode ? previewSanityClient : writeSanityClient
+  const [settings, postsResult] = await Promise.all([
+    cmsClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY),
+    cmsClient.fetch(ALL_PUBLISHED_POSTS_BY_LANGUAGE_QUERY, { language: langCode }),
+  ])
+  const posts: Post[] = postsResult || []
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -114,6 +113,8 @@ const langHref = (path: string) => getLocalizedPath(path, langCode)
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         headerNav={settings?.headerNav ?? undefined}
         guestNav={settings?.guestNav ?? undefined}
         authNav={settings?.authNav ?? undefined}
@@ -197,8 +198,12 @@ const langHref = (path: string) => getLocalizedPath(path, langCode)
 
       <Footer
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         footerDescription={settings?.footerDescription}
+        footerDescriptionHindi={settings?.footerDescriptionHindi}
         copyrightText={settings?.copyrightText}
+        copyrightTextHindi={settings?.copyrightTextHindi}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
         socialLinks={settings?.socialLinks ?? undefined}

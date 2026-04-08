@@ -141,6 +141,13 @@ for (const document of documents) {
   const normalizedSlug = sanitizeSlug(document.slug)
   const nextPatch = {}
 
+  if (document.translationOf?._ref) {
+    const normalizedSourceRef = getBaseId(document.translationOf._ref)
+    if (document.translationOf._ref !== normalizedSourceRef) {
+      nextPatch.translationOf = { _type: 'reference', _ref: normalizedSourceRef }
+    }
+  }
+
   if (normalizedLanguage && document.language !== normalizedLanguage) {
     nextPatch.language = normalizedLanguage
   }

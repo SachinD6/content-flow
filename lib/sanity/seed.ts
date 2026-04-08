@@ -42,6 +42,22 @@ const defaultSiteSettings = {
   _id: SITE_SETTINGS_ID,
   siteName: 'ContentFlow',
   siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
+  notFoundPage: {
+    english: {
+      eyebrow: '404 Error',
+      title: 'Page not found',
+      description: "The page you're looking for doesn't exist, was moved, or is not published yet.",
+      primaryButtonLabel: 'Go to homepage',
+      secondaryButtonLabel: 'Browse posts',
+    },
+    hindi: {
+      eyebrow: '404 त्रुटि',
+      title: 'पेज नहीं मिला',
+      description: 'जिस पेज को आप ढूंढ रहे हैं वह मौजूद नहीं है, हटाया जा चुका है, या अभी प्रकाशित नहीं हुआ है।',
+      primaryButtonLabel: 'होमपेज पर जाएँ',
+      secondaryButtonLabel: 'पोस्ट्स देखें',
+    },
+  },
   copyrightText: '© 2026 ContentFlow. All rights reserved.',
   footerDescription: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
   socialLinks: [],

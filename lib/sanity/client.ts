@@ -25,6 +25,11 @@ export const writeSanityClient = createClient({
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-01-01',
   useCdn: false,
+  resultSourceMap: 'withKeyArraySelector',
+  stega: {
+    enabled: false,
+    studioUrl: '/studio',
+  },
   token: process.env.SANITY_API_TOKEN,
 });
 
@@ -35,5 +40,10 @@ export const previewSanityClient = createClient({
   apiVersion: '2024-01-01',
   useCdn: false,
   perspective: 'previewDrafts',
+  resultSourceMap: 'withKeyArraySelector',
+  stega: {
+    enabled: true,
+    studioUrl: '/studio',
+  },
   token: process.env.SANITY_API_TOKEN,
 });

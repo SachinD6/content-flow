@@ -10,13 +10,14 @@ export interface SocialLink {
 }
 
 export interface LegalLinks {
-  privacy: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
-  terms: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
-  cookies: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  privacy: { label: string; labelHindi?: string | null; href: string; external?: boolean; target?: '_self' | '_blank' }
+  terms: { label: string; labelHindi?: string | null; href: string; external?: boolean; target?: '_self' | '_blank' }
+  cookies: { label: string; labelHindi?: string | null; href: string; external?: boolean; target?: '_self' | '_blank' }
 }
 
 export interface NavItem {
   label: string
+  labelHindi?: string | null
   href: string
   linkType?: 'internal' | 'external'
   external?: boolean
@@ -30,6 +31,7 @@ export interface NavItem {
 
 export interface NavGroup {
   title: string
+  titleHindi?: string | null
   items: NavItem[]
 }
 
@@ -43,7 +45,9 @@ export interface NotFoundContent {
 
 export interface SiteSettings {
   siteName: string | null
+  siteNameHindi?: string | null
   siteDescription: string | null
+  siteDescriptionHindi?: string | null
   logo: string | null
   favicon: string | null
   notFoundPage:
@@ -53,7 +57,9 @@ export interface SiteSettings {
       }
     | null
   copyrightText: string | null
+  copyrightTextHindi?: string | null
   footerDescription: string | null
+  footerDescriptionHindi?: string | null
   socialLinks: SocialLink[] | null
   legalLinks: LegalLinks | null
   headerNav: NavItem[] | null
@@ -239,7 +245,9 @@ export interface Page {
 // Default fallback values
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: 'ContentFlow',
+  siteNameHindi: 'कॉन्टेंटफ्लो',
   siteDescription: 'A modern publishing platform for writers, creators, and thinkers.',
+  siteDescriptionHindi: 'लेखकों, क्रिएटर्स और विचारकों के लिए एक आधुनिक प्रकाशन मंच।',
   logo: null,
   favicon: null,
   notFoundPage: {
@@ -259,50 +267,55 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     },
   },
   copyrightText: '© 2026 ContentFlow. All rights reserved.',
+  copyrightTextHindi: '© 2026 कॉन्टेंटफ्लो। सर्वाधिकार सुरक्षित।',
   footerDescription: 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.',
+  footerDescriptionHindi:
+    'लेखकों, क्रिएटर्स और विचारकों के लिए एक आधुनिक प्रकाशन मंच। अपनी कहानियाँ दुनिया के साथ साझा करें और अपना पाठक वर्ग बढ़ाएँ।',
   socialLinks: [],
   legalLinks: {
-    privacy: { label: 'Privacy Policy', href: '/privacy' },
-    terms: { label: 'Terms of Service', href: '/terms' },
-    cookies: { label: 'Cookies', href: '/cookies' },
+    privacy: { label: 'Privacy Policy', labelHindi: 'गोपनीयता नीति', href: '/privacy' },
+    terms: { label: 'Terms of Service', labelHindi: 'सेवा की शर्तें', href: '/terms' },
+    cookies: { label: 'Cookies', labelHindi: 'कुकीज़', href: '/cookies' },
   },
   headerNav: [
-    { label: 'Articles', href: '/posts' },
-    { label: 'Write', href: '/dashboard/posts', requiresAuth: true },
+    { label: 'Articles', labelHindi: 'लेख', href: '/posts' },
+    { label: 'Write', labelHindi: 'लिखें', href: '/dashboard/posts', requiresAuth: true },
   ],
   footerNav: [
     {
       title: 'Platform',
+      titleHindi: 'प्लेटफ़ॉर्म',
       items: [
-        { label: 'Articles', href: '/posts' },
-        { label: 'Dashboard', href: '/dashboard', requiresAuth: true },
-        { label: 'Write a story', href: '/dashboard/posts', requiresAuth: true },
+        { label: 'Articles', labelHindi: 'लेख', href: '/posts' },
+        { label: 'Dashboard', labelHindi: 'डैशबोर्ड', href: '/dashboard', requiresAuth: true },
+        { label: 'Write a story', labelHindi: 'कहानी लिखें', href: '/dashboard/posts', requiresAuth: true },
       ],
     },
     {
       title: 'Account',
+      titleHindi: 'खाता',
       items: [
-        { label: 'Settings', href: '/dashboard/settings', requiresAuth: true },
-        { label: 'Billing', href: '/dashboard/billing', requiresAuth: true },
-        { label: 'Help Center', href: '/help' },
+        { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings', requiresAuth: true },
+        { label: 'Billing', labelHindi: 'बिलिंग', href: '/dashboard/billing', requiresAuth: true },
+        { label: 'Help Center', labelHindi: 'सहायता केंद्र', href: '/help' },
       ],
     },
   ],
   dashboardNav: [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Posts', href: '/dashboard/posts' },
-    { label: 'Analytics', href: '/dashboard/analytics' },
-    { label: 'Settings', href: '/dashboard/settings' },
-    { label: 'Billing', href: '/dashboard/billing' },
+    { label: 'Dashboard', labelHindi: 'डैशबोर्ड', href: '/dashboard' },
+    { label: 'Posts', labelHindi: 'पोस्ट्स', href: '/dashboard/posts' },
+    { label: 'Analytics', labelHindi: 'एनालिटिक्स', href: '/dashboard/analytics' },
+    { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings' },
+    { label: 'Billing', labelHindi: 'बिलिंग', href: '/dashboard/billing' },
   ],
   authNav: [
-    { label: 'Write a story', href: '/dashboard/posts' },
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Settings', href: '/dashboard/settings' },
+    { label: 'Write a story', labelHindi: 'कहानी लिखें', href: '/dashboard/posts' },
+    { label: 'Dashboard', labelHindi: 'डैशबोर्ड', href: '/dashboard' },
+    { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings' },
   ],
   guestNav: [
-    { label: 'Sign In', href: '/login' },
-    { label: 'Get Started', href: '/signup' },
+    { label: 'Sign In', labelHindi: 'साइन इन', href: '/login' },
+    { label: 'Get Started', labelHindi: 'शुरू करें', href: '/signup' },
   ],
 }
 

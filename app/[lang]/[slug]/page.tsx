@@ -145,6 +145,8 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
     <div className="min-h-screen bg-[#0b0c10]">
       <Header
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         headerNav={settings?.headerNav ?? undefined}
         guestNav={settings?.guestNav ?? undefined}
         authNav={settings?.authNav ?? undefined}
@@ -214,8 +216,12 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
 
       <Footer
         siteName={settings?.siteName}
+        siteNameHindi={settings?.siteNameHindi}
+        logo={settings?.logo}
         copyrightText={settings?.copyrightText}
+        copyrightTextHindi={settings?.copyrightTextHindi}
         footerDescription={settings?.footerDescription}
+        footerDescriptionHindi={settings?.footerDescriptionHindi}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
         socialLinks={settings?.socialLinks ?? undefined}

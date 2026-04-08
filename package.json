@@ -11,7 +11,10 @@
     "start": "next start",
     "lint": "eslint",
     "migrate:slugs": "node ./scripts/normalize-translation-slugs.mjs",
-    "migrate:translations": "node ./scripts/fix-translation-data.mjs"
+    "migrate:translations": "node ./scripts/fix-translation-data.mjs",
+    "translate:hi:missing": "node ./scripts/create-missing-hindi-translations.mjs",
+    "translate:hi:finalize": "node ./scripts/finalize-hindi-translations.mjs",
+    "localize:site-settings": "node ./scripts/localize-site-settings.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
