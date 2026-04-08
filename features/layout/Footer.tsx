@@ -5,7 +5,10 @@ import { t } from '@/lib/i18n/translations'
 interface NavItem {
   label: string
   href: string
+  external?: boolean
+  target?: '_self' | '_blank'
   requiresAuth?: boolean
+  children?: NavItem[] | null
 }
 
 interface NavGroup {
@@ -14,9 +17,9 @@ interface NavGroup {
 }
 
 interface LegalLinks {
-  privacy: { label: string; href: string }
-  terms: { label: string; href: string }
-  cookies: { label: string; href: string }
+  privacy: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  terms: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  cookies?: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
 }
 
 interface FooterProps {
@@ -25,6 +28,7 @@ interface FooterProps {
   copyrightText?: string | null
   legalLinks?: LegalLinks | null
   footerNav?: NavGroup[] | null
+  socialLinks?: Array<{ platform: string; url: string; external?: boolean; target?: '_self' | '_blank' }> | null
   footerCTAButtons?: Array<{
     label: string
     href: string
@@ -49,9 +53,23 @@ interface FooterProps {
 
 const defaultLanguage = 'en'
 
-function localizePath(path: string, lang?: string): string {
-  if (!lang || lang === defaultLanguage) return path
-  return `/${lang}${path}`
+function isExternalHref(path: string, item?: NavItem): boolean {
+  return Boolean(
+    item?.external ||
+      item?.target === '_blank' ||
+      path.startsWith('http://') ||
+      path.startsWith('https://') ||
+      path.startsWith('mailto:') ||
+      path.startsWith('tel:') ||
+      path.startsWith('#')
+  )
+}
+
+function localizePath(path: string, lang?: string, item?: NavItem): string {
+  if (!lang || lang === defaultLanguage || isExternalHref(path, item)) return path
+  if (path === '/') return `/${lang}`
+  if (path.startsWith(`/${lang}/`) || path === `/${lang}`) return path
+  return `/${lang}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 function getLocalizedNavItem(lang?: string): NavGroup[] {
@@ -75,12 +93,61 @@ function getLocalizedNavItem(lang?: string): NavGroup[] {
   ]
 }
 
+function FooterLink({
+  item,
+  lang,
+  className,
+}: {
+  item: NavItem
+  lang?: string
+  className: string
+}) {
+  const target = item.target === '_blank' || item.external ? '_blank' : undefined
+  return (
+    <Link
+      href={localizePath(item.href, lang, item)}
+      target={target}
+      rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+      className={className}
+    >
+      {item.label}
+    </Link>
+  )
+}
+
+function LegalLink({
+  item,
+  fallbackHref,
+  fallbackLabel,
+  lang,
+}: {
+  item?: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  fallbackHref: string
+  fallbackLabel: string
+  lang?: string
+}) {
+  const href = item?.href ?? fallbackHref
+  const target = item?.target === '_blank' || item?.external ? '_blank' : undefined
+
+  return (
+    <Link
+      href={localizePath(href, lang, item)}
+      target={target}
+      rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+      className="text-sm text-zinc-500 transition-colors hover:text-white"
+    >
+      {item?.label ?? fallbackLabel}
+    </Link>
+  )
+}
+
 export function Footer({
   siteName,
   footerDescription,
   copyrightText,
   legalLinks,
   footerNav,
+  socialLinks,
   footerCTAButtons,
   newsletterSection,
   user,
@@ -88,63 +155,82 @@ export function Footer({
 }: FooterProps) {
   const navGroups = footerNav ?? getLocalizedNavItem(lang)
   const showNewsletter = newsletterSection?.enabled !== false
+  const filteredSocialLinks = socialLinks?.filter((link) => link.url) ?? []
 
   return (
-    <footer className="border-t border-white/[0.06] mt-24 bg-[#0b0c10]">
-      <div className="mx-auto max-w-6xl px-12 lg:px-32 py-16">
-        {/* Newsletter Section */}
+    <footer className="mt-24 border-t border-white/[0.06] bg-[#0b0c10]">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         {showNewsletter && (
-          <div className="mb-16 pb-12 border-b border-white/[0.06]">
+          <section className="mb-16 rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6 sm:p-8">
             <div className="max-w-xl">
-              <h3 className="text-xl font-bold text-white mb-3">
+              <h2 className="mb-3 text-xl font-bold text-white">
                 {newsletterSection?.heading ?? t('stayInLoop', lang || 'en')}
-              </h3>
-              <p className="text-zinc-500 text-sm mb-5">
+              </h2>
+              <p className="mb-5 text-sm leading-relaxed text-zinc-400">
                 {newsletterSection?.description ?? t('newsletterDescription', lang || 'en')}
               </p>
-              <div className="flex gap-3 mb-6">
+              <form className="flex flex-col gap-3 sm:flex-row">
+                <label className="sr-only" htmlFor="footer-newsletter-email">
+                  Email address
+                </label>
                 <input
+                  id="footer-newsletter-email"
                   type="email"
                   placeholder={newsletterSection?.placeholder ?? t('enterEmail', lang || 'en')}
-                  className="flex-1 px-4 py-2.5 bg-[#121319] border border-white/[0.08] rounded-lg text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#6154f0]/50 transition-colors"
+                  className="min-h-11 flex-1 rounded-xl border border-white/[0.08] bg-[#121319] px-4 text-sm text-white placeholder:text-zinc-600 focus:border-[#6154f0]/50 focus:outline-none"
                 />
-                <button className="px-5 py-2.5 bg-white text-[#0b0c10] text-sm font-medium rounded-lg hover:bg-zinc-200 transition-colors">
+                <button className="min-h-11 rounded-xl bg-white px-5 text-sm font-semibold text-[#0b0c10] transition-colors hover:bg-zinc-200">
                   {newsletterSection?.buttonText ?? t('subscribe', lang || 'en')}
                 </button>
-              </div>
+              </form>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          {/* Brand */}
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-5">
+            <div className="mb-5 flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6154f0]">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">
-                {siteName ?? 'ContentFlow'}
-              </span>
+              <span className="text-xl font-bold text-white">{siteName ?? 'ContentFlow'}</span>
             </div>
-            <p className="text-zinc-400 text-sm leading-relaxed max-w-md mb-6">
+            <p className="mb-6 max-w-md text-sm leading-relaxed text-zinc-400">
               {footerDescription ?? 'A modern publishing platform for writers, creators, and thinkers. Share your stories with the world and grow your audience.'}
             </p>
-            <div className="flex gap-4">
+
+            {filteredSocialLinks.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-3">
+                {filteredSocialLinks.map((link) => (
+                  <Link
+                    key={`${link.platform}-${link.url}`}
+                    href={localizePath(link.url, lang, {
+                      label: link.platform,
+                      href: link.url,
+                      external: link.external,
+                      target: link.target,
+                    })}
+                    target={link.target === '_blank' || link.external ? '_blank' : undefined}
+                    rel={link.target === '_blank' || link.external ? 'noopener noreferrer' : undefined}
+                    className="rounded-full border border-white/[0.08] px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-zinc-400 transition-colors hover:border-white/20 hover:text-white"
+                  >
+                    {link.platform}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-4">
               {(footerCTAButtons ?? [
                 { label: t('getStarted', lang || 'en'), href: '/signup', variant: 'primary' },
                 { label: t('learnMore', lang || 'en'), href: '/posts', variant: 'secondary' },
               ])
-                .filter((btn) => {
-                  if (btn.requiresAuth && !user) return false
-                  return true
-                })
+                .filter((button) => !button.requiresAuth || user)
                 .map((button, index) => (
                   <Link
                     key={`${button.href}-${index}`}
                     href={localizePath(button.href, lang)}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                    className={`inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-medium transition-colors ${
                       button.variant === 'primary'
                         ? 'bg-white text-[#0b0c10] hover:bg-zinc-200'
                         : 'text-zinc-400 hover:text-white'
@@ -156,56 +242,64 @@ export function Footer({
             </div>
           </div>
 
-          {/* Footer Navigation Groups */}
           {navGroups.map((group, groupIndex) => (
-            <div key={`${group.title}-${groupIndex}`}>
-              <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
+            <nav key={`${group.title}-${groupIndex}`} aria-label={group.title}>
+              <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-white">
                 {group.title}
-              </h4>
+              </h2>
               <ul className="space-y-4">
-                {group.items.map((item, itemIndex) => {
-                  if (item.requiresAuth && !user) return null
-
-                  return (
+                {group.items
+                  .filter((item) => !item.requiresAuth || user)
+                  .map((item, itemIndex) => (
                     <li key={`${item.href}-${itemIndex}`}>
-                      <Link
-                        href={localizePath(item.href, lang)}
-                        className="text-sm text-zinc-500 hover:text-white transition-colors"
-                      >
-                        {item.label}
-                      </Link>
+                      <FooterLink
+                        item={item}
+                        lang={lang}
+                        className="text-sm text-zinc-500 transition-colors hover:text-white"
+                      />
+                      {item.children && item.children.length > 0 && (
+                        <ul className="mt-3 space-y-3 border-l border-white/[0.08] pl-4">
+                          {item.children.map((child, childIndex) => (
+                            <li key={`${child.href}-${childIndex}`}>
+                              <FooterLink
+                                item={child}
+                                lang={lang}
+                                className="text-sm text-zinc-600 transition-colors hover:text-white"
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
-                  )
-                })}
+                  ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
 
-        {/* Bottom Section */}
-        <div className="pt-8 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-8 md:flex-row">
           <p className="text-sm text-zinc-500">
             {copyrightText ?? '© 2026 ContentFlow. All rights reserved.'}
           </p>
-          <div className="flex items-center gap-8">
-            <Link
-              href={localizePath(legalLinks?.privacy?.href ?? '/privacy', lang)}
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
-            >
-              {legalLinks?.privacy?.label ?? t('privacyPolicy', lang || 'en')}
-            </Link>
-            <Link
-              href={localizePath(legalLinks?.terms?.href ?? '/terms', lang)}
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
-            >
-              {legalLinks?.terms?.label ?? t('termsOfService', lang || 'en')}
-            </Link>
-            <Link
-              href={localizePath(legalLinks?.cookies?.href ?? '/cookies', lang)}
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
-            >
-              {legalLinks?.cookies?.label ?? t('cookies', lang || 'en')}
-            </Link>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <LegalLink
+              item={legalLinks?.privacy}
+              fallbackHref="/privacy"
+              fallbackLabel={t('privacyPolicy', lang || 'en')}
+              lang={lang}
+            />
+            <LegalLink
+              item={legalLinks?.terms}
+              fallbackHref="/terms"
+              fallbackLabel={t('termsOfService', lang || 'en')}
+              lang={lang}
+            />
+            <LegalLink
+              item={legalLinks?.cookies}
+              fallbackHref="/cookies"
+              fallbackLabel={t('cookies', lang || 'en')}
+              lang={lang}
+            />
           </div>
         </div>
       </div>

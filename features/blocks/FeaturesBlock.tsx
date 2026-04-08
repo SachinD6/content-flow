@@ -37,6 +37,8 @@ interface Feature {
   link?: {
     text?: string
     href?: string
+    external?: boolean
+    target?: '_self' | '_blank'
   }
 }
 
@@ -61,13 +63,18 @@ export function FeaturesBlock({
   features = [],
   lang = 'en',
 }: FeaturesBlockProps) {
+  const safeFeatures = features ?? []
+
   const localizedHref = (href: string) => {
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) {
+      return href
+    }
     if (lang === 'en') return href
     if (href === '/') return `/${lang}`
     return `/${lang}${href.startsWith('/') ? href : '/' + href}`
   }
 
-  if (features.length === 0) return null
+  if (safeFeatures.length === 0) return null
 
   return (
     <section className="py-16">
@@ -88,7 +95,7 @@ export function FeaturesBlock({
         )}
 
         <div className={cn(layoutClasses[layout])}>
-          {features.map((feature, index) => {
+          {safeFeatures.map((feature, index) => {
             const IconComponent = feature.icon ? iconMap[feature.icon] : null
 
             return (
@@ -115,6 +122,8 @@ export function FeaturesBlock({
                 {feature.link && (
                   <Link
                     href={localizedHref(feature.link.href || '#')}
+                    target={feature.link.target === '_blank' || feature.link.external ? '_blank' : undefined}
+                    rel={feature.link.target === '_blank' || feature.link.external ? 'noopener noreferrer' : undefined}
                     className="text-sm text-[#6154f0] hover:text-[#5841e8] font-medium inline-flex items-center gap-1"
                   >
                     {feature.link.text || 'Learn more'}

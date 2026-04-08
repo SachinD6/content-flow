@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { Twitter, Linkedin, Github, Globe, Mail } from 'lucide-react'
 
 interface TeamBlockProps {
@@ -13,13 +14,16 @@ interface TeamBlockProps {
     bio?: string
     socialLinks?: Array<{
       platform: 'twitter' | 'linkedin' | 'github' | 'website' | 'email'
-      url: string
+      href: string
+      external?: boolean
+      target?: '_self' | '_blank'
     }>
   }>
   columns?: number
   showBio?: boolean
   showSocial?: boolean
   variant?: 'cards' | 'minimal' | 'circle'
+  lang?: string
   styles?: {
     backgroundType?: string
     backgroundColor?: string
@@ -37,8 +41,11 @@ export function TeamBlock({
   showBio = true,
   showSocial = true,
   variant = 'cards',
+  lang = 'en',
   styles,
 }: TeamBlockProps) {
+  const safeMembers = members ?? []
+
   const getPaddingClass = (padding?: string) => {
     const classes: Record<string, string> = {
       none: '',
@@ -78,6 +85,25 @@ export function TeamBlock({
     return icons[platform] || <Globe className="w-4 h-4" />
   }
 
+  const isExternalHref = (href: string, target?: '_self' | '_blank', external?: boolean) =>
+    Boolean(
+      external ||
+        target === '_blank' ||
+        href.startsWith('http://') ||
+        href.startsWith('https://') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        href.startsWith('#')
+    )
+
+  const localizeHref = (href: string, target?: '_self' | '_blank', external?: boolean) => {
+    if (!href) return '#'
+    if (lang === 'en' || isExternalHref(href, target, external)) return href
+    if (href === '/') return `/${lang}`
+    if (href === `/${lang}` || href.startsWith(`/${lang}/`)) return href
+    return `/${lang}${href.startsWith('/') ? href : `/${href}`}`
+  }
+
   const bgStyle = styles?.backgroundType === 'color' 
     ? { backgroundColor: styles.backgroundColor } 
     : {}
@@ -102,14 +128,14 @@ export function TeamBlock({
         )}
 
         <div className={`grid grid-cols-1 ${gridColsClass} gap-8`}>
-          {members.map((member, index) => (
+          {safeMembers.map((member, index) => (
             <div key={index} className={containerStyles[variant]}>
               <div className={variant === 'circle' ? 'flex flex-col items-center' : ''}>
                 <div className={`relative mb-4 ${variant === 'circle' ? 'w-24 h-24' : 'w-20 h-20'}`}>
                   {member.image ? (
                     <Image
                       src={member.image}
-                      alt={member.name}
+                      alt={member.name || 'Team member'}
                       fill
                       className={`object-cover ${variant === 'circle' ? 'rounded-full' : 'rounded-lg'}`}
                     />
@@ -132,15 +158,15 @@ export function TeamBlock({
                 {showSocial && member.socialLinks && member.socialLinks.length > 0 && (
                   <div className="flex gap-3">
                     {member.socialLinks.map((link, i) => (
-                      <a
+                      <Link
                         key={i}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={localizeHref(link.href, link.target, link.external)}
+                        target={isExternalHref(link.href, link.target, link.external) ? '_blank' : link.target}
+                        rel={isExternalHref(link.href, link.target, link.external) ? 'noopener noreferrer' : undefined}
                         className="text-zinc-500 hover:text-[#6154f0] transition-colors"
                       >
                         {getSocialIcon(link.platform)}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 )}

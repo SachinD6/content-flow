@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const defaultLanguage = 'en'
 const languages = ['en', 'hi']
+const reservedTopLevelRoutes = new Set(['login', 'signup', 'dashboard', 'admin', 'auth', 'posts'])
 
 function getLanguageFromHeader(request: NextRequest): string | null {
   const acceptLanguage = request.headers.get('accept-language')
@@ -48,6 +49,13 @@ export async function middleware(request: NextRequest) {
   const pathSegments = pathname.split('/').filter(Boolean)
   const firstSegment = pathSegments[0]
   const isLocalizedPath = languages.includes(firstSegment)
+
+  if (isLocalizedPath && firstSegment === defaultLanguage) {
+    const url = request.nextUrl.clone()
+    const remainder = pathSegments.slice(1)
+    url.pathname = remainder.length > 0 ? `/${remainder.join('/')}` : '/'
+    return NextResponse.redirect(url)
+  }
 
   // For localized paths, set language cookie and continue
   if (isLocalizedPath) {
@@ -120,26 +128,71 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect /posts to localized version
-  if (pathname === '/posts') {
-    const preferredLanguage = getLanguageFromCookie(request) || 
-      getLanguageFromHeader(request) || 
+  if (pathname === '/' || pathname === '') {
+    const preferredLanguage =
+      getLanguageFromCookie(request) ||
+      getLanguageFromHeader(request) ||
       defaultLanguage
-    
+
+    if (preferredLanguage !== defaultLanguage) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/${preferredLanguage}`
+      return NextResponse.redirect(url)
+    }
+
     const url = request.nextUrl.clone()
-    url.pathname = `/${preferredLanguage}/posts`
-    return NextResponse.redirect(url)
+    url.pathname = `/${defaultLanguage}`
+    const rewriteResponse = NextResponse.rewrite(url)
+
+    supabaseResponse.headers.forEach((value, key) => {
+      rewriteResponse.headers.set(key, value)
+    })
+
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie)
+    })
+
+    return rewriteResponse
   }
 
-  // For root path, let app/page.tsx handle the redirect
-  // This avoids redirect loops
-  if (pathname === '/' || pathname === '') {
-    return supabaseResponse
+  if (pathname === '/posts') {
+    const url = request.nextUrl.clone()
+    url.pathname = `/${defaultLanguage}/posts`
+    const rewriteResponse = NextResponse.rewrite(url)
+
+    supabaseResponse.headers.forEach((value, key) => {
+      rewriteResponse.headers.set(key, value)
+    })
+
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie)
+    })
+
+    return rewriteResponse
+  }
+
+  if (pathSegments.length === 1 && firstSegment && !reservedTopLevelRoutes.has(firstSegment)) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/${defaultLanguage}/${firstSegment}`
+    const rewriteResponse = NextResponse.rewrite(url)
+
+    supabaseResponse.headers.forEach((value, key) => {
+      rewriteResponse.headers.set(key, value)
+    })
+
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie)
+    })
+
+    return rewriteResponse
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Match all paths except static files and studio
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|studio|studio/.*|api|api/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 };

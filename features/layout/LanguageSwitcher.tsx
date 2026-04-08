@@ -4,26 +4,54 @@ import { useParams, usePathname, useRouter } from 'next/navigation'
 import { Globe } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { languages, type LanguageId } from '@/lib/i18n/config'
+import { toast } from 'sonner'
+
+const STORAGE_KEY = 'contentflow-language'
+const defaultLanguage = 'en'
 
 interface LanguageSwitcherProps {
   supportedLanguages?: { id: string; title: string; nativeTitle?: string }[]
+  currentLang?: LanguageId
+  translationLinks?: Partial<Record<LanguageId, string>>
+  contentTypeLabel?: 'page' | 'post'
 }
 
-export function LanguageSwitcher({ supportedLanguages }: LanguageSwitcherProps) {
+function buildStructuralLanguagePath(pathname: string, targetLang: LanguageId) {
+  const segments = pathname.split('/').filter(Boolean)
+  const firstSegment = segments[0]
+  const hasLanguagePrefix = languages.some((language) => language.id === firstSegment)
+  const remainder = hasLanguagePrefix ? segments.slice(1) : segments
+
+  if (targetLang === defaultLanguage) {
+    return remainder.length > 0 ? `/${remainder.join('/')}` : '/'
+  }
+
+  return remainder.length > 0 ? `/${targetLang}/${remainder.join('/')}` : `/${targetLang}`
+}
+
+export function LanguageSwitcher({
+  supportedLanguages,
+  currentLang: currentLangProp,
+  translationLinks,
+  contentTypeLabel = 'page',
+}: LanguageSwitcherProps) {
   const params = useParams()
   const pathname = usePathname()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const currentLang = (params?.lang as string) || 'en'
+  // Get current language from URL params
+  const currentLang = (currentLangProp || (params?.lang as LanguageId) || defaultLanguage) as LanguageId
   
+  // Filter available languages
   const availableLanguages = supportedLanguages 
     ? languages.filter(l => supportedLanguages.some(sl => sl.id === l.id))
     : languages
 
   const currentLanguageData = availableLanguages.find(l => l.id === currentLang) || availableLanguages[0]
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -39,31 +67,39 @@ export function LanguageSwitcher({ supportedLanguages }: LanguageSwitcherProps) 
     
     if (langId === currentLang) return
 
-    // eslint-disable-next-line -- Setting cookie in event handler is intentional
+    if (translationLinks) {
+      const targetPath = translationLinks[langId]
+
+      if (!targetPath) {
+        const targetLanguage = availableLanguages.find((language) => language.id === langId)?.title || langId
+        toast(`${targetLanguage} version is not available for this ${contentTypeLabel} yet.`)
+        return
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, langId)
+      } catch {
+        // localStorage might not be available
+      }
+
+      // eslint-disable-next-line react-hooks/immutability -- Setting cookie in event handler is intentional
+      document.cookie = `preferred-language=${langId}; path=/; max-age=${60 * 60 * 24 * 365}`
+      router.push(targetPath)
+      return
+    }
+
+    // Save to both localStorage AND cookie for persistence
+    try {
+      localStorage.setItem(STORAGE_KEY, langId)
+    } catch {
+      // localStorage might not be available
+    }
+    
+    // Set cookie for middleware (server-side) access
+    // eslint-disable-next-line react-hooks/immutability -- Setting cookie in event handler is intentional
     document.cookie = `preferred-language=${langId}; path=/; max-age=${60 * 60 * 24 * 365}`
-    
-    const segments = pathname.split('/').filter(Boolean)
-    const firstSegment = segments[0]
-    
-    let newPath: string
-    
-    if (languages.some(l => l.id === firstSegment)) {
-      segments[0] = langId
-      newPath = '/' + segments.join('/')
-    } else {
-      if (langId === 'en') {
-        newPath = pathname
-      } else {
-        newPath = '/' + langId + pathname
-      }
-    }
-    
-    if (newPath === '/') {
-      if (langId !== 'en') {
-        newPath = '/' + langId
-      }
-    }
-    
+
+    const newPath = buildStructuralLanguagePath(pathname, langId)
     router.push(newPath)
   }
 

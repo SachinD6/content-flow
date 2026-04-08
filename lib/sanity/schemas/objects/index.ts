@@ -1,4 +1,4 @@
-import { defineType, defineField } from 'sanity'
+import { defineField, defineType } from 'sanity'
 
 import heroBlock from './blocks/heroBlock'
 import postsGridBlock from './blocks/postsGridBlock'
@@ -23,9 +23,9 @@ import contactFormBlock from './blocks/contactFormBlock'
 import teamBlock from './blocks/teamBlock'
 import blockStyles from './blockStyles'
 
-const navItem = defineType({
-  name: 'navItem',
-  title: 'Navigation Item',
+const navChildItem = defineType({
+  name: 'navChildItem',
+  title: 'Dropdown Link',
   type: 'object',
   fields: [
     defineField({
@@ -35,38 +35,223 @@ const navItem = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'href',
-      title: 'URL',
+      name: 'linkType',
+      title: 'Link Type',
       type: 'string',
+      options: {
+        list: [
+          { title: 'Internal Page', value: 'internal' },
+          { title: 'External URL', value: 'external' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'internal',
+    }),
+    defineField({
+      name: 'page',
+      title: 'Internal Page',
+      type: 'reference',
+      to: [{ type: 'page' }],
+      hidden: ({ parent }) => parent?.linkType !== 'internal',
+    }),
+    defineField({
+      name: 'href',
+      title: 'External URL',
+      type: 'string',
+      description: 'Paste the full external link.',
+      hidden: ({ parent }) => parent?.linkType !== 'external',
+    }),
+    defineField({
+      name: 'target',
+      title: 'Open In',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Same tab', value: '_self' },
+          { title: 'New tab', value: '_blank' },
+        ],
+      },
+      initialValue: '_self',
+    }),
+    defineField({
+      name: 'icon',
+      title: 'Icon',
+      type: 'string',
+      description: 'Optional icon name for supported frontend nav styles.',
+    }),
+  ],
+  preview: {
+    select: { title: 'label', href: 'href', page: 'page.title' },
+    prepare({ title, href, page }) {
+      return {
+        title: title || 'Untitled link',
+        subtitle: page || href || 'No link set',
+      }
+    },
+  },
+})
+
+const cmsLink = defineType({
+  name: 'cmsLink',
+  title: 'Link',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'text',
+      title: 'Link Text',
+      type: 'string',
+    }),
+    defineField({
+      name: 'linkType',
+      title: 'Link Type',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Internal', value: 'internal' },
+          { title: 'External', value: 'external' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'internal',
+    }),
+    defineField({
+      name: 'page',
+      title: 'Internal Page',
+      type: 'reference',
+      to: [{ type: 'page' }],
+      hidden: ({ parent }) => parent?.linkType !== 'internal',
+    }),
+    defineField({
+      name: 'href',
+      title: 'External URL',
+      type: 'string',
+      hidden: ({ parent }) => parent?.linkType !== 'external',
+    }),
+    defineField({
+      name: 'target',
+      title: 'Open In',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Same tab', value: '_self' },
+          { title: 'New tab', value: '_blank' },
+        ],
+      },
+      initialValue: '_self',
+    }),
+  ],
+  preview: {
+    select: { title: 'text', href: 'href', page: 'page.title' },
+    prepare({ title, href, page }) {
+      return {
+        title: title || 'Link',
+        subtitle: page || href || 'No link selected',
+      }
+    },
+  },
+})
+
+const navItem = defineType({
+  name: 'navItem',
+  title: 'Navigation Item',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'label',
+      title: 'Label',
+      type: 'string',
+      description: 'The text visitors click.',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'linkType',
+      title: 'Link Type',
+      type: 'string',
+      description: 'Choose an internal page or an external URL.',
+      options: {
+        list: [
+          { title: 'Internal Page', value: 'internal' },
+          { title: 'External URL', value: 'external' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'internal',
+    }),
+    defineField({
+      name: 'page',
+      title: 'Internal Page',
+      type: 'reference',
+      to: [{ type: 'page' }],
+      hidden: ({ parent }) => parent?.linkType !== 'internal',
+    }),
+    defineField({
+      name: 'href',
+      title: 'External URL',
+      type: 'string',
+      description: 'Paste the full external link.',
+      hidden: ({ parent }) => parent?.linkType !== 'external',
+    }),
+    defineField({
+      name: 'target',
+      title: 'Open In',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Same tab', value: '_self' },
+          { title: 'New tab', value: '_blank' },
+        ],
+      },
+      initialValue: '_self',
+    }),
+    defineField({
+      name: 'icon',
+      title: 'Icon',
+      type: 'string',
+      description: 'Optional icon name for supported frontend nav styles.',
+    }),
+    defineField({
+      name: 'children',
+      title: 'Dropdown Items',
+      type: 'array',
+      description: 'Optional one-level dropdown links.',
+      of: [{ type: 'navChildItem' }],
+    }),
+    defineField({
       name: 'external',
-      title: 'External Link',
+      title: 'Legacy External Link',
       type: 'boolean',
+      description: 'Kept for old content. Prefer Link Type for new links.',
       initialValue: false,
+      hidden: true,
     }),
     defineField({
       name: 'requiresAuth',
-      title: 'Requires Authentication',
+      title: 'Requires Login',
       type: 'boolean',
+      description: 'Hide this link unless the visitor is logged in.',
       initialValue: false,
     }),
     defineField({
       name: 'authOnly',
-      title: 'Show Only When Logged In',
+      title: 'Only Show When Logged In',
       type: 'boolean',
       initialValue: false,
     }),
     defineField({
       name: 'guestOnly',
-      title: 'Show Only When Logged Out',
+      title: 'Only Show When Logged Out',
       type: 'boolean',
       initialValue: false,
     }),
   ],
   preview: {
-    select: { title: 'label', subtitle: 'href' },
+    select: { title: 'label', href: 'href', page: 'page.title' },
+    prepare({ title, href, page }) {
+      return {
+        title: title || 'Untitled link',
+        subtitle: page || href || 'No link set',
+      }
+    },
   },
 })
 
@@ -105,12 +290,6 @@ const ctaButton = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'href',
-      title: 'URL',
-      type: 'string',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
       name: 'variant',
       title: 'Button Style',
       type: 'string',
@@ -125,10 +304,49 @@ const ctaButton = defineType({
       initialValue: 'primary',
     }),
     defineField({
+      name: 'linkType',
+      title: 'Link Type',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Internal', value: 'internal' },
+          { title: 'External', value: 'external' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'internal',
+    }),
+    defineField({
+      name: 'page',
+      title: 'Internal Page',
+      type: 'reference',
+      to: [{ type: 'page' }],
+      hidden: ({ parent }) => parent?.linkType !== 'internal',
+    }),
+    defineField({
+      name: 'href',
+      title: 'External URL',
+      type: 'string',
+      hidden: ({ parent }) => parent?.linkType !== 'external',
+    }),
+    defineField({
+      name: 'target',
+      title: 'Open In',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Same tab', value: '_self' },
+          { title: 'New tab', value: '_blank' },
+        ],
+      },
+      initialValue: '_self',
+    }),
+    defineField({
       name: 'external',
       title: 'External Link',
       type: 'boolean',
       initialValue: false,
+      hidden: true,
     }),
     defineField({
       name: 'requiresAuth',
@@ -138,40 +356,42 @@ const ctaButton = defineType({
     }),
   ],
   preview: {
-    select: { title: 'label', subtitle: 'href' },
+    select: { title: 'label', href: 'href', page: 'page.title' },
+    prepare({ title, href, page }) {
+      return {
+        title: title || 'Button',
+        subtitle: page || href || 'No link selected',
+      }
+    },
   },
 })
 
 export const objects = [
+  cmsLink,
+  navChildItem,
   navItem,
   navGroup,
   ctaButton,
   blockStyles,
-  // Block components for page builder - Layout
   containerBlock,
   gridBlock,
   separatorBlock,
-  // Block components - Content
   heroBlock,
   contentBlock,
   imageBlock,
   codeBlock,
   videoBlock,
-  // Block components - Posts
   postsGridBlock,
   featuredPostBlock,
   searchBlock,
   tagsFilterBlock,
-  // Block components - Marketing
   ctaBlock,
   newsletterBlock,
   pricingBlock,
-  // Block components - Social
   statsBlock,
   testimonialBlock,
   teamBlock,
   featuresBlock,
-  // Block components - Interactive
   contactFormBlock,
   accordionBlock,
 ]

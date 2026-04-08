@@ -4,12 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Clock } from 'lucide-react';
 import type { Post } from '@/types';
+import { getLocalizedPath } from '@/lib/i18n/translations';
 
 interface BlogPostCardProps {
   post: Post;
   featured?: boolean;
   horizontal?: boolean;
   isFirst?: boolean;
+  lang?: string;
 }
 
 function calculateReadingTime(content?: string): number {
@@ -25,7 +27,7 @@ function AuthorAvatar({ name, avatar }: { name: string; avatar?: string | null }
       {avatar ? (
         <Image 
           src={avatar} 
-          alt={name}
+          alt={name || 'Author avatar'}
           fill 
           className="object-cover"
         />
@@ -38,7 +40,7 @@ function AuthorAvatar({ name, avatar }: { name: string; avatar?: string | null }
   );
 }
 
-export function BlogPostCard({ post, featured = false, isFirst = false }: BlogPostCardProps) {
+export function BlogPostCard({ post, featured = false, isFirst = false, lang = 'en' }: BlogPostCardProps) {
   const formattedDate = post.publishedAt 
     ? new Date(post.publishedAt).toLocaleDateString('en-US', { 
         month: 'short',
@@ -48,17 +50,18 @@ export function BlogPostCard({ post, featured = false, isFirst = false }: BlogPo
 
   const readingTime = calculateReadingTime(post.excerpt ?? undefined);
   const tags = post.tags ?? [];
+  const postHref = getLocalizedPath(`/posts/${post.slug}`, lang);
 
   if (featured) {
     return (
-      <Link href={`/posts/${post.slug}`} className="group block">
+      <Link href={postHref} className="group block">
         <article className="flex flex-row gap-5 md:gap-8">
           {/* Image - Left side */}
           <div className="relative w-32 h-32 md:w-56 md:h-40 bg-[#121319] rounded-lg overflow-hidden flex-shrink-0">
             {post.coverImage ? (
               <Image
                 src={post.coverImage}
-                alt={post.title}
+                alt={post.title || 'Post cover image'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="224px"
@@ -111,7 +114,7 @@ export function BlogPostCard({ post, featured = false, isFirst = false }: BlogPo
   // Medium-style horizontal article card
   return (
     <Link 
-      href={`/posts/${post.slug}`}
+      href={postHref}
       className="group block"
     >
       <article className="flex gap-5 md:gap-6 py-8 border-b border-white/[0.04] last:border-b-0">
@@ -160,7 +163,7 @@ export function BlogPostCard({ post, featured = false, isFirst = false }: BlogPo
           {post.coverImage ? (
             <Image
               src={post.coverImage}
-              alt={post.title}
+              alt={post.title || 'Post cover image'}
               fill
               className="object-cover"
               sizes="112px"

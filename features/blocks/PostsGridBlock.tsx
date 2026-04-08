@@ -28,6 +28,8 @@ interface PostsGridBlockProps {
     show?: boolean
     text?: string
     href?: string
+    external?: boolean
+    target?: '_self' | '_blank'
   }
   lang?: string
 }
@@ -49,6 +51,9 @@ export function PostsGridBlock({
   lang = 'en',
 }: PostsGridBlockProps) {
   const localizedHref = (href: string) => {
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) {
+      return href
+    }
     if (lang === 'en') return href
     if (href === '/') return `/${lang}`
     return `/${lang}${href.startsWith('/') ? href : '/' + href}`
@@ -94,6 +99,7 @@ export function PostsGridBlock({
               <BlogPostCard
                 post={post}
                 featured={layout === 'featured' && index === 0}
+                lang={lang}
               />
             </div>
           ))}
@@ -103,6 +109,8 @@ export function PostsGridBlock({
           <div className="mt-12 text-center">
             <Link
               href={localizedHref(viewAllLink.href || '/posts')}
+              target={viewAllLink.target === '_blank' || viewAllLink.external ? '_blank' : undefined}
+              rel={viewAllLink.target === '_blank' || viewAllLink.external ? 'noopener noreferrer' : undefined}
               className="inline-flex items-center gap-2 text-[#6154f0] hover:text-[#5841e8] font-medium transition-colors"
             >
               {viewAllLink.text || 'View all posts'}

@@ -2,11 +2,16 @@ import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
 import { presentationTool } from 'sanity/presentation'
 import { visionTool } from '@sanity/vision'
-import { documentInternationalization } from '@sanity/document-internationalization'
-import { assist } from '@sanity/assist'
 import { schemaTypes } from './lib/sanity/schemas'
+import { languageSelectorPlugin, getStudioLanguage } from './lib/sanity/studio/languageSelectorPlugin'
+import { createTranslationAction, viewOriginalAction } from './lib/sanity/studio/actions/createTranslationAction'
 
 const singlePageTypes = ['home', 'auth', 'dashboard']
+
+const getLanguage = (): string => {
+  if (typeof window === 'undefined') return 'en'
+  return getStudioLanguage()
+}
 
 export default defineConfig({
   name: 'default',
@@ -14,22 +19,13 @@ export default defineConfig({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'wk6gdzqf',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   plugins: [
-    // AI Assist - enables AI-powered content assist
-    // Translation configuration is handled by @sanity/document-internationalization
-    assist(),
+    languageSelectorPlugin(),
     presentationTool({
       previewUrl: {
         previewMode: {
           enable: '/api/draft/enable',
         },
       },
-    }),
-    documentInternationalization({
-      supportedLanguages: [
-        { id: 'en', title: 'English' },
-        { id: 'hi', title: 'Hindi' },
-      ],
-      schemaTypes: ['page', 'post'],
     }),
     structureTool({
       structure: (S) =>
@@ -38,27 +34,18 @@ export default defineConfig({
           .items([
             S.listItem()
               .title('Posts')
-              .icon(() => '📝')
               .child(S.documentTypeList('post').title('Posts')),
-            
+
             S.listItem()
               .title('Pages')
-              .icon(() => '📄')
               .child(S.documentTypeList('page').title('Pages')),
-            
+
             S.listItem()
               .title('Authors')
-              .icon(() => '👤')
               .child(S.documentTypeList('author').title('Authors')),
-            
-            S.listItem()
-              .title('Languages')
-              .icon(() => '🌐')
-              .child(S.documentTypeList('language').title('Languages')),
-            
+
             S.listItem()
               .title('Settings')
-              .icon(() => '⚙️')
               .child(
                 S.document()
                   .schemaType('siteSettings')
@@ -75,6 +62,7 @@ export default defineConfig({
       const filtered = templates.filter(
         (template) => !singlePageTypes.includes(template.id)
       )
+
       return [
         ...filtered,
         {
@@ -91,6 +79,9 @@ export default defineConfig({
               { _type: 'newsletterBlock', title: 'Stay in the loop', description: 'Get the latest articles and updates delivered to your inbox.', style: 'simple' },
             ],
           },
+          initialValue: async () => ({
+            language: getLanguage(),
+          }),
         },
         {
           id: 'blog-page-template',
@@ -106,6 +97,9 @@ export default defineConfig({
               { _type: 'postsGridBlock', layout: 'grid', postsSource: 'latest', limit: 12 },
             ],
           },
+          initialValue: async () => ({
+            language: getLanguage(),
+          }),
         },
         {
           id: 'about-page-template',
@@ -121,6 +115,9 @@ export default defineConfig({
               { _type: 'featuresBlock', title: 'What We Offer', layout: 'grid', features: [{ title: 'Fast & Modern', description: 'Built with the latest technologies.', icon: 'zap' }, { title: 'CMS-Driven', description: 'Manage content from a powerful CMS.', icon: 'layers' }, { title: 'SEO Optimized', description: 'Every page is optimized for search.', icon: 'globe' }] },
             ],
           },
+          initialValue: async () => ({
+            language: getLanguage(),
+          }),
         },
         {
           id: 'contact-page-template',
@@ -132,10 +129,13 @@ export default defineConfig({
             slug: { current: 'contact' },
             description: 'Get in touch with our team.',
             components: [
-              { _type: 'heroBlock', title: 'Get in Touch', subtitle: 'Contact', description: 'Have questions? We\'d love to hear from you.', backgroundType: 'gradient', align: 'center', size: 'md' },
+              { _type: 'heroBlock', title: 'Get in Touch', subtitle: 'Contact', description: "Have questions? We'd love to hear from you.", backgroundType: 'gradient', align: 'center', size: 'md' },
               { _type: 'newsletterBlock', title: 'Stay Updated', description: 'Subscribe to our newsletter.', style: 'simple', showIcon: true },
             ],
           },
+          initialValue: async () => ({
+            language: getLanguage(),
+          }),
         },
         {
           id: 'landing-page-template',
@@ -152,18 +152,21 @@ export default defineConfig({
               { _type: 'ctaBlock', title: 'Ready to Get Started?', description: 'Join thousands of teams using ContentFlow.', background: 'gradient', align: 'center' },
             ],
           },
+          initialValue: async () => ({
+            language: getLanguage(),
+          }),
         },
       ]
     },
   },
   document: {
     actions: (input, context) => {
-      const documentId = context.documentId
-      const isSinglePage = documentId === 'page-home' || documentId === 'page-auth' || documentId === 'page-dashboard'
-      
-      if (isSinglePage) {
-        return input.filter(({ action }) => action && ['publish', 'discardChanges', 'restore'].includes(action))
+      const schemaType = context.schemaType
+
+      if (schemaType === 'post' || schemaType === 'page') {
+        return [...input, createTranslationAction, viewOriginalAction]
       }
+
       return input
     },
   },

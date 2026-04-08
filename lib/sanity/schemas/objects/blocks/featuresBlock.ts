@@ -74,11 +74,7 @@ export default defineType({
             defineField({
               name: 'link',
               title: 'Link',
-              type: 'object',
-              fields: [
-                defineField({ name: 'text', type: 'string', title: 'Link Text' }),
-                defineField({ name: 'href', type: 'string', title: 'Link URL' }),
-              ],
+              type: 'cmsLink',
             }),
           ],
           preview: {

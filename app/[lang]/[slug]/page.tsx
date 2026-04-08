@@ -1,16 +1,19 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { draftMode } from 'next/headers'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { sanityFetch } from '@/lib/sanity/live'
-import { PAGE_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY, ALL_POSTS_BY_LANGUAGE_QUERY } from '@/lib/sanity/queries'
+import { PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY, ALL_POSTS_BY_LANGUAGE_QUERY } from '@/lib/sanity/queries'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
 import { PageRenderer } from '@/features/blocks'
 import { PortableText } from '@portabletext/react'
-import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
+import { isValidLanguage } from '@/lib/i18n'
+import { buildAlternateLanguageEntries, buildTranslationLinks, getPagePath } from '@/lib/i18n/content-routing'
 import type { PortableTextBlock } from '@portabletext/types'
+
+export const dynamic = 'force-dynamic'
 
 interface SlugPageParams {
   lang: string
@@ -21,9 +24,17 @@ interface Page {
   _id: string
   title: string
   slug?: string
+  canonicalSlug?: string
+  language?: string
   description?: string
   components?: { _type: string; _key: string; [key: string]: unknown }[]
   content?: PortableTextBlock[]
+  availableTranslations?: Array<{
+    _id: string
+    language: string
+    slug?: string
+    canonicalSlug?: string
+  }>
   seo?: {
     metaTitle?: string
     metaDescription?: string
@@ -43,7 +54,7 @@ export async function generateMetadata(props: { params: Promise<SlugPageParams> 
   const langCode = lang
   
   const pageResult = await sanityFetch({ 
-    query: PAGE_BY_SLUG_AND_LANGUAGE_QUERY, 
+    query: PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, 
     params: { slug, language: langCode }
   })
   const page = pageResult.data as Page | null
@@ -52,15 +63,14 @@ export async function generateMetadata(props: { params: Promise<SlugPageParams> 
     return { title: 'Page Not Found' }
   }
 
+  const canonicalSlug = page.canonicalSlug || page.slug || slug
+
   return {
     title: page.seo?.metaTitle || page.title || 'ContentFlow',
     description: page.seo?.metaDescription || page.description || undefined,
     alternates: {
-      canonical: langCode === defaultLanguage ? `/${slug}` : `/${langCode}/${slug}`,
-      languages: {
-        'en': `/${slug}`,
-        'hi': `/hi/${slug}`,
-      }
+      canonical: getPagePath(canonicalSlug, langCode),
+      languages: buildAlternateLanguageEntries(page.availableTranslations, 'page'),
     }
   }
 }
@@ -77,7 +87,7 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
   const { isEnabled: isDraftMode } = await draftMode()
   
   const [pageResult, settingsResult, postsResult] = await Promise.all([
-    sanityFetch({ query: PAGE_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
+    sanityFetch({ query: PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
     sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
     sanityFetch({ query: ALL_POSTS_BY_LANGUAGE_QUERY, params: { language: langCode } }),
   ])
@@ -88,6 +98,12 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
 
   if (!page) {
     notFound()
+  }
+
+  const canonicalSlug = page.canonicalSlug || page.slug || slug
+  const canonicalPath = getPagePath(canonicalSlug, langCode)
+  if (slug !== canonicalSlug) {
+    permanentRedirect(canonicalPath)
   }
 
   const supabase = await createClient()
@@ -116,9 +132,8 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
     { _id: 'hi-id', id: 'hi', title: 'Hindi', nativeTitle: 'हिन्दी' },
   ]
 
-  const langHref = (path: string) => langCode === defaultLanguage ? path : `/${langCode}${path}`
-  
   const hasComponents = page.components && page.components.length > 0
+  const translationLinks = buildTranslationLinks(page.availableTranslations, 'page')
 
   return (
     <div className="min-h-screen bg-[#0b0c10]">
@@ -129,6 +144,8 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
         authNav={settings?.authNav ?? undefined}
         lang={langCode}
         supportedLanguages={supportedLanguages}
+        translationLinks={translationLinks}
+        contentTypeLabel="page"
         user={userProfile}
       />
 
@@ -162,7 +179,7 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div className="mb-8">
               <Link
-                href={langHref('/')}
+                href={getPagePath(undefined, langCode)}
                 className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -195,6 +212,7 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
         footerDescription={settings?.footerDescription}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
+        socialLinks={settings?.socialLinks ?? undefined}
         user={userProfile}
         lang={langCode}
       />

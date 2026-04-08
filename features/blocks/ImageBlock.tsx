@@ -39,7 +39,7 @@ export function ImageBlock({
         >
           <Image
             src={image}
-            alt={alt}
+            alt={alt || 'Content image'}
             width={1200}
             height={675}
             className="w-full h-auto object-cover"

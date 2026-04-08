@@ -61,7 +61,9 @@ export function StatsBlock({
   stats = [],
   background = 'none',
 }: StatsBlockProps) {
-  if (stats.length === 0) return null
+  const safeStats = stats ?? []
+
+  if (safeStats.length === 0) return null
 
   return (
     <section className={cn('py-16', backgroundClasses[background])}>
@@ -73,7 +75,7 @@ export function StatsBlock({
         )}
 
         <div className={cn(layoutClasses[layout])}>
-          {stats.map((stat, index) => {
+          {safeStats.map((stat, index) => {
             const IconComponent = stat.icon ? iconMap[stat.icon] : null
 
             return (

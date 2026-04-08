@@ -89,6 +89,12 @@ export default defineType({
               title: 'Button Link',
               type: 'string',
               placeholder: '/signup',
+              hidden: true,
+            }),
+            defineField({
+              name: 'buttonLink',
+              title: 'Button Link',
+              type: 'cmsLink',
             }),
           ],
           preview: {

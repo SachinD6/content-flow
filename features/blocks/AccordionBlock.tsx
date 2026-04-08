@@ -32,8 +32,9 @@ export function AccordionBlock({
   variant = 'default',
   styles,
 }: AccordionBlockProps) {
+  const safeItems = items ?? []
   const [openItems, setOpenItems] = useState<Set<number>>(
-    new Set(items.filter(item => item.initiallyOpen).map((_, i) => i))
+    new Set(safeItems.filter((item) => item.initiallyOpen).map((_, i) => i))
   )
 
   const toggleItem = (index: number) => {
@@ -98,7 +99,7 @@ export function AccordionBlock({
         )}
 
         <div className="space-y-4">
-          {items.map((item, index) => {
+          {safeItems.map((item, index) => {
             const isOpen = openItems.has(index)
             return (
               <div

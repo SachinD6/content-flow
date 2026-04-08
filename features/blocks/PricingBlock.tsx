@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 interface PricingBlockProps {
   title?: string
   subtitle?: string
@@ -13,6 +15,12 @@ interface PricingBlockProps {
     highlightLabel?: string
     buttonText?: string
     buttonHref?: string
+    buttonExternal?: boolean
+    buttonLink?: {
+      href?: string
+      external?: boolean
+      target?: '_self' | '_blank'
+    }
   }>
   columns?: number
   variant?: 'cards' | 'table' | 'minimal'
@@ -23,6 +31,7 @@ interface PricingBlockProps {
     paddingBottom?: string
     maxWidth?: string
   }
+  lang?: string
 }
 
 export function PricingBlock({
@@ -31,7 +40,19 @@ export function PricingBlock({
   plans = [],
   columns = 3,
   styles,
+  lang = 'en',
 }: PricingBlockProps) {
+  const safePlans = plans ?? []
+
+  const localizedHref = (href: string) => {
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) {
+      return href
+    }
+    if (lang === 'en') return href
+    if (href === '/') return `/${lang}`
+    return `/${lang}${href.startsWith('/') ? href : '/' + href}`
+  }
+
   const getPaddingClass = (padding?: string) => {
     const classes: Record<string, string> = {
       none: '',
@@ -77,7 +98,7 @@ export function PricingBlock({
         )}
 
         <div className={`grid grid-cols-1 ${gridColsClass} gap-8`}>
-          {plans.map((plan, index) => (
+          {safePlans.map((plan, index) => (
             <div
               key={index}
               className={`relative p-8 rounded-2xl ${
@@ -120,8 +141,10 @@ export function PricingBlock({
               )}
 
               {plan.buttonText && (
-                <a
-                  href={plan.buttonHref || '#'}
+                <Link
+                  href={localizedHref(plan.buttonLink?.href || plan.buttonHref || '#')}
+                  target={plan.buttonLink?.target === '_blank' || plan.buttonExternal ? '_blank' : undefined}
+                  rel={plan.buttonLink?.target === '_blank' || plan.buttonExternal ? 'noopener noreferrer' : undefined}
                   className={`block w-full py-3 px-6 text-center font-medium rounded-lg transition-colors ${
                     plan.highlighted
                       ? 'bg-white text-[#0b0c10] hover:bg-zinc-200'
@@ -129,7 +152,7 @@ export function PricingBlock({
                   }`}
                 >
                   {plan.buttonText}
-                </a>
+                </Link>
               )}
             </div>
           ))}

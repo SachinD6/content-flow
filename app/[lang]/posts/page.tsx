@@ -10,6 +10,8 @@ import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
 import { t, getLocalizedPath } from '@/lib/i18n/translations'
 import { BlogPostCard } from '@/features/posts/BlogPostCard'
 
+export const dynamic = 'force-dynamic'
+
 interface PostsPageProps {
   params: Promise<{ lang: string }>
 }
@@ -168,6 +170,7 @@ const langHref = (path: string) => getLocalizedPath(path, langCode)
                 key={post._id} 
                 post={post} 
                 isFirst={index === 0}
+                lang={langCode}
               />
             ))}
           </div>
@@ -198,6 +201,7 @@ const langHref = (path: string) => getLocalizedPath(path, langCode)
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
+        socialLinks={settings?.socialLinks ?? undefined}
         user={userProfile}
         lang={langCode}
       />

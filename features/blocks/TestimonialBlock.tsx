@@ -70,7 +70,7 @@ function TestimonialCard({
           <div className="relative h-10 w-10 rounded-full overflow-hidden">
             <Image
               src={testimonial.avatar}
-              alt={testimonial.author}
+              alt={testimonial.author || 'Testimonial author'}
               fill
               className="object-cover"
             />
@@ -94,7 +94,9 @@ export function TestimonialBlock({
   layout = 'grid',
   testimonials = [],
 }: TestimonialBlockProps) {
-  if (testimonials.length === 0) return null
+  const safeTestimonials = testimonials ?? []
+
+  if (safeTestimonials.length === 0) return null
 
   return (
     <section className="py-16">
@@ -115,7 +117,7 @@ export function TestimonialBlock({
         )}
 
         <div className={cn(layoutClasses[layout])}>
-          {testimonials.map((testimonial, index) => (
+          {safeTestimonials.map((testimonial, index) => (
             <TestimonialCard
               key={index}
               testimonial={testimonial}

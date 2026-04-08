@@ -121,10 +121,42 @@ export default defineType({
           initialValue: 'View all posts',
         }),
         defineField({
-          name: 'href',
-          title: 'Link URL',
+          name: 'linkType',
+          title: 'Link Type',
           type: 'string',
-          initialValue: '/posts',
+          options: {
+            list: [
+              { title: 'Internal', value: 'internal' },
+              { title: 'External', value: 'external' },
+            ],
+            layout: 'radio',
+          },
+          initialValue: 'internal',
+        }),
+        defineField({
+          name: 'page',
+          title: 'Internal Page',
+          type: 'reference',
+          to: [{ type: 'page' }],
+          hidden: ({ parent }) => parent?.linkType !== 'internal',
+        }),
+        defineField({
+          name: 'href',
+          title: 'External URL',
+          type: 'string',
+          hidden: ({ parent }) => parent?.linkType !== 'external',
+        }),
+        defineField({
+          name: 'target',
+          title: 'Open In',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'Same tab', value: '_self' },
+              { title: 'New tab', value: '_blank' },
+            ],
+          },
+          initialValue: '_self',
         }),
       ],
     }),

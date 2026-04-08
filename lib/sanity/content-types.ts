@@ -5,21 +5,27 @@ export type PageType = 'home' | 'auth' | 'dashboard' | 'generic'
 export interface SocialLink {
   platform: string
   url: string
+  external?: boolean
+  target?: '_self' | '_blank'
 }
 
 export interface LegalLinks {
-  privacy: { label: string; href: string }
-  terms: { label: string; href: string }
-  cookies: { label: string; href: string }
+  privacy: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  terms: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
+  cookies: { label: string; href: string; external?: boolean; target?: '_self' | '_blank' }
 }
 
 export interface NavItem {
   label: string
   href: string
+  linkType?: 'internal' | 'external'
   external?: boolean
+  target?: '_self' | '_blank'
+  icon?: string | null
   requiresAuth?: boolean
   authOnly?: boolean
   guestOnly?: boolean
+  children?: NavItem[] | null
 }
 
 export interface NavGroup {
@@ -156,6 +162,7 @@ export interface Page {
     ogImage?: string | null
   } | null
   publishedAt?: string | null
+  components?: Array<{ _type: string; _key?: string; [key: string]: unknown }> | null
   
   // Home page fields
   heroSection?: HeroSection | null

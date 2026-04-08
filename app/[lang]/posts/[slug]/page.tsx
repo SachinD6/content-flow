@@ -1,24 +1,29 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { draftMode } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { Metadata } from 'next'
 
 import { sanityFetch } from '@/lib/sanity/live'
-import { POST_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY } from '@/lib/sanity/queries'
+import { POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY } from '@/lib/sanity/queries'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
-import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
+import { isValidLanguage } from '@/lib/i18n'
+import { buildAlternateLanguageEntries, buildTranslationLinks, getLocalizedPath, getPostPath } from '@/lib/i18n/content-routing'
 import type { PortableTextBlock } from '@portabletext/types'
+
+export const dynamic = 'force-dynamic'
 
 interface ExtendedPost {
   _id: string
   title: string
   slug: string
+  canonicalSlug?: string
+  language?: string
   excerpt?: string
   body?: PortableTextBlock[]
   publishedAt?: string
@@ -27,6 +32,12 @@ interface ExtendedPost {
   author?: { name: string; avatar?: string; bio?: string }
   coverImage?: string
   readingTime?: number
+  availableTranslations?: Array<{
+    _id: string
+    language: string
+    slug?: string
+    canonicalSlug?: string
+  }>
 }
 
 interface PostPageParams {
@@ -34,7 +45,7 @@ interface PostPageParams {
   slug: string
 }
 
-const PortableTextRenderer = dynamic(
+const PortableTextRenderer = dynamicImport(
   () => import('@/features/posts/PortableTextRenderer'),
   { loading: () => <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div> }
 )
@@ -50,7 +61,7 @@ export async function generateMetadata(props: { params: Promise<PostPageParams> 
   const langCode = lang
   
   const postResult = await sanityFetch({ 
-    query: POST_BY_SLUG_AND_LANGUAGE_QUERY, 
+    query: POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, 
     params: { slug, language: langCode }
   })
   const post = postResult.data as ExtendedPost | null
@@ -59,15 +70,14 @@ export async function generateMetadata(props: { params: Promise<PostPageParams> 
     return { title: 'Post Not Found' }
   }
 
+  const canonicalSlug = post.canonicalSlug || post.slug || slug
+
   return {
     title: `${post.title} | ContentFlow`,
     description: post.excerpt || undefined,
     alternates: {
-      canonical: langCode === defaultLanguage ? `/posts/${slug}` : `/${langCode}/posts/${slug}`,
-      languages: {
-        'en': `/posts/${slug}`,
-        'hi': `/hi/posts/${slug}`,
-      }
+      canonical: getPostPath(canonicalSlug, langCode),
+      languages: buildAlternateLanguageEntries(post.availableTranslations, 'post'),
     }
   }
 }
@@ -84,7 +94,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
   const { isEnabled: isDraftMode } = await draftMode()
   
   const [postResult, settingsResult] = await Promise.all([
-    sanityFetch({ query: POST_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
+    sanityFetch({ query: POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
     sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
   ])
 
@@ -93,6 +103,12 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
 
   if (!post) {
     notFound()
+  }
+
+  const canonicalSlug = post.canonicalSlug || post.slug || slug
+  const canonicalPath = getPostPath(canonicalSlug, langCode)
+  if (slug !== canonicalSlug) {
+    permanentRedirect(canonicalPath)
   }
 
   const supabase = await createClient()
@@ -124,7 +140,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
     { _id: 'hi-id', id: 'hi', title: 'Hindi', nativeTitle: 'हिन्दी' },
   ]
 
-  const langHref = (path: string) => langCode === defaultLanguage ? path : `/${langCode}${path}`
+  const translationLinks = buildTranslationLinks(post.availableTranslations, 'post')
 
   return (
     <div className="min-h-screen bg-[#0b0c10]">
@@ -135,6 +151,8 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
         authNav={settings?.authNav ?? undefined}
         lang={langCode}
         supportedLanguages={supportedLanguages}
+        translationLinks={translationLinks}
+        contentTypeLabel="post"
         user={userProfile}
       />
 
@@ -160,7 +178,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
       <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="mb-8">
           <Link
-            href={langHref('/')}
+            href={getLocalizedPath('/', langCode)}
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -171,7 +189,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
         <article className="space-y-6 sm:space-y-8">
           <div className="flex flex-wrap gap-2">
             {post.tags?.map((tag) => (
-              <Link key={tag} href={langHref(`/?tag=${tag}`)}>
+              <Link key={tag} href={getLocalizedPath(`/?tag=${tag}`, langCode)}>
                 <Badge
                   variant="secondary"
                   className="bg-white/5 hover:bg-[#6154f0]/20 text-zinc-400 hover:text-[#6154f0] text-[10px] uppercase font-bold tracking-widest border border-white/10 rounded-full px-3 py-1 transition-colors cursor-pointer"
@@ -197,7 +215,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
                 {post.author?.avatar ? (
                   <Image
                     src={post.author.avatar}
-                    alt={post.author.name || 'Author'}
+                    alt={post.author.name || 'Author avatar'}
                     fill
                     className="object-cover"
                   />
@@ -229,7 +247,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
             <div className="relative w-full aspect-[16/9] overflow-hidden rounded-[16px] shadow-2xl">
               <Image
                 src={post.coverImage}
-                alt={post.title}
+                alt={post.title || 'Post cover image'}
                 fill
                 priority
                 className="object-cover"
@@ -245,7 +263,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
 
         <div className="mt-16 pt-8 border-t border-white/5">
           <Link
-            href={langHref('/')}
+            href={getLocalizedPath('/', langCode)}
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -260,6 +278,7 @@ export default async function LangPostPage(props: { params: Promise<PostPagePara
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
+        socialLinks={settings?.socialLinks ?? undefined}
         user={userProfile}
         lang={langCode}
       />

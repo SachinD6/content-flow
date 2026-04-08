@@ -31,17 +31,18 @@ export function FeaturedPostBlock({
   layout = 'large',
   posts = [],
 }: FeaturedPostBlockProps) {
+  const safePosts = posts ?? []
   let featuredPost = post
 
-  if (!featuredPost && posts.length > 0) {
+  if (!featuredPost && safePosts.length > 0) {
     if (autoSelect === 'featured') {
-      featuredPost = posts.find((p) => p.featured) || posts[0]
+      featuredPost = safePosts.find((p) => p.featured) || safePosts[0]
     } else if (autoSelect === 'latest') {
-      featuredPost = posts[0]
+      featuredPost = safePosts[0]
     } else if (autoSelect === 'mostViewed') {
-      featuredPost = posts.find((p) => p.mostViewed) || posts[0]
+      featuredPost = safePosts.find((p) => p.mostViewed) || safePosts[0]
     } else {
-      featuredPost = posts[0]
+      featuredPost = safePosts[0]
     }
   }
 

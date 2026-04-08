@@ -64,6 +64,37 @@ export function PageRenderer({
 }: PageRendererProps) {
   if (components.length === 0) return null
 
+  const selectPosts = (block: {
+    postsSource?: 'latest' | 'featured' | 'byTag' | 'byAuthor' | 'manual'
+    postSource?: 'all' | 'tags' | 'author' | 'featured'
+    limit?: number
+    maxPosts?: number
+    tagFilter?: string[]
+    tags?: string[]
+    manualPosts?: Post[]
+  }) => {
+    const limit = block.limit || block.maxPosts || 6
+    const source = block.postsSource || block.postSource || 'latest'
+
+    if (source === 'manual' && block.manualPosts?.length) {
+      return block.manualPosts.slice(0, limit)
+    }
+
+    if (source === 'featured') {
+      return posts.filter((post) => post.featured).slice(0, limit)
+    }
+
+    if (source === 'byTag' || source === 'tags') {
+      const selectedTags = block.tagFilter || block.tags || []
+      if (selectedTags.length === 0) return posts.slice(0, limit)
+      return posts
+        .filter((post) => post.tags?.some((tag) => selectedTags.includes(tag)))
+        .slice(0, limit)
+    }
+
+    return posts.slice(0, limit)
+  }
+
   return (
     <>
       {components.map((component) => {
@@ -107,6 +138,8 @@ export function PageRenderer({
               layout?: 'grid' | 'list' | 'featured' | 'masonry'
               postsSource?: 'latest' | 'featured' | 'byTag' | 'byAuthor' | 'manual'
               limit?: number
+              tagFilter?: string[]
+              manualPosts?: Post[]
               emptyMessage?: string
               viewAllLink?: { show?: boolean; text?: string; href?: string }
               styles?: Record<string, unknown>
@@ -117,7 +150,7 @@ export function PageRenderer({
                 title={block.title}
                 subtitle={block.subtitle}
                 layout={block.layout}
-                posts={posts.slice(0, block.limit || 6) as any[]}
+                posts={selectPosts(block) as any[]}
                 emptyMessage={block.emptyMessage}
                 viewAllLink={block.viewAllLink}
                 lang={lang}
@@ -144,6 +177,7 @@ export function PageRenderer({
               paginationMode?: 'numbered' | 'infinite' | 'loadMore'
               postsPerPage?: number
               maxPosts?: number
+              manualPosts?: Post[]
               styles?: Record<string, unknown>
             }
             return (
@@ -567,6 +601,7 @@ export function PageRenderer({
                 columns={block.columns}
                 variant={block.variant}
                 styles={block.styles as any}
+                lang={lang}
               />
             )
           }
@@ -608,16 +643,18 @@ export function PageRenderer({
             const block = component as unknown as {
               title?: string
               subtitle?: string
-              members?: Array<{
-                name: string
-                role?: string
-                image?: string
-                bio?: string
-                socialLinks?: Array<{
-                  platform: string
-                  url: string
+                members?: Array<{
+                  name: string
+                  role?: string
+                  image?: string
+                  bio?: string
+                  socialLinks?: Array<{
+                    platform: string
+                    href: string
+                    external?: boolean
+                    target?: '_self' | '_blank'
+                  }>
                 }>
-              }>
               columns?: number
               showBio?: boolean
               showSocial?: boolean
@@ -634,6 +671,7 @@ export function PageRenderer({
                 showBio={block.showBio}
                 showSocial={block.showSocial}
                 variant={block.variant}
+                lang={lang}
                 styles={block.styles as any}
               />
             )

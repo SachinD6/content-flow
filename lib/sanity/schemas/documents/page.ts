@@ -1,136 +1,252 @@
-import { defineType, defineField } from 'sanity'
+import { defineField, defineType } from 'sanity'
+import { getStudioLanguage } from '../../studio/languageSelectorPlugin'
+
+function sanitizeStoredSlug(value?: string | null) {
+  return value?.trim().replace(/^\/+/, '').replace(/\/+$/, '') || ''
+}
+
+function normalizeLanguageValue(value: unknown) {
+  return typeof value === 'string' && value ? value : 'en'
+}
+
+function isTranslationDocument(document: unknown) {
+  return Boolean((document as { translationOf?: { _ref?: string } } | undefined)?.translationOf?._ref)
+}
+
+async function isSlugUniquePerLanguage(slug: string, context: { document?: { _id?: string; language?: string }; getClient: (options: { apiVersion: string }) => { fetch: <T>(query: string, params: Record<string, unknown>) => Promise<T> } }) {
+  const document = context.document
+  const publishedId = document?._id?.replace(/^drafts\./, '')
+  const draftId = publishedId ? `drafts.${publishedId}` : undefined
+  const normalizedSlug = sanitizeStoredSlug(slug)
+  const language = normalizeLanguageValue(document?.language)
+
+  const client = context.getClient({ apiVersion: '2024-01-01' })
+
+  return client.fetch<boolean>(
+    `count(*[
+      _type == "page" &&
+      slug.current == $slug &&
+      coalesce(language, "en") == $language &&
+      !(_id in [$draftId, $publishedId])
+    ]) == 0`,
+    {
+      slug: normalizedSlug,
+      language,
+      draftId,
+      publishedId,
+    }
+  )
+}
+
+function validateNormalizedSlug(value: { current?: string } | undefined, pageType?: string) {
+  if (pageType === 'home') return true
+  if (!value?.current) return 'A slug is required for this page.'
+
+  const normalized = sanitizeStoredSlug(value.current)
+
+  if (value.current !== normalized) {
+    return 'The slug cannot start or end with spaces or slashes.'
+  }
+
+  if (/^(en|hi)(\/|-)/i.test(normalized) || /-(en|hi)$/i.test(normalized)) {
+    return 'Do not add language codes to the slug. Use only the base slug, for example "cookie".'
+  }
+
+  return true
+}
+
+async function validateTranslationSlugMatchesSource(
+  value: { current?: string } | undefined,
+  context: {
+    document?: {
+      language?: string
+      translationOf?: { _ref?: string }
+      pageType?: string
+    }
+    getClient: (options: { apiVersion: string }) => { fetch: <T>(query: string, params: Record<string, unknown>) => Promise<T> }
+  }
+) {
+  const normalizedValidation = validateNormalizedSlug(value, context.document?.pageType)
+  if (normalizedValidation !== true) return normalizedValidation
+  if (context.document?.pageType === 'home') return true
+
+  const sourceId = context.document?.translationOf?._ref
+  if (!sourceId) return true
+
+  const client = context.getClient({ apiVersion: '2024-01-01' })
+  const sourceSlug = await client.fetch<string | null>(`*[_id == $sourceId][0].slug.current`, { sourceId })
+  const currentSlug = sanitizeStoredSlug(value?.current)
+
+  if (!sourceSlug) return true
+
+  if (currentSlug !== sanitizeStoredSlug(sourceSlug)) {
+    return `Translated pages must use the same slug as the original page: "${sanitizeStoredSlug(sourceSlug)}". Do not add language codes.`
+  }
+
+  return true
+}
 
 export default defineType({
   name: 'page',
   title: 'Page',
   type: 'document',
+  initialValue: () => ({
+    language: getStudioLanguage(),
+  }),
   groups: [
-    { name: 'main', title: '📄 Main' },
-    { name: 'content', title: '🧱 Content' },
-    { name: 'auth', title: '🔐 Auth Settings' },
-    { name: 'dashboard', title: '📊 Dashboard Settings' },
-    { name: 'seo', title: '🔍 SEO' },
+    { name: 'basic', title: 'Page Info', default: true },
+    { name: 'content', title: 'Content Blocks' },
+    { name: 'settings', title: 'Settings' },
+    { name: 'translation', title: 'Translation' },
+    { name: 'advanced', title: 'SEO / Advanced' },
+    { name: 'auth', title: 'Auth Page' },
+    { name: 'dashboard', title: 'Dashboard Page' },
   ],
   fields: [
-    // ==================== MAIN FIELDS ====================
     defineField({
       name: 'title',
-      title: 'Title',
+      title: 'Page Title',
       type: 'string',
+      description: 'The page name shown in Studio and used as a default heading.',
       validation: (Rule) => Rule.required(),
-      group: 'main',
+      group: 'basic',
     }),
-    
     defineField({
       name: 'slug',
-      title: 'Slug',
+      title: 'URL Slug',
       type: 'slug',
+      description: 'Use only the last URL part, for example cookies. Do not add hi, en, or /hi/. The language prefix is added automatically in public URLs.',
       options: {
         source: 'title',
         maxLength: 200,
-        slugify: (input: string) => input
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .slice(0, 200),
+        slugify: (input: string) =>
+          input
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .slice(0, 200),
+        isUnique: isSlugUniquePerLanguage,
       },
-      description: 'URL path for this page',
-      group: 'main',
+      validation: (Rule) => Rule.custom((value, context) => validateTranslationSlugMatchesSource(value as { current?: string } | undefined, context as {
+        document?: {
+          language?: string
+          translationOf?: { _ref?: string }
+          pageType?: string
+        }
+        getClient: (options: { apiVersion: string }) => { fetch: <T>(query: string, params: Record<string, unknown>) => Promise<T> }
+      })),
+      hidden: ({ document }) => document?.pageType === 'home',
+      readOnly: ({ document }) => isTranslationDocument(document),
+      group: 'basic',
     }),
-    
     defineField({
       name: 'pageType',
       title: 'Page Type',
       type: 'string',
+      description: 'Choose what this page is used for.',
       options: {
         list: [
-          { title: '🏠 Homepage', value: 'home' },
-          { title: '📄 Generic Page', value: 'generic' },
-          { title: '🔐 Auth Page', value: 'auth' },
-          { title: '📊 Dashboard', value: 'dashboard' },
+          { title: 'Homepage', value: 'home' },
+          { title: 'Standard Page', value: 'generic' },
+          { title: 'Login / Signup Page', value: 'auth' },
+          { title: 'Dashboard Page', value: 'dashboard' },
         ],
         layout: 'radio',
       },
+      initialValue: 'generic',
       validation: (Rule) => Rule.required(),
-      description: 'Select the type of page',
-      group: 'main',
+      group: 'basic',
     }),
-    
     defineField({
       name: 'description',
-      title: 'Description',
+      title: 'Short Description',
       type: 'text',
       rows: 2,
-      description: 'Brief description shown in previews',
-      group: 'main',
+      description: 'Optional summary used in previews and as fallback SEO text.',
+      group: 'basic',
     }),
-
+    defineField({
+      name: 'components',
+      title: 'Page Sections',
+      type: 'array',
+      description: 'Add, remove, and reorder sections to build the page like WordPress blocks.',
+      of: [
+        { type: 'heroBlock', title: 'Hero Section' },
+        { type: 'contentBlock', title: 'Rich Text Section' },
+        { type: 'postsGridBlock', title: 'Latest Posts' },
+        { type: 'featuredPostBlock', title: 'Featured Post' },
+        { type: 'ctaBlock', title: 'Call To Action' },
+        { type: 'newsletterBlock', title: 'Email Signup' },
+        { type: 'featuresBlock', title: 'Feature Cards' },
+        { type: 'testimonialBlock', title: 'Testimonials' },
+        { type: 'teamBlock', title: 'Team Members' },
+        { type: 'statsBlock', title: 'Stats' },
+        { type: 'pricingBlock', title: 'Pricing Table' },
+        { type: 'contactFormBlock', title: 'Contact Form' },
+        { type: 'accordionBlock', title: 'FAQ' },
+        { type: 'imageBlock', title: 'Image' },
+        { type: 'videoBlock', title: 'Video' },
+        { type: 'separatorBlock', title: 'Spacer / Divider' },
+        { type: 'searchBlock', title: 'Post Search' },
+        { type: 'tagsFilterBlock', title: 'Posts By Tag' },
+        { type: 'containerBlock', title: 'Layout Container' },
+        { type: 'gridBlock', title: 'Layout Grid' },
+        { type: 'codeBlock', title: 'Code Block' },
+      ],
+      group: 'content',
+    }),
     defineField({
       name: 'language',
       title: 'Language',
-      type: 'reference',
-      to: [{ type: 'language' }],
-      description: 'Language for this page',
-      group: 'main',
+      type: 'string',
+      description: 'Choose the language for this version of the page.',
+      options: {
+        list: [
+          { title: '🇺🇸 English', value: 'en' },
+          { title: '🇮🇳 Hindi', value: 'hi' },
+        ],
+        layout: 'dropdown',
+      },
+      initialValue: getStudioLanguage,
+      readOnly: ({ document }) => isTranslationDocument(document),
+      group: 'translation',
     }),
-    
     defineField({
       name: 'translationOf',
       title: 'Translation Of',
       type: 'reference',
+      description: 'Automatically linked when you use the Translate action.',
       to: [{ type: 'page' }],
-      description: 'Link to original page if this is a translation',
       options: {
+        disableNew: true,
         filter: ({ document }) => {
-          const language = (document as { language?: { _ref?: string } })?.language?._ref
+          const language = (document as { language?: string })?.language
           if (!language) return { filter: 'true' }
           return {
-            filter: 'language._ref != $language',
+            filter: 'language != $language',
             params: { language },
           }
         },
       },
-      group: 'main',
+      readOnly: ({ document }) => isTranslationDocument(document),
+      group: 'translation',
     }),
-
-    // ==================== CONTENT BUILDER ====================
     defineField({
-      name: 'components',
-      title: 'Page Content',
-      type: 'array',
-      of: [
-        // Layout
-        { type: 'containerBlock', title: 'Container' },
-        { type: 'gridBlock', title: 'Grid Layout' },
-        { type: 'separatorBlock', title: 'Separator' },
-        // Content
-        { type: 'heroBlock', title: 'Hero Section' },
-        { type: 'contentBlock', title: 'Rich Text' },
-        { type: 'imageBlock', title: 'Image' },
-        { type: 'codeBlock', title: 'Code Block' },
-        { type: 'videoBlock', title: 'Video Embed' },
-        // Posts
-        { type: 'postsGridBlock', title: 'Posts Grid' },
-        { type: 'featuredPostBlock', title: 'Featured Post' },
-        { type: 'searchBlock', title: 'Search' },
-        { type: 'tagsFilterBlock', title: 'Tags Filter' },
-        // Marketing
-        { type: 'ctaBlock', title: 'Call to Action' },
-        { type: 'newsletterBlock', title: 'Newsletter' },
-        { type: 'pricingBlock', title: 'Pricing Table' },
-        // Social
-        { type: 'statsBlock', title: 'Statistics' },
-        { type: 'testimonialBlock', title: 'Testimonials' },
-        { type: 'teamBlock', title: 'Team Grid' },
-        { type: 'featuresBlock', title: 'Features Grid' },
-        // Interactive
-        { type: 'contactFormBlock', title: 'Contact Form' },
-        { type: 'accordionBlock', title: 'FAQ / Accordion' },
-      ],
-      description: 'Build your page by adding and arranging content blocks',
-      group: 'content',
+      name: 'publishedAt',
+      title: 'Publish Date',
+      type: 'datetime',
+      description: 'Optional date used for sorting page lists.',
+      group: 'settings',
     }),
-
-    // ==================== AUTH PAGE SETTINGS ====================
+    defineField({
+      name: 'slugHistory',
+      title: 'Slug History',
+      type: 'array',
+      of: [{ type: 'string' }],
+      readOnly: true,
+      hidden: true,
+      group: 'advanced',
+    }),
     defineField({
       name: 'brandName',
       title: 'Brand Name',
@@ -139,7 +255,6 @@ export default defineType({
       group: 'auth',
       hidden: ({ document }) => document?.pageType !== 'auth',
     }),
-    
     defineField({
       name: 'tagline',
       title: 'Tagline',
@@ -148,28 +263,29 @@ export default defineType({
       group: 'auth',
       hidden: ({ document }) => document?.pageType !== 'auth',
     }),
-    
     defineField({
       name: 'features',
-      title: 'Features',
+      title: 'Auth Page Benefits',
       type: 'array',
+      description: 'Short benefit bullets shown beside login and signup forms.',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'title', type: 'string', validation: (Rule) => Rule.required() }),
-            defineField({ name: 'description', type: 'text', rows: 2 }),
+            defineField({ name: 'title', title: 'Title', type: 'string', validation: (Rule) => Rule.required() }),
+            defineField({ name: 'description', title: 'Description', type: 'text', rows: 2 }),
             defineField({
               name: 'icon',
+              title: 'Icon',
               type: 'string',
               options: {
                 list: [
-                  { title: '🚀 Rocket', value: 'rocket' },
-                  { title: '💻 Code', value: 'code' },
-                  { title: '📚 Layers', value: 'layers' },
-                  { title: '⚡ Zap', value: 'zap' },
-                  { title: '🛡️ Shield', value: 'shield' },
-                  { title: '👥 Users', value: 'users' },
+                  { title: 'Rocket', value: 'rocket' },
+                  { title: 'Code', value: 'code' },
+                  { title: 'Layers', value: 'layers' },
+                  { title: 'Zap', value: 'zap' },
+                  { title: 'Shield', value: 'shield' },
+                  { title: 'Users', value: 'users' },
                 ],
               },
             }),
@@ -182,43 +298,43 @@ export default defineType({
       group: 'auth',
       hidden: ({ document }) => document?.pageType !== 'auth',
     }),
-    
     defineField({
       name: 'loginPage',
-      title: 'Login Page',
+      title: 'Login Form Text',
       type: 'object',
       group: 'auth',
       hidden: ({ document }) => document?.pageType !== 'auth',
       fields: [
-        defineField({ name: 'title', type: 'string', initialValue: 'Welcome back' }),
-        defineField({ name: 'subtitle', type: 'string', initialValue: 'Sign in to your workspace' }),
-        defineField({ name: 'buttonText', type: 'string', initialValue: 'Sign in' }),
+        defineField({ name: 'title', title: 'Title', type: 'string', initialValue: 'Welcome back' }),
+        defineField({ name: 'subtitle', title: 'Subtitle', type: 'string', initialValue: 'Sign in to your workspace' }),
+        defineField({ name: 'buttonText', title: 'Button Text', type: 'string', initialValue: 'Sign in' }),
       ],
     }),
-    
     defineField({
       name: 'signupPage',
-      title: 'Signup Page',
+      title: 'Signup Form Text',
       type: 'object',
       group: 'auth',
       hidden: ({ document }) => document?.pageType !== 'auth',
       fields: [
-        defineField({ name: 'title', type: 'string', initialValue: 'Create an account' }),
-        defineField({ name: 'subtitle', type: 'string', initialValue: 'Sign up for your workspace' }),
-        defineField({ name: 'buttonText', type: 'string', initialValue: 'Sign up' }),
+        defineField({ name: 'title', title: 'Title', type: 'string', initialValue: 'Create an account' }),
+        defineField({ name: 'subtitle', title: 'Subtitle', type: 'string', initialValue: 'Sign up for your workspace' }),
+        defineField({ name: 'buttonText', title: 'Button Text', type: 'string', initialValue: 'Sign up' }),
       ],
     }),
-    
     defineField({
       name: 'oauthProviders',
       title: 'OAuth Providers',
       type: 'array',
+      group: 'auth',
+      hidden: ({ document }) => document?.pageType !== 'auth',
       of: [
         {
           type: 'object',
           fields: [
             defineField({
               name: 'name',
+              title: 'Provider',
               type: 'string',
               options: {
                 list: [
@@ -227,40 +343,35 @@ export default defineType({
                 ],
               },
             }),
-            defineField({ name: 'enabled', type: 'boolean', initialValue: true }),
+            defineField({ name: 'enabled', title: 'Enabled', type: 'boolean', initialValue: true }),
           ],
-          preview: {
-            select: { title: 'name' },
-          },
+          preview: { select: { title: 'name' } },
         },
       ],
-      group: 'auth',
-      hidden: ({ document }) => document?.pageType !== 'auth',
     }),
-
-    // ==================== DASHBOARD SETTINGS ====================
     defineField({
       name: 'dashboardWelcome',
-      title: 'Welcome Message',
+      title: 'Dashboard Welcome Message',
       type: 'object',
       group: 'dashboard',
       hidden: ({ document }) => document?.pageType !== 'dashboard',
       fields: [
         defineField({
           name: 'message',
+          title: 'Message',
           type: 'string',
-          description: "Use {name} for user's name",
+          description: "Use {name} for the user's name.",
           initialValue: 'Welcome back, {name}',
         }),
         defineField({
           name: 'description',
+          title: 'Description',
           type: 'text',
           rows: 2,
           initialValue: 'Here is what is happening across your content ecosystem today.',
         }),
       ],
     }),
-    
     defineField({
       name: 'stats',
       title: 'Dashboard Stats',
@@ -270,79 +381,87 @@ export default defineType({
       fields: [
         defineField({
           name: 'totalPosts',
+          title: 'Total Posts Card',
           type: 'object',
           fields: [
-            defineField({ name: 'label', type: 'string', initialValue: 'Total Posts' }),
+            defineField({ name: 'label', title: 'Label', type: 'string', initialValue: 'Total Posts' }),
           ],
         }),
         defineField({
           name: 'subscription',
+          title: 'Subscription Card',
           type: 'object',
           fields: [
-            defineField({ name: 'label', type: 'string', initialValue: 'Subscription Plan' }),
-            defineField({ name: 'proText', type: 'string', initialValue: 'Unlimited access' }),
-            defineField({ name: 'freeText', type: 'string', initialValue: 'Basic limits' }),
+            defineField({ name: 'label', title: 'Label', type: 'string', initialValue: 'Subscription Plan' }),
+            defineField({ name: 'proText', title: 'Pro Text', type: 'string', initialValue: 'Unlimited access' }),
+            defineField({ name: 'freeText', title: 'Free Text', type: 'string', initialValue: 'Basic limits' }),
           ],
         }),
       ],
     }),
-
-    // ==================== SEO ====================
     defineField({
       name: 'seo',
       title: 'SEO Settings',
       type: 'object',
-      group: 'seo',
+      description: 'Optional overrides for search engines and social sharing.',
+      group: 'advanced',
       fields: [
         defineField({
           name: 'metaTitle',
-          title: 'Meta Title',
+          title: 'SEO Title',
           type: 'string',
-          description: 'Override page title for SEO',
+          description: 'Defaults to the page title.',
         }),
         defineField({
           name: 'metaDescription',
-          title: 'Meta Description',
+          title: 'SEO Description',
           type: 'text',
           rows: 2,
-          description: 'Override description for SEO',
+          description: 'Defaults to the short description.',
         }),
         defineField({
           name: 'ogImage',
-          title: 'OpenGraph Image',
+          title: 'Social Share Image',
           type: 'image',
           options: { hotspot: true },
-          description: 'Image shown when shared on social media',
+          description: 'Image shown when this page is shared.',
         }),
       ],
     }),
-    
-    defineField({
-      name: 'publishedAt',
-      title: 'Published At',
-      type: 'datetime',
-      description: 'Publication date for sorting',
-      group: 'seo',
-    }),
   ],
-  
   preview: {
     select: {
       title: 'title',
-      subtitle: 'pageType',
+      pageType: 'pageType',
       slug: 'slug.current',
+      language: 'language',
+      translationOf: 'translationOf._ref',
     },
     prepare(selection) {
-      const { title, subtitle, slug } = selection as { title?: string; subtitle?: string; slug?: string }
-      const pageTypeLabels: Record<string, string> = {
-        home: '🏠 Homepage',
-        auth: '🔐 Auth',
-        dashboard: '📊 Dashboard',
-        generic: '📄 Page',
+      const { title, pageType, slug, language, translationOf } = selection as {
+        title?: string
+        pageType?: string
+        slug?: string
+        language?: string
+        translationOf?: string
       }
+      const pageTypeLabels: Record<string, string> = {
+        home: 'Homepage',
+        auth: 'Auth Page',
+        dashboard: 'Dashboard Page',
+        generic: 'Page',
+      }
+      const flag = language === 'hi' ? '🇮🇳' : '🇺🇸'
+      const path = pageType === 'home'
+        ? language === 'hi' ? '/hi' : '/'
+        : slug
+          ? language === 'hi' ? `/hi/${slug}` : `/${slug}`
+          : 'No slug yet'
+      const translationLabel = translationOf ? 'translation' : 'original'
+
       return {
-        title: title || 'Untitled',
-        subtitle: slug ? `${pageTypeLabels[subtitle ?? ''] || subtitle} — /${slug}` : pageTypeLabels[subtitle ?? ''] || subtitle,
+        title: `${flag} ${title || 'Untitled Page'}`,
+        subtitle: `${pageTypeLabels[pageType || 'generic']} - ${path} - ${translationLabel}`,
       }
     },
   },

@@ -7,6 +7,7 @@ interface CTAButton {
   href: string
   variant?: string
   external?: boolean
+  target?: '_self' | '_blank'
 }
 
 interface CTABlockProps {
@@ -45,7 +46,12 @@ export function CTABlock({
   align = 'center',
   lang = 'en',
 }: CTABlockProps) {
+  const safeButtons = buttons ?? []
+
   const localizedHref = (href: string) => {
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) {
+      return href
+    }
     if (lang === 'en') return href
     if (href === '/') return `/${lang}`
     return `/${lang}${href.startsWith('/') ? href : '/' + href}`
@@ -65,9 +71,9 @@ export function CTABlock({
             </p>
           )}
 
-          {buttons.length > 0 && (
+          {safeButtons.length > 0 && (
             <div className="flex flex-wrap gap-4 mt-4">
-              {buttons.map((button, index) => (
+              {safeButtons.map((button, index) => (
                 <Link
                   key={`${button.href}-${index}`}
                   href={localizedHref(button.href)}
@@ -75,8 +81,8 @@ export function CTABlock({
                     'inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-lg transition-colors',
                     buttonVariants[button.variant as keyof typeof buttonVariants] || buttonVariants.primary
                   )}
-                  target={button.external ? '_blank' : undefined}
-                  rel={button.external ? 'noopener noreferrer' : undefined}
+                  target={button.target === '_blank' || button.external ? '_blank' : undefined}
+                  rel={button.target === '_blank' || button.external ? 'noopener noreferrer' : undefined}
                 >
                   {button.label}
                   <ArrowRight className="h-4 w-4" />

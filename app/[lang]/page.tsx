@@ -14,6 +14,8 @@ import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
 import { t } from '@/lib/i18n/translations'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 interface LangPageProps {
   params: Promise<{ lang: string }>
 }
@@ -183,6 +185,7 @@ export default async function LangHomePage({ params }: LangPageProps) {
         copyrightText={settings?.copyrightText}
         legalLinks={settings?.legalLinks}
         footerNav={settings?.footerNav ?? undefined}
+        socialLinks={settings?.socialLinks ?? undefined}
         user={userProfile}
         lang={langCode}
       />
