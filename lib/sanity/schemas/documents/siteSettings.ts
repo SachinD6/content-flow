@@ -1,4 +1,4 @@
-import { defineType, defineField } from 'sanity'
+import { defineField, defineType } from 'sanity'
 
 const defineLegalLinkFields = () => [
   defineField({ name: 'label', title: 'Label', type: 'string' }),
@@ -42,18 +42,58 @@ const defineLegalLinkFields = () => [
   }),
 ]
 
+const defineNotFoundLanguageFields = (defaults: {
+  eyebrow: string
+  title: string
+  description: string
+  primaryButtonLabel: string
+  secondaryButtonLabel: string
+}) => [
+  defineField({
+    name: 'eyebrow',
+    title: 'Eyebrow',
+    type: 'string',
+    initialValue: defaults.eyebrow,
+  }),
+  defineField({
+    name: 'title',
+    title: 'Title',
+    type: 'string',
+    initialValue: defaults.title,
+  }),
+  defineField({
+    name: 'description',
+    title: 'Description',
+    type: 'text',
+    rows: 3,
+    initialValue: defaults.description,
+  }),
+  defineField({
+    name: 'primaryButtonLabel',
+    title: 'Primary Button Label',
+    type: 'string',
+    initialValue: defaults.primaryButtonLabel,
+  }),
+  defineField({
+    name: 'secondaryButtonLabel',
+    title: 'Secondary Button Label',
+    type: 'string',
+    initialValue: defaults.secondaryButtonLabel,
+  }),
+]
+
 export default defineType({
   name: 'siteSettings',
   title: 'Site Settings',
   type: 'document',
   groups: [
-    { name: 'general', title: '🏷️ General' },
-    { name: 'languages', title: '🌐 Languages' },
-    { name: 'navigation', title: '🔗 Navigation' },
-    { name: 'footer', title: '📄 Footer' },
+    { name: 'general', title: 'General' },
+    { name: 'languages', title: 'Languages' },
+    { name: 'navigation', title: 'Navigation' },
+    { name: 'footer', title: 'Footer' },
+    { name: 'experience', title: 'Experience' },
   ],
   fields: [
-    // ==================== GENERAL ====================
     defineField({
       name: 'siteName',
       title: 'Site Name',
@@ -67,7 +107,8 @@ export default defineType({
       title: 'Site Description',
       type: 'text',
       rows: 2,
-      initialValue: 'A modern publishing platform for writers, creators, and thinkers.',
+      initialValue:
+        'A modern publishing platform for writers, creators, and thinkers.',
       group: 'general',
     }),
     defineField({
@@ -84,15 +125,14 @@ export default defineType({
       options: { hotspot: true },
       group: 'general',
     }),
-
-    // ==================== LANGUAGES ====================
     defineField({
       name: 'supportedLanguages',
       title: 'Supported Languages',
       type: 'array',
       of: [{ type: 'reference', to: [{ type: 'language' }] }],
       description: 'Languages available for this site',
-      validation: (Rule) => Rule.min(1).error('At least one language is required'),
+      validation: (Rule) =>
+        Rule.min(1).error('At least one language is required'),
       group: 'languages',
     }),
     defineField({
@@ -103,8 +143,6 @@ export default defineType({
       description: 'The default language for the site',
       group: 'languages',
     }),
-
-    // ==================== NAVIGATION ====================
     defineField({
       name: 'headerNav',
       title: 'Header Navigation',
@@ -145,14 +183,49 @@ export default defineType({
       description: 'Links shown when logged out',
       group: 'navigation',
     }),
-
-    // ==================== FOOTER ====================
+    defineField({
+      name: 'notFoundPage',
+      title: '404 Page',
+      type: 'object',
+      description:
+        'Content shown when a page URL does not exist. English is used for normal routes, Hindi for /hi routes.',
+      group: 'experience',
+      fields: [
+        defineField({
+          name: 'english',
+          title: 'English Copy',
+          type: 'object',
+          fields: defineNotFoundLanguageFields({
+            eyebrow: '404 Error',
+            title: 'Page not found',
+            description:
+              "The page you're looking for doesn't exist, was moved, or is not published yet.",
+            primaryButtonLabel: 'Go to homepage',
+            secondaryButtonLabel: 'Browse posts',
+          }),
+        }),
+        defineField({
+          name: 'hindi',
+          title: 'Hindi Copy',
+          type: 'object',
+          fields: defineNotFoundLanguageFields({
+            eyebrow: '404 त्रुटि',
+            title: 'पेज नहीं मिला',
+            description:
+              'जिस पेज को आप ढूंढ रहे हैं वह मौजूद नहीं है, हटाया जा चुका है, या अभी प्रकाशित नहीं हुआ है।',
+            primaryButtonLabel: 'होमपेज पर जाएँ',
+            secondaryButtonLabel: 'पोस्ट्स देखें',
+          }),
+        }),
+      ],
+    }),
     defineField({
       name: 'footerDescription',
       title: 'Footer Description',
       type: 'text',
       rows: 3,
-      initialValue: 'A modern publishing platform for writers, creators, and thinkers.',
+      initialValue:
+        'A modern publishing platform for writers, creators, and thinkers.',
       group: 'footer',
     }),
     defineField({
@@ -208,7 +281,8 @@ export default defineType({
               name: 'href',
               title: 'External URL',
               type: 'url',
-              validation: (Rule) => Rule.uri({ scheme: ['http', 'https'] }),
+              validation: (Rule) =>
+                Rule.uri({ scheme: ['http', 'https'] }),
               hidden: ({ parent }) => parent?.linkType !== 'external',
             }),
             defineField({
@@ -279,7 +353,11 @@ export default defineType({
   preview: {
     select: { title: 'siteName', subtitle: 'siteDescription' },
     prepare(selection) {
-      const { title, subtitle } = selection as { title?: string; subtitle?: string }
+      const { title, subtitle } = selection as {
+        title?: string
+        subtitle?: string
+      }
+
       return { title: title || 'Site Settings', subtitle }
     },
   },

@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate:slugs": "node ./scripts/normalize-translation-slugs.mjs"
+    "migrate:slugs": "node ./scripts/normalize-translation-slugs.mjs",
+    "migrate:translations": "node ./scripts/fix-translation-data.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

@@ -43,6 +43,15 @@ function createDraftId(type: string, sourceId: string, targetLang: string) {
   return `drafts.translation.${type}.${sourceId}.${targetLang}`
 }
 
+function createPublishedId(type: string, sourceId: string, targetLang: string) {
+  return `translation.${type}.${sourceId}.${targetLang}`
+}
+
+function normalizeDocumentLanguage(value: unknown) {
+  if (typeof value === 'string' && value in LANGUAGES) return value
+  return 'en'
+}
+
 function getTargetSlug(slug: string) {
   return slug
     .trim()
@@ -79,10 +88,26 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
   const router = useRouter()
   const [existingTranslationId, setExistingTranslationId] = useState<string | null>(null)
   const translationOf = document?.translationOf as { _ref?: string } | undefined
-  const currentLang = ((document?.language as string | undefined) || 'en')
+  const currentLang = normalizeDocumentLanguage(document?.language)
   const targetLang = currentLang === 'en' ? 'hi' : 'en'
   const langInfo = LANGUAGES[targetLang]
   const sourceId = id ? getPublishedId(id) : null
+  const translationLookupQuery = `
+    *[
+      _type == $type &&
+      translationOf._ref == $sourceId &&
+      coalesce(language->id, language, 'en') == $targetLang
+    ] | order(
+      select(defined(title) && title != '' => 5, 0) desc,
+      select(defined(excerpt) && excerpt != '' => 4, 0) desc,
+      select(count(body) > 0 => 3, 0) desc,
+      select(count(components) > 0 => 3, 0) desc,
+      select(defined(publishedAt) => 2, 0) desc,
+      _updatedAt desc
+    )[0]{
+      _id
+    }
+  `
 
   useEffect(() => {
     if (!document || !sourceId || translationOf?._ref || !LANGUAGES[currentLang]) {
@@ -93,10 +118,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     let cancelled = false
 
     client
-      .fetch<{ _id: string } | null>(
-        `*[_type == $type && language == $targetLang && translationOf._ref == $sourceId][0]{_id}`,
-        { type, targetLang, sourceId }
-      )
+      .fetch<{ _id: string } | null>(translationLookupQuery, { type, targetLang, sourceId })
       .then((result) => {
         if (!cancelled) setExistingTranslationId(result?._id ?? null)
       })
@@ -107,7 +129,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     return () => {
       cancelled = true
     }
-  }, [client, currentLang, document, sourceId, targetLang, translationOf?._ref, type])
+  }, [client, currentLang, document, sourceId, targetLang, translationLookupQuery, translationOf?._ref, type])
 
   if (!document || !id || !sourceId) return null
   if (translationOf?._ref) return null
@@ -121,7 +143,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
       title: `Open the existing ${langInfo.title} translation.`,
       group: ['paneActions'],
       onHandle: () => {
-        router.navigateIntent('edit', { type, id: existingTranslationId })
+        router.navigateIntent('edit', { type, id: getPublishedId(existingTranslationId) })
         props.onComplete()
       },
     }
@@ -135,20 +157,22 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     group: ['paneActions'],
     onHandle: async () => {
       try {
-        const existingTranslation = await client.fetch<{ _id: string } | null>(
-          `*[_type == $type && language == $targetLang && translationOf._ref == $sourceId][0]{_id}`,
-          { type, targetLang, sourceId }
-        )
+        const existingTranslation = await client.fetch<{ _id: string } | null>(translationLookupQuery, {
+          type,
+          targetLang,
+          sourceId,
+        })
 
         if (existingTranslation?._id) {
-          router.navigateIntent('edit', { type, id: existingTranslation._id })
+          router.navigateIntent('edit', { type, id: getPublishedId(existingTranslation._id) })
           props.onComplete()
           return
         }
 
         const langLabel = targetLang === 'hi' ? 'Hindi' : 'English'
-        const values: { _id: string; _type: string } & Record<string, unknown> = {
-          _id: createDraftId(type, sourceId, targetLang),
+        const draftId = createDraftId(type, sourceId, targetLang)
+        const values: Record<string, unknown> = {
+          _id: draftId,
           _type: type,
           language: targetLang,
           translationOf: { _type: 'reference', _ref: sourceId },
@@ -177,8 +201,24 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
           values.components = blankTranslatableValue(document.components, 'components')
         }
 
-        const newDoc = await client.createIfNotExists(values)
-        router.navigateIntent('edit', { type, id: newDoc._id })
+        const nextPublishedId = createPublishedId(type, sourceId, targetLang)
+        const existingDraft = await client.fetch<{ _id: string } | null>(
+          `*[_id in [$draftId, $publishedId]][0]{_id}`,
+          {
+            draftId,
+            publishedId: nextPublishedId,
+          }
+        )
+
+        const patchableValues = Object.fromEntries(
+          Object.entries(values).filter(([key]) => key !== '_id')
+        )
+
+        const newDoc = existingDraft?._id
+          ? await client.patch(existingDraft._id).set(patchableValues).commit()
+          : await client.create(values as { _id: string; _type: string } & Record<string, unknown>)
+
+        router.navigateIntent('edit', { type, id: getPublishedId(newDoc._id) })
         props.onComplete()
       } catch (error) {
         console.error('Translation creation failed:', error)

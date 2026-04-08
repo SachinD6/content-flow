@@ -71,6 +71,19 @@ export function LanguageSwitcher({
       const targetPath = translationLinks[langId]
 
       if (!targetPath) {
+        if (contentTypeLabel === 'page') {
+          try {
+            localStorage.setItem(STORAGE_KEY, langId)
+          } catch {
+            // localStorage might not be available
+          }
+
+          // eslint-disable-next-line react-hooks/immutability -- Setting cookie in event handler is intentional
+          document.cookie = `preferred-language=${langId}; path=/; max-age=${60 * 60 * 24 * 365}`
+          router.push(buildStructuralLanguagePath(pathname, langId))
+          return
+        }
+
         const targetLanguage = availableLanguages.find((language) => language.id === langId)?.title || langId
         toast(`${targetLanguage} version is not available for this ${contentTypeLabel} yet.`)
         return

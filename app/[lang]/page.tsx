@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
 import { PageRenderer } from '@/features/blocks'
-import { sanityFetch } from '@/lib/sanity/live'
 import { 
   PAGE_BY_TYPE_AND_LANGUAGE_QUERY, 
   SITE_SETTINGS_WITH_LANGUAGES_QUERY, 
@@ -12,6 +11,8 @@ import {
 } from '@/lib/sanity/queries'
 import { isValidLanguage, defaultLanguage } from '@/lib/i18n'
 import { t } from '@/lib/i18n/translations'
+import { buildTranslationLinks } from '@/lib/i18n/content-routing'
+import { previewSanityClient, writeSanityClient } from '@/lib/sanity/client'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -41,6 +42,18 @@ interface Post {
   coverImage?: string
 }
 
+interface HomePageData {
+  components?: Array<{ _type: string; _key?: string; [key: string]: unknown }> | null
+  availableTranslations?: Array<{
+    _id: string
+    language: string
+    slug?: string
+    canonicalSlug?: string
+  }> | null
+}
+
+type PageComponent = { _type: string; _key: string; [key: string]: unknown }
+
 export async function generateMetadata({ params }: LangPageProps): Promise<Metadata> {
   const { lang } = await params
   
@@ -51,8 +64,7 @@ export async function generateMetadata({ params }: LangPageProps): Promise<Metad
   
   const langCode = lang
   
-  const settingsResult = await sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY })
-  const settings = settingsResult.data
+  const settings = await writeSanityClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY)
   
   return {
     title: settings?.siteName || 'ContentFlow',
@@ -77,22 +89,14 @@ export default async function LangHomePage({ params }: LangPageProps) {
   
   const langCode = lang
   const { isEnabled: isDraftMode } = await draftMode()
+  const cmsClient = isDraftMode ? previewSanityClient : writeSanityClient
   
-  const [settingsResult, homePageResult, postsResult] = await Promise.all([
-    sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
-    sanityFetch({ 
-      query: PAGE_BY_TYPE_AND_LANGUAGE_QUERY, 
-      params: { pageType: 'home', language: langCode }
-    }),
-    sanityFetch({ 
-      query: ALL_POSTS_BY_LANGUAGE_QUERY, 
-      params: { language: langCode }
-    }),
+  const [settings, homePage, postsResult] = await Promise.all([
+    cmsClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY),
+    cmsClient.fetch(PAGE_BY_TYPE_AND_LANGUAGE_QUERY, { pageType: 'home', language: langCode }),
+    cmsClient.fetch(ALL_POSTS_BY_LANGUAGE_QUERY, { language: langCode }),
   ])
-
-  const settings = settingsResult.data
-  const homePage = homePageResult.data
-  const posts: Post[] = postsResult.data || []
+  const posts: Post[] = postsResult || []
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -120,7 +124,15 @@ export default async function LangHomePage({ params }: LangPageProps) {
     { _id: 'hi-id', id: 'hi', title: 'Hindi', nativeTitle: 'हिन्दी', isDefault: false },
   ]
 
-  const hasComponents = homePage?.components && homePage.components.length > 0
+  const homePageData = homePage as HomePageData | null
+  const components: PageComponent[] = Array.isArray(homePageData?.components)
+    ? homePageData.components.map((component, index) => ({
+        ...component,
+        _key: component._key || `${component._type}-${index}`,
+      }))
+    : []
+  const hasComponents = components.length > 0
+  const translationLinks = buildTranslationLinks(homePageData?.availableTranslations || undefined, 'page')
 
   return (
     <div className="min-h-screen bg-[#0b0c10]">
@@ -131,6 +143,8 @@ export default async function LangHomePage({ params }: LangPageProps) {
         authNav={settings?.authNav ?? undefined}
         lang={langCode}
         supportedLanguages={supportedLanguages}
+        translationLinks={translationLinks}
+        contentTypeLabel="page"
         user={userProfile}
       />
 
@@ -155,7 +169,7 @@ export default async function LangHomePage({ params }: LangPageProps) {
       <main>
         {hasComponents ? (
           <PageRenderer
-            components={homePage.components}
+            components={components}
             posts={posts}
             lang={langCode}
           />

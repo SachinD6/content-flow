@@ -3,7 +3,6 @@ import { draftMode } from 'next/headers'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { sanityFetch } from '@/lib/sanity/live'
 import { PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, SITE_SETTINGS_WITH_LANGUAGES_QUERY, ALL_POSTS_BY_LANGUAGE_QUERY } from '@/lib/sanity/queries'
 import { createClient } from '@/lib/supabase/server'
 import { Header, Footer } from '@/features/layout'
@@ -11,6 +10,7 @@ import { PageRenderer } from '@/features/blocks'
 import { PortableText } from '@portabletext/react'
 import { isValidLanguage } from '@/lib/i18n'
 import { buildAlternateLanguageEntries, buildTranslationLinks, getPagePath } from '@/lib/i18n/content-routing'
+import { previewSanityClient, writeSanityClient } from '@/lib/sanity/client'
 import type { PortableTextBlock } from '@portabletext/types'
 
 export const dynamic = 'force-dynamic'
@@ -43,6 +43,8 @@ interface Page {
   publishedAt?: string
 }
 
+type PageComponent = { _type: string; _key: string; [key: string]: unknown }
+
 export async function generateMetadata(props: { params: Promise<SlugPageParams> }): Promise<Metadata> {
   const { lang, slug } = await props.params
   
@@ -53,11 +55,10 @@ export async function generateMetadata(props: { params: Promise<SlugPageParams> 
   
   const langCode = lang
   
-  const pageResult = await sanityFetch({ 
-    query: PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, 
-    params: { slug, language: langCode }
-  })
-  const page = pageResult.data as Page | null
+  const page = await writeSanityClient.fetch(PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, {
+    slug,
+    language: langCode,
+  }) as Page | null
 
   if (!page) {
     return { title: 'Page Not Found' }
@@ -85,22 +86,21 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
   
   const langCode = lang
   const { isEnabled: isDraftMode } = await draftMode()
+  const cmsClient = isDraftMode ? previewSanityClient : writeSanityClient
   
-  const [pageResult, settingsResult, postsResult] = await Promise.all([
-    sanityFetch({ query: PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, params: { slug, language: langCode } }),
-    sanityFetch({ query: SITE_SETTINGS_WITH_LANGUAGES_QUERY }),
-    sanityFetch({ query: ALL_POSTS_BY_LANGUAGE_QUERY, params: { language: langCode } }),
+  const [page, settings, posts] = await Promise.all([
+    cmsClient.fetch(PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY, { slug, language: langCode }),
+    cmsClient.fetch(SITE_SETTINGS_WITH_LANGUAGES_QUERY),
+    cmsClient.fetch(ALL_POSTS_BY_LANGUAGE_QUERY, { language: langCode }),
   ])
+  const pageData = page as Page | null
+  const localizedPosts = posts || []
 
-  const page = pageResult.data as Page | null
-  const settings = settingsResult.data
-  const posts = postsResult.data || []
-
-  if (!page) {
+  if (!pageData) {
     notFound()
   }
 
-  const canonicalSlug = page.canonicalSlug || page.slug || slug
+  const canonicalSlug = pageData.canonicalSlug || pageData.slug || slug
   const canonicalPath = getPagePath(canonicalSlug, langCode)
   if (slug !== canonicalSlug) {
     permanentRedirect(canonicalPath)
@@ -132,8 +132,14 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
     { _id: 'hi-id', id: 'hi', title: 'Hindi', nativeTitle: 'हिन्दी' },
   ]
 
-  const hasComponents = page.components && page.components.length > 0
-  const translationLinks = buildTranslationLinks(page.availableTranslations, 'page')
+  const pageComponents: PageComponent[] = Array.isArray(pageData.components)
+    ? pageData.components.map((component, index) => ({
+        ...component,
+        _key: component._key || `${component._type}-${index}`,
+      }))
+    : []
+  const hasComponents = pageComponents.length > 0
+  const translationLinks = buildTranslationLinks(pageData.availableTranslations, 'page')
 
   return (
     <div className="min-h-screen bg-[#0b0c10]">
@@ -171,8 +177,8 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
       <main>
         {hasComponents ? (
           <PageRenderer
-            components={page.components}
-            posts={posts}
+            components={pageComponents}
+            posts={localizedPosts}
             lang={langCode}
           />
         ) : (
@@ -188,18 +194,18 @@ export default async function LangGenericPage(props: { params: Promise<SlugPageP
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-8">
-              {page.title}
+              {pageData.title}
             </h1>
 
-            {page.description && (
+            {pageData.description && (
               <p className="text-lg text-zinc-400 mb-8">
-                {page.description}
+                {pageData.description}
               </p>
             )}
 
-            {page.content && page.content.length > 0 && (
+            {pageData.content && pageData.content.length > 0 && (
               <div className="prose prose-invert prose-zinc max-w-none">
-                <PortableText value={page.content as PortableTextBlock[]} />
+                <PortableText value={pageData.content as PortableTextBlock[]} />
               </div>
             )}
           </div>

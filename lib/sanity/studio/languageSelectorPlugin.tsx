@@ -16,6 +16,8 @@ function LanguageSelector() {
     : 'en'
 
   const handleChange = (langId: string) => {
+    if (langId === storedLanguage) return
+
     try {
       localStorage.setItem(STORAGE_KEY, langId)
     } catch {
@@ -23,6 +25,7 @@ function LanguageSelector() {
     }
     // Custom event for other components to listen
     window.dispatchEvent(new CustomEvent('studio-language-change', { detail: langId }))
+    window.location.reload()
   }
 
   return (

@@ -11,7 +11,7 @@ const POST_CARD_FIELDS = groq`
   showOnHome,
   readingTime,
   tags,
-  language,
+  'language': coalesce(language->id, language, 'en'),
   author->{ name, 'avatar': image.asset->url },
   'coverImage': coverImage.asset->url,
   'coverImageAssetId': coverImage.asset._ref
@@ -143,7 +143,7 @@ const PAGE_ROUTE_FIELDS = groq`
   'slug': slug.current,
   'canonicalSlug': coalesce(translationOf->slug.current, slug.current),
   'slugHistory': coalesce(slugHistory, []),
-  'language': coalesce(language, 'en'),
+  'language': coalesce(language->id, language, 'en'),
   'translationGroupId': coalesce(translationOf._ref, _id),
   description,
   components[] { ${PAGE_COMPONENT_FIELDS} },
@@ -157,11 +157,11 @@ const PAGE_ROUTE_FIELDS = groq`
   'availableTranslations': *[
     _type == 'page' &&
     pageType == 'generic' &&
-    coalesce(language, 'en') in ['en', 'hi'] &&
+    coalesce(language->id, language, 'en') in ['en', 'hi'] &&
     coalesce(translationOf._ref, _id) == coalesce(^.translationOf._ref, ^._id)
-  ] | order(coalesce(language, 'en') asc) {
+  ] | order(coalesce(language->id, language, 'en') asc) {
     _id,
-    'language': coalesce(language, 'en'),
+    'language': coalesce(language->id, language, 'en'),
     'slug': slug.current,
     'canonicalSlug': coalesce(translationOf->slug.current, slug.current)
   }
@@ -179,18 +179,18 @@ const POST_ROUTE_FIELDS = groq`
   'slug': slug.current,
   'canonicalSlug': coalesce(translationOf->slug.current, slug.current),
   'slugHistory': coalesce(slugHistory, []),
-  'language': coalesce(language, 'en'),
+  'language': coalesce(language->id, language, 'en'),
   'translationGroupId': coalesce(translationOf._ref, _id),
   author->{ name, bio, 'avatar': image.asset->url },
   'coverImage': coverImage.asset->url,
   'coverImageAssetId': coverImage.asset._ref,
   'availableTranslations': *[
     _type == 'post' &&
-    coalesce(language, 'en') in ['en', 'hi'] &&
+    coalesce(language->id, language, 'en') in ['en', 'hi'] &&
     coalesce(translationOf._ref, _id) == coalesce(^.translationOf._ref, ^._id)
-  ] | order(coalesce(language, 'en') asc) {
+  ] | order(coalesce(language->id, language, 'en') asc) {
     _id,
-    'language': coalesce(language, 'en'),
+    'language': coalesce(language->id, language, 'en'),
     'slug': slug.current,
     'canonicalSlug': coalesce(translationOf->slug.current, slug.current)
   }
@@ -201,6 +201,22 @@ const SITE_SETTINGS_FIELDS = groq`
   siteDescription,
   'logo': logo.asset->url,
   'favicon': favicon.asset->url,
+  notFoundPage {
+    english {
+      eyebrow,
+      title,
+      description,
+      primaryButtonLabel,
+      secondaryButtonLabel
+    },
+    hindi {
+      eyebrow,
+      title,
+      description,
+      primaryButtonLabel,
+      secondaryButtonLabel
+    }
+  },
   copyrightText,
   footerDescription,
   socialLinks[] {
@@ -410,7 +426,7 @@ export const PAGE_BY_TYPE_AND_LANGUAGE_QUERY = groq`
   *[
     _type == 'page' &&
     pageType == $pageType &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ][0] {
     _id,
     title,
@@ -422,7 +438,7 @@ export const PAGE_BY_TYPE_AND_LANGUAGE_QUERY = groq`
       metaDescription,
       'ogImage': ogImage.asset->url
     },
-    language,
+    'language': coalesce(language->id, language, 'en'),
     brandName,
     tagline,
     features[] { title, description, icon },
@@ -433,6 +449,17 @@ export const PAGE_BY_TYPE_AND_LANGUAGE_QUERY = groq`
     stats {
       totalPosts { label },
       subscription { label, proText, freeText }
+    },
+    'availableTranslations': *[
+      _type == 'page' &&
+      pageType == $pageType &&
+      coalesce(language->id, language, 'en') in ['en', 'hi'] &&
+      coalesce(translationOf._ref, _id) == coalesce(^.translationOf._ref, ^._id)
+    ] | order(coalesce(language->id, language, 'en') asc) {
+      _id,
+      'language': coalesce(language->id, language, 'en'),
+      'slug': slug.current,
+      'canonicalSlug': coalesce(translationOf->slug.current, slug.current)
     },
     'slug': slug.current,
     content,
@@ -445,7 +472,7 @@ export const PAGE_BY_SLUG_AND_LANGUAGE_QUERY = groq`
     _type == 'page' &&
     pageType == 'generic' &&
     slug.current == $slug &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ][0] {
     _id,
     title,
@@ -454,7 +481,7 @@ export const PAGE_BY_SLUG_AND_LANGUAGE_QUERY = groq`
     description,
     components[] { ${PAGE_COMPONENT_FIELDS} },
     content,
-    language,
+    'language': coalesce(language->id, language, 'en'),
     seo {
       metaTitle,
       metaDescription,
@@ -469,7 +496,7 @@ export const ALL_POSTS_BY_LANGUAGE_QUERY = groq`
     _type == 'post' &&
     defined(publishedAt) &&
     showOnHome != false &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ] | order(publishedAt desc) {
     ${POST_CARD_FIELDS}
   }
@@ -484,13 +511,17 @@ export const PAGE_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY = groq`
       $slug in coalesce(slugHistory, []) ||
       translationOf->slug.current == $slug
     ) &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ] | order(
+    select(defined(title) && title != '' => 4, 0) desc,
+    select(count(components) > 0 => 3, 0) desc,
+    select(count(content) > 0 => 3, 0) desc,
     select(
       slug.current == $slug => 2,
       coalesce(translationOf->slug.current, '') == $slug => 1,
       0
-    ) desc
+    ) desc,
+    _updatedAt desc
   )[0] {
     ${PAGE_ROUTE_FIELDS}
   }
@@ -500,10 +531,10 @@ export const POST_BY_SLUG_AND_LANGUAGE_QUERY = groq`
   *[
     _type == 'post' &&
     slug.current == $slug &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ][0] {
     ...,
-    language,
+    'language': coalesce(language->id, language, 'en'),
     author->{ name, bio, 'avatar': image.asset->url },
     'coverImage': coverImage.asset->url,
     'coverImageAssetId': coverImage.asset._ref
@@ -518,13 +549,16 @@ export const POST_ROUTE_BY_SLUG_AND_LANGUAGE_QUERY = groq`
       $slug in coalesce(slugHistory, []) ||
       translationOf->slug.current == $slug
     ) &&
-    coalesce(language, 'en') == $language
+    coalesce(language->id, language, 'en') == $language
   ] | order(
+    select(defined(title) => 4, 0) desc,
+    select(count(body) > 0 => 3, 0) desc,
     select(
       slug.current == $slug => 2,
       coalesce(translationOf->slug.current, '') == $slug => 1,
       0
-    ) desc
+    ) desc,
+    _updatedAt desc
   )[0] {
     ${POST_ROUTE_FIELDS}
   }
@@ -560,7 +594,7 @@ export const HOME_PAGE_DATA_QUERY = groq`
     'homePage': *[
       _type == 'page' &&
       pageType == 'home' &&
-      coalesce(language, 'en') == $language
+      coalesce(language->id, language, 'en') == $language
     ][0] {
       _id,
       title,
@@ -570,7 +604,7 @@ export const HOME_PAGE_DATA_QUERY = groq`
       _type == 'post' &&
       defined(publishedAt) &&
       showOnHome != false &&
-      coalesce(language, 'en') == $language
+      coalesce(language->id, language, 'en') == $language
     ] | order(publishedAt desc) [0...20] {
       ${POST_CARD_FIELDS}
     }

@@ -317,6 +317,7 @@ export function PageRenderer({
                 showDate={block.showDate}
                 layout={block.layout}
                 posts={posts as any[]}
+                lang={lang}
               />
             )
           }

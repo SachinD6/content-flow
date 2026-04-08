@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Search, X, FileText } from 'lucide-react'
 import Link from 'next/link'
+import { getLocalizedPath } from '@/lib/i18n/translations'
 
 interface SearchBlockProps {
   title?: string
@@ -77,6 +78,8 @@ export function SearchBlock({
     setResults([])
     setHasSearched(false)
   }
+
+  const postHref = (slug: string) => getLocalizedPath(`/posts/${slug}`, lang)
 
   const getPaddingClass = (padding?: string) => {
     const classes: Record<string, string> = {
@@ -159,7 +162,7 @@ export function SearchBlock({
                   {results.map((post) => (
                     <Link
                       key={post._id}
-                      href={`/${lang}/posts/${post.slug}`}
+                      href={postHref(post.slug)}
                       className="block p-4 sm:p-5 bg-[#121319] border border-white/[0.08] rounded-lg hover:border-[#6154f0]/50 transition-colors"
                     >
                       <h3 className="text-base sm:text-lg font-medium text-white mb-1">{post.title}</h3>

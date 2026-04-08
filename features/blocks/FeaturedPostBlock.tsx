@@ -22,6 +22,7 @@ interface FeaturedPostBlockProps {
   showDate?: boolean
   layout?: 'large' | 'medium' | 'split'
   posts?: Post[]
+  lang?: string
 }
 
 export function FeaturedPostBlock({
@@ -30,6 +31,7 @@ export function FeaturedPostBlock({
   autoSelect = 'featured',
   layout = 'large',
   posts = [],
+  lang = 'en',
 }: FeaturedPostBlockProps) {
   const safePosts = posts ?? []
   let featuredPost = post
@@ -68,13 +70,14 @@ export function FeaturedPostBlock({
                   {featuredPost.excerpt}
                 </p>
               )}
-              <BlogPostCard post={featuredPost} horizontal />
+              <BlogPostCard post={featuredPost} horizontal lang={lang} />
             </div>
           </div>
         ) : (
           <BlogPostCard
             post={featuredPost}
             featured={layout === 'large'}
+            lang={lang}
           />
         )}
       </div>

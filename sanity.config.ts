@@ -1,5 +1,5 @@
 import { defineConfig } from 'sanity'
-import { structureTool } from 'sanity/structure'
+import { structureTool, type StructureBuilder } from 'sanity/structure'
 import { presentationTool } from 'sanity/presentation'
 import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './lib/sanity/schemas'
@@ -11,6 +11,26 @@ const singlePageTypes = ['home', 'auth', 'dashboard']
 const getLanguage = (): string => {
   if (typeof window === 'undefined') return 'en'
   return getStudioLanguage()
+}
+
+const createLanguageScopedList = (
+  S: StructureBuilder,
+  schemaType: 'post' | 'page',
+  title: string
+) => {
+  const language = getLanguage()
+  const languageTitle =
+    language === 'hi' ? 'Hindi' : language === 'en' ? 'English' : language
+
+  return S.documentTypeList(schemaType)
+    .title(`${title} (${languageTitle})`)
+    .filter(
+      `_type == $schemaType && coalesce(language->id, language, "en") == $language`
+    )
+    .params({
+      schemaType,
+      language,
+    })
 }
 
 export default defineConfig({
@@ -34,11 +54,11 @@ export default defineConfig({
           .items([
             S.listItem()
               .title('Posts')
-              .child(S.documentTypeList('post').title('Posts')),
+              .child(createLanguageScopedList(S, 'post', 'Posts')),
 
             S.listItem()
               .title('Pages')
-              .child(S.documentTypeList('page').title('Pages')),
+              .child(createLanguageScopedList(S, 'page', 'Pages')),
 
             S.listItem()
               .title('Authors')

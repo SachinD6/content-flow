@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { BlogPostCard } from '@/features/posts/BlogPostCard'
 
 interface TagsFilterBlockProps {
@@ -167,10 +166,11 @@ export function TagsFilterBlock({
             <div className="lg:col-span-3">
               <div className={`grid ${gridCols} gap-6`}>
                 {displayPosts.map((post) => (
-                  <Link key={post._id} href={`/${lang}/posts/${post.slug}`}>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <BlogPostCard post={post as any} />
-                  </Link>
+                  <BlogPostCard
+                    key={post._id}
+                    post={post}
+                    lang={lang}
+                  />
                 ))}
               </div>
               {filteredPosts.length > postsPerTag && (
@@ -215,10 +215,11 @@ export function TagsFilterBlock({
             </div>
             <div className={`grid ${gridCols} gap-6`}>
               {displayPosts.map((post) => (
-                <Link key={post._id} href={`/${lang}/posts/${post.slug}`}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <BlogPostCard post={post as any} />
-                </Link>
+                <BlogPostCard
+                  key={post._id}
+                  post={post}
+                  lang={lang}
+                />
               ))}
             </div>
           </div>
@@ -229,10 +230,11 @@ export function TagsFilterBlock({
             {renderTags()}
             <div className={`grid ${gridCols} gap-6`}>
               {displayPosts.map((post) => (
-                <Link key={post._id} href={`/${lang}/posts/${post.slug}`}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <BlogPostCard post={post as any} />
-                </Link>
+                <BlogPostCard
+                  key={post._id}
+                  post={post}
+                  lang={lang}
+                />
               ))}
             </div>
           </div>
