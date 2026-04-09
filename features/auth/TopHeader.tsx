@@ -27,7 +27,7 @@ export function TopHeader() {
       </div>
 
       <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
-        <div className="relative hidden sm:flex items-center">
+        <div className="relative hidden xl:flex items-center">
           <Search className="absolute left-3 h-4 w-4 text-zinc-500" strokeWidth={2} />
           <input
             type="text"

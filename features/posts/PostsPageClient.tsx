@@ -67,7 +67,7 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
+    <div className="min-w-0 space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Preview Mode Banner */}
       {isDraftMode && (
         <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/10 p-4 shadow-xl">
@@ -92,9 +92,9 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
         <FeaturedBanner post={featuredPost} />
       )}
 
-      <div className="rounded-[16px] border border-white/5 bg-[#121319] p-4 sm:p-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="relative w-full sm:max-w-md">
+      <div className="overflow-hidden rounded-[16px] border border-white/5 bg-[#121319] p-4 shadow-xl sm:p-6">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+          <div className="relative w-full lg:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" strokeWidth={2} />
             <input
               type="text"
@@ -107,7 +107,7 @@ export function PostsPageClient({ showBanner, featuredPost, initialPosts, isDraf
               )}
             />
           </div>
-          <div className="shrink-0 text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
+          <div className="text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
             {filteredPosts.length} / {posts?.length || 0} posts
           </div>
         </div>

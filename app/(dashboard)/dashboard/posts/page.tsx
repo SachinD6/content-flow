@@ -52,13 +52,15 @@ export default async function PostsPage() {
         }
         description="Manage your technical documentation and editorial content across all production clusters."
       >
-        <SyncButton />
+        <div className="w-full sm:w-auto">
+          <SyncButton />
+        </div>
         <Link
           href="/dashboard/posts/new"
-          className="flex items-center gap-2 px-3 sm:px-6 py-2 bg-[#6154f0] hover:bg-[#584acf] rounded-[8px] text-[12px] font-bold text-white transition-all shadow-lg shadow-[#6154f0]/20"
+          className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#6154f0] px-3 py-2 text-[12px] font-bold text-white shadow-lg shadow-[#6154f0]/20 transition-all hover:bg-[#584acf] sm:w-auto sm:px-6"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          <span className="hidden sm:inline">New Post</span>
+          <span>New Post</span>
         </Link>
       </PageHeader>
       

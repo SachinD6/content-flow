@@ -36,33 +36,33 @@ export function FeaturedBanner({ post }: FeaturedBannerProps) {
       {/* Top Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#6154f0] to-transparent" />
 
-      <div className="relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
+      <div className="relative flex flex-col items-start gap-3 p-3 sm:p-4 md:flex-row md:items-center md:gap-4">
         {/* Image Section */}
         {post.coverImage ? (
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden rounded-lg">
+          <div className="relative h-16 w-full overflow-hidden rounded-lg sm:h-20 md:h-20 md:w-20 md:shrink-0">
             <Image
               src={post.coverImage}
               alt={post.title}
               fill
               className="object-cover"
-              sizes="80px"
+              sizes="(max-width: 767px) 100vw, 80px"
               priority
             />
           </div>
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-[#6154f0]/10 flex items-center justify-center">
+          <div className="flex h-16 w-full items-center justify-center rounded-lg bg-[#6154f0]/10 sm:h-20 md:h-20 md:w-20 md:shrink-0">
             <Sparkles className="h-6 w-6 text-[#6154f0]/50" />
           </div>
         )}
 
         {/* Content Section */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
             <Badge className="bg-[#6154f0]/20 text-[#766bf3] border-[#6154f0]/30 text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5">
               Featured
             </Badge>
             {formattedDate && (
-              <span className="hidden sm:flex items-center gap-1 text-[10px] text-zinc-500">
+              <span className="flex items-center gap-1 text-[10px] text-zinc-500">
                 <Clock className="h-3 w-3" />
                 {formattedDate}
               </span>
@@ -74,13 +74,13 @@ export function FeaturedBanner({ post }: FeaturedBannerProps) {
             href={`/dashboard/posts/${post.slug}`} 
             className="group/title block"
           >
-            <h2 className="text-sm sm:text-base font-semibold text-white group-hover/title:text-[#766bf3] transition-colors duration-300 truncate">
+            <h2 className="line-clamp-2 text-sm font-semibold text-white transition-colors duration-300 group-hover/title:text-[#766bf3] sm:text-base">
               {post.title}
             </h2>
           </Link>
 
           {/* Excerpt - Hidden on mobile */}
-          <p className="text-xs text-zinc-500 truncate hidden sm:block mt-0.5">
+          <p className="mt-0.5 hidden text-xs text-zinc-500 sm:block line-clamp-2">
             {post.excerpt || 'No excerpt available'}
           </p>
         </div>
@@ -89,14 +89,14 @@ export function FeaturedBanner({ post }: FeaturedBannerProps) {
         <Link
           href={`/dashboard/posts/${post.slug}`}
           className={cn(
-            "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5",
+            "inline-flex items-center gap-1.5 self-stretch px-3 py-2 md:self-auto",
             "bg-[#6154f0] hover:bg-[#584acf] text-white",
-            "rounded-lg text-xs font-medium",
+            "justify-center rounded-lg text-xs font-medium md:shrink-0",
             "transition-all duration-200",
             "group/btn"
           )}
         >
-          <span className="hidden sm:inline">Read</span>
+          <span>Read</span>
           <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
         </Link>
 

@@ -361,15 +361,15 @@ export function PostsTable({ data, currentUserId }: { data: Post[]; currentUserI
 
   return (
     <>
-      {/* Mobile Cards - hidden on lg+ */}
-      <div className="lg:hidden space-y-3">
+      {/* Card layout for mobile and tablet */}
+      <div className="xl:hidden space-y-3">
         {data.map((post) => (
           <MobilePostCard key={post._id} post={post} />
         ))}
       </div>
 
-      {/* Desktop Table - hidden on mobile */}
-      <div className="hidden lg:block overflow-x-auto">
+      {/* Dense table layout only when there is enough horizontal room */}
+      <div className="hidden xl:block overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
