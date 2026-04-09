@@ -185,7 +185,15 @@ export default defineType({
       title: 'Dashboard Navigation',
       type: 'array',
       of: [{ type: 'navItem' }],
-      description: 'Links shown in dashboard sidebar',
+      description: 'Links shown in dashboard sidebar. Use the "Group" field on each item to create sections like Main, Account, Help.',
+      group: 'navigation',
+    }),
+    defineField({
+      name: 'dashboardFooterNav',
+      title: 'Dashboard Footer Links',
+      type: 'array',
+      of: [{ type: 'navItem' }],
+      description: 'Links shown at the bottom of the dashboard sidebar (e.g. Documentation, Support)',
       group: 'navigation',
     }),
     defineField({

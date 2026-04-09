@@ -4,22 +4,16 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutDashboard, FileText, Settings, CreditCard, Menu, SquareTerminal, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, SquareTerminal, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { useUser } from '@/hooks/useUser';
+import { getIcon } from '@/lib/icon-map';
 import type { Post } from '@/types';
-
-const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Posts', href: '/dashboard/posts', icon: FileText },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-];
+import type { NavItem } from '@/lib/sanity/content-types';
 
 interface SidebarContentProps {
   onLinkClick?: () => void;
@@ -32,6 +26,16 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const { profile, loading, error, refetch } = useUser();
+
+  const { data: settings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const res = await fetch('/api/site-settings');
+      if (!res.ok) throw new Error('Failed to fetch site settings');
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: posts } = useQuery<Post[]>({
     queryKey: ['posts'],
@@ -52,8 +56,67 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
     onLinkClick?.();
   };
 
-  // Mobile sidebar should always show text regardless of desktop sidebar state
   const showText = isMobile || sidebarOpen;
+
+  const dashboardNav: NavItem[] = settings?.dashboardNav || [];
+  const dashboardFooterNav: NavItem[] = settings?.dashboardFooterNav || [];
+
+  const groups = [...new Set(dashboardNav.map(item => item.group || 'Main'))]
+  const groupedNav = groups.map(group => ({
+    label: group,
+    items: dashboardNav.filter(item => (item.group || 'Main') === group),
+  }))
+
+  const getBadge = (item: NavItem) => {
+    if (item.badge === 'posts' && posts) return posts.length
+    return null
+  }
+
+  const renderNavItem = (item: NavItem, isFooter = false) => {
+    const isActive = pathname.startsWith(item.href) &&
+      (item.href === '/dashboard' ? pathname === '/dashboard' : true)
+    const IconComponent = getIcon(item.icon)
+    const badgeCount = getBadge(item)
+
+    return (
+      <Link
+        key={item.href + item.label}
+        href={item.href}
+        onClick={handleLinkClick}
+        target={item.target === '_blank' ? '_blank' : undefined}
+        rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+        className={cn(
+          'group flex items-center rounded-[8px] px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
+          !isFooter && isActive
+            ? 'bg-[#121319] text-white border border-white/5 shadow-sm'
+            : !isFooter
+              ? 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5',
+          isFooter && 'py-2 text-[12px]'
+        )}
+        title={!showText ? item.label : undefined}
+      >
+        <IconComponent
+          className={cn(
+            'h-[18px] w-[18px] shrink-0',
+            isActive ? 'text-[#6154f0]' : 'text-zinc-500 group-hover:text-zinc-300',
+            showText && 'mr-3'
+          )}
+          strokeWidth={2}
+        />
+        {showText && (
+          <>
+            <span className="truncate">{item.label}</span>
+            {badgeCount !== null && (
+              <span className="ml-auto inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">
+                {badgeCount}
+              </span>
+            )}
+          </>
+        )}
+      </Link>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#0b0c10] border-r border-white/5 text-zinc-400 font-sans transition-all duration-300">
@@ -68,7 +131,6 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
             <span className="text-[9px] uppercase tracking-[0.2em] text-[#6154f0] font-bold">Engineering CMS</span>
           </div>
         )}
-        {/* Collapse Toggle Button - Moved to top */}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -92,72 +154,29 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href) && 
-            (item.href === '/dashboard' ? pathname === '/dashboard' : true);
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={handleLinkClick}
-              className={cn(
-                'group flex items-center rounded-[8px] px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
-                isActive
-                  ? 'bg-[#121319] text-white border border-white/5 shadow-sm'
-                  : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-              )}
-              title={!showText ? item.name : undefined}
-            >
-              <item.icon
-                className={cn(
-                  'h-[18px] w-[18px] shrink-0',
-                  isActive ? 'text-[#6154f0]' : 'text-zinc-500 group-hover:text-zinc-300',
-                  showText && 'mr-3'
-                )}
-                strokeWidth={2}
-              />
-              {showText && (
-                <span className="truncate">{item.name}</span>
-              )}
-              {showText && item.name === 'Posts' && posts && (
-                <span className="ml-auto inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">
-                  {posts.length}
+      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
+        {groupedNav.map((group) => (
+          <div key={group.label}>
+            {showText && groupedNav.length > 1 && (
+              <div className="px-3 mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-600">
+                  {group.label}
                 </span>
-              )}
-            </Link>
-          );
-        })}
+              </div>
+            )}
+            <div className="space-y-1">
+              {group.items.map(item => renderNavItem(item))}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer Navigation */}
-      <div className="p-3 border-t border-white/5 space-y-1">
-        <Link
-          href="/documentation"
-          onClick={handleLinkClick}
-          className={cn(
-            "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
-            !showText && "justify-center px-0"
-          )}
-          title={!showText ? 'Documentation' : undefined}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", showText && "mr-3")}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          {showText && "Documentation"}
-        </Link>
-        <Link
-          href="/support"
-          onClick={handleLinkClick}
-          className={cn(
-            "flex items-center px-3 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-300 rounded-[8px] hover:bg-white/5 transition-colors",
-            !showText && "justify-center px-0"
-          )}
-          title={!showText ? 'Support' : undefined}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("h-4 w-4 shrink-0", showText && "mr-3")}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-          {showText && "Support"}
-        </Link>
-      </div>
+      {dashboardFooterNav.length > 0 && (
+        <div className="p-3 border-t border-white/5 space-y-1">
+          {dashboardFooterNav.map(item => renderNavItem(item, true))}
+        </div>
+      )}
 
       {/* User Profile Mini */}
       <div className="p-4 border-t border-white/5">
@@ -176,9 +195,9 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
             <>
               <div className="relative h-8 w-8 rounded-full overflow-hidden bg-zinc-800 shrink-0 border border-white/10">
                 {profile?.avatarUrl ? (
-                  <Image 
-                    src={profile.avatarUrl} 
-                    alt="Avatar" 
+                  <Image
+                    src={profile.avatarUrl}
+                    alt="Avatar"
                     width={32}
                     height={32}
                     className="object-cover"
@@ -202,7 +221,7 @@ function SidebarContent({ onLinkClick, isMobile = false }: SidebarContentProps) 
                     )}
                   </span>
                   {error && showText && (
-                    <button 
+                    <button
                       onClick={refetch}
                       className="text-[10px] text-[#6154f0] hover:text-[#584acf] mt-1 text-left cursor-pointer"
                     >

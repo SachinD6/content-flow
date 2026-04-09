@@ -95,11 +95,15 @@ const defaultSiteSettings = {
     },
   ],
   dashboardNav: [
-    { label: 'Dashboard', href: '/dashboard', external: false, requiresAuth: true },
-    { label: 'Posts', href: '/dashboard/posts', external: false, requiresAuth: true },
-    { label: 'Analytics', href: '/dashboard/analytics', external: false, requiresAuth: true },
-    { label: 'Settings', href: '/dashboard/settings', external: false, requiresAuth: true },
-    { label: 'Billing', href: '/dashboard/billing', external: false, requiresAuth: true },
+    { label: 'Dashboard', href: '/dashboard', external: false, requiresAuth: true, icon: 'layout-dashboard', group: 'Main' },
+    { label: 'Posts', href: '/dashboard/posts', external: false, requiresAuth: true, icon: 'file-text', group: 'Main', badge: 'posts' },
+    { label: 'Analytics', href: '/dashboard/analytics', external: false, requiresAuth: true, icon: 'bar-chart-3', group: 'Main' },
+    { label: 'Settings', href: '/dashboard/settings', external: false, requiresAuth: true, icon: 'settings', group: 'Account' },
+    { label: 'Billing', href: '/dashboard/billing', external: false, requiresAuth: true, icon: 'credit-card', group: 'Account' },
+  ],
+  dashboardFooterNav: [
+    { label: 'Documentation', href: '/documentation', external: false, icon: 'book-open' },
+    { label: 'Support', href: '/support', external: false, icon: 'help-circle' },
   ],
   authNav: [
     { label: 'Write a story', href: '/dashboard/posts/new', external: false, requiresAuth: true },

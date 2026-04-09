@@ -59,6 +59,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       dashboardNav: [
         ...DEFAULT_SITE_SETTINGS.dashboardNav!,
       ],
+      dashboardFooterNav: [
+        ...DEFAULT_SITE_SETTINGS.dashboardFooterNav!,
+      ],
       authNav: [
         ...DEFAULT_SITE_SETTINGS.authNav!,
       ],
@@ -240,6 +243,9 @@ export async function getHomePageData() {
     ],
     dashboardNav: [
       ...DEFAULT_SITE_SETTINGS.dashboardNav!,
+    ],
+    dashboardFooterNav: [
+      ...DEFAULT_SITE_SETTINGS.dashboardFooterNav!,
     ],
     authNav: [
       ...DEFAULT_SITE_SETTINGS.authNav!,

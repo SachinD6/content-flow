@@ -18,7 +18,7 @@ export default async function DashboardGroupLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0b0c10] font-sans text-zinc-100 selection:bg-[#6154f0] selection:text-white">
+    <div className="min-h-screen bg-[#0b0c10] font-sans text-zinc-100 selection:bg-[#6154f0] selection:text-white">
       <Sidebar />
       <ClientLayoutWrapper>
         <TopHeader />

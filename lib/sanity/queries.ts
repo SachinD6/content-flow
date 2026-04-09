@@ -32,6 +32,8 @@ const NAV_ITEM_FIELDS = groq`
   'external': coalesce(external, linkType == 'external', target == '_blank'),
   'target': coalesce(target, select(linkType == 'external' => '_blank', '_self')),
   icon,
+  group,
+  'badge': coalesce(badge, 'none'),
   requiresAuth,
   authOnly,
   guestOnly,
@@ -306,6 +308,7 @@ const SITE_SETTINGS_FIELDS = groq`
     items[] { ${NAV_ITEM_FIELDS} }
   },
   dashboardNav[] { ${NAV_ITEM_FIELDS} },
+  dashboardFooterNav[] { ${NAV_ITEM_FIELDS} },
   authNav[] { ${NAV_ITEM_FIELDS} },
   guestNav[] { ${NAV_ITEM_FIELDS} }
 `

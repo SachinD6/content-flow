@@ -23,6 +23,8 @@ export interface NavItem {
   external?: boolean
   target?: '_self' | '_blank'
   icon?: string | null
+  group?: string | null
+  badge?: string | null
   requiresAuth?: boolean
   authOnly?: boolean
   guestOnly?: boolean
@@ -65,6 +67,7 @@ export interface SiteSettings {
   headerNav: NavItem[] | null
   footerNav: NavGroup[] | null
   dashboardNav: NavItem[] | null
+  dashboardFooterNav: NavItem[] | null
   authNav: NavItem[] | null
   guestNav: NavItem[] | null
 }
@@ -302,11 +305,15 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     },
   ],
   dashboardNav: [
-    { label: 'Dashboard', labelHindi: 'डैशबोर्ड', href: '/dashboard' },
-    { label: 'Posts', labelHindi: 'पोस्ट्स', href: '/dashboard/posts' },
-    { label: 'Analytics', labelHindi: 'एनालिटिक्स', href: '/dashboard/analytics' },
-    { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings' },
-    { label: 'Billing', labelHindi: 'बिलिंग', href: '/dashboard/billing' },
+    { label: 'Dashboard', labelHindi: 'डैशबोर्ड', href: '/dashboard', icon: 'layout-dashboard', group: 'Main' },
+    { label: 'Posts', labelHindi: 'पोस्ट्स', href: '/dashboard/posts', icon: 'file-text', group: 'Main', badge: 'posts' },
+    { label: 'Analytics', labelHindi: 'एनालिटिक्स', href: '/dashboard/analytics', icon: 'bar-chart-3', group: 'Main' },
+    { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings', icon: 'settings', group: 'Account' },
+    { label: 'Billing', labelHindi: 'बिलिंग', href: '/dashboard/billing', icon: 'credit-card', group: 'Account' },
+  ],
+  dashboardFooterNav: [
+    { label: 'Documentation', labelHindi: 'दस्तावेज़', href: '/documentation', icon: 'book-open' },
+    { label: 'Support', labelHindi: 'सहायता', href: '/support', icon: 'help-circle' },
   ],
   authNav: [
     { label: 'Write a story', labelHindi: 'कहानी लिखें', href: '/dashboard/posts' },
