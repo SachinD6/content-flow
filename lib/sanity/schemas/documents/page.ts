@@ -26,7 +26,7 @@ async function isSlugUniquePerLanguage(slug: string, context: { document?: { _id
     `count(*[
       _type == "page" &&
       slug.current == $slug &&
-      coalesce(language->id, language, "en") == $language &&
+      coalesce(language, "en") == $language &&
       !(_id in [$draftId, $publishedId])
     ]) == 0`,
     {
@@ -230,7 +230,7 @@ export default defineType({
           const language = (document as { language?: string })?.language
           if (!language) return { filter: 'true' }
           return {
-            filter: 'coalesce(language->id, language, "en") != $language',
+            filter: 'coalesce(language, "en") != $language',
             params: { language },
           }
         },

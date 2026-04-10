@@ -25,12 +25,13 @@ const createLanguageScopedList = (
   return S.documentTypeList(schemaType)
     .title(`${title} (${languageTitle})`)
     .filter(
-      `_type == $schemaType && coalesce(language->id, language, "en") == $language`
+      `_type == $schemaType && coalesce(language, "en") == $language`
     )
     .params({
       schemaType,
       language,
     })
+    .apiVersion('2024-01-01')
 }
 
 export default defineConfig({

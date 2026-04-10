@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     ]
 
     // Language filter
-    filters.push(`(language == null || language->id == $language)`)
+    filters.push(`coalesce(language, 'en') == $language`)
 
     // Post source filters
     if (postSource === 'featured') {
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
         tags,
         author->{ name, 'avatar': image.asset->url },
         'coverImage': coverImage.asset->url,
-        language->{ _id, id, title, nativeTitle }
+        'language': coalesce(language, 'en')
       }
     `
 

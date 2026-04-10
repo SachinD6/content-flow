@@ -97,7 +97,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
     *[
       _type == $type &&
       translationOf._ref in [$sourceId, $draftSourceId] &&
-      coalesce(language->id, language, 'en') == $targetLang
+      coalesce(language, 'en') == $targetLang
     ] | order(
       select(defined(title) && title != '' => 5, 0) desc,
       select(defined(excerpt) && excerpt != '' => 4, 0) desc,
@@ -116,7 +116,7 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
       return
     }
 
-    let cancelled = false
+    const abortController = new AbortController()
 
     client
       .fetch<{ _id: string } | null>(translationLookupQuery, {
@@ -124,16 +124,18 @@ const CreateTranslationAction: DocumentActionComponent = (props: DocumentActionP
         targetLang,
         sourceId,
         draftSourceId,
-      })
+      }, { signal: abortController.signal })
       .then((result) => {
-        if (!cancelled) setExistingTranslationId(result?._id ?? null)
+        setExistingTranslationId(result?._id ?? null)
       })
-      .catch(() => {
-        if (!cancelled) setExistingTranslationId(null)
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setExistingTranslationId(null)
+        }
       })
 
     return () => {
-      cancelled = true
+      abortController.abort()
     }
   }, [
     client,

@@ -113,7 +113,7 @@ const client = createClient({
 const data = await client.fetch(`
   {
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0],
-    "pages": *[_type == "page" && coalesce(language->id, language, "en") == "hi"]{
+    "pages": *[_type == "page" && coalesce(language, "en") == "hi"]{
       _id,
       title,
       pageType,
@@ -130,7 +130,7 @@ const data = await client.fetch(`
       stats,
       activitySection
     },
-    "posts": *[_type == "post" && coalesce(language->id, language, "en") == "hi"]{
+    "posts": *[_type == "post" && coalesce(language, "en") == "hi"]{
       _id,
       title,
       excerpt,
@@ -424,7 +424,7 @@ const draftsToPublish = await client.fetch(`
   *[
     (_type == "page" || _type == "post") &&
     _id in path("drafts.translation.**") &&
-    coalesce(language->id, language, "en") == "hi"
+    coalesce(language, "en") == "hi"
   ]{
     ...
   }
