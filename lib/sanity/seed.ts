@@ -101,10 +101,6 @@ const defaultSiteSettings = {
     { label: 'Settings', href: '/dashboard/settings', external: false, requiresAuth: true, icon: 'settings', group: 'Account' },
     { label: 'Billing', href: '/dashboard/billing', external: false, requiresAuth: true, icon: 'credit-card', group: 'Account' },
   ],
-  dashboardFooterNav: [
-    { label: 'Documentation', href: '/documentation', external: false, icon: 'book-open' },
-    { label: 'Support', href: '/support', external: false, icon: 'help-circle' },
-  ],
   authNav: [
     { label: 'Write a story', href: '/dashboard/posts/new', external: false, requiresAuth: true },
     { label: 'Dashboard', href: '/dashboard', external: false, requiresAuth: true },

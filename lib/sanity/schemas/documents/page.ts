@@ -102,6 +102,7 @@ export default defineType({
   groups: [
     { name: 'basic', title: 'Page Info', default: true },
     { name: 'content', title: 'Content Blocks' },
+    { name: 'navigation', title: 'Navigation' },
     { name: 'settings', title: 'Settings' },
     { name: 'translation', title: 'Translation' },
     { name: 'advanced', title: 'SEO / Advanced' },
@@ -354,6 +355,24 @@ export default defineType({
           preview: { select: { title: 'name' } },
         },
       ],
+    }),
+    defineField({
+      name: 'dashboardNav',
+      title: 'Sidebar Navigation',
+      type: 'array',
+      of: [{ type: 'navItem' }],
+      description: 'Links shown in the dashboard sidebar. Use the "Group" field on each item to create sections like Main, Account, Help.',
+      group: 'navigation',
+      hidden: ({ document }) => document?.pageType !== 'dashboard',
+    }),
+    defineField({
+      name: 'dashboardFooterNav',
+      title: 'Sidebar Footer Links',
+      type: 'array',
+      of: [{ type: 'navItem' }],
+      description: 'Links shown at the bottom of the dashboard sidebar (e.g. Documentation, Support)',
+      group: 'navigation',
+      hidden: ({ document }) => document?.pageType !== 'dashboard',
     }),
     defineField({
       name: 'dashboardWelcome',

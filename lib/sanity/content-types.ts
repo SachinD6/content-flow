@@ -67,7 +67,6 @@ export interface SiteSettings {
   headerNav: NavItem[] | null
   footerNav: NavGroup[] | null
   dashboardNav: NavItem[] | null
-  dashboardFooterNav: NavItem[] | null
   authNav: NavItem[] | null
   guestNav: NavItem[] | null
 }
@@ -310,10 +309,6 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     { label: 'Analytics', labelHindi: 'एनालिटिक्स', href: '/dashboard/analytics', icon: 'bar-chart-3', group: 'Main' },
     { label: 'Settings', labelHindi: 'सेटिंग्स', href: '/dashboard/settings', icon: 'settings', group: 'Account' },
     { label: 'Billing', labelHindi: 'बिलिंग', href: '/dashboard/billing', icon: 'credit-card', group: 'Account' },
-  ],
-  dashboardFooterNav: [
-    { label: 'Documentation', labelHindi: 'दस्तावेज़', href: '/documentation', icon: 'book-open' },
-    { label: 'Support', labelHindi: 'सहायता', href: '/support', icon: 'help-circle' },
   ],
   authNav: [
     { label: 'Write a story', labelHindi: 'कहानी लिखें', href: '/dashboard/posts' },

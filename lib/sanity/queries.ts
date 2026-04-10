@@ -308,7 +308,6 @@ const SITE_SETTINGS_FIELDS = groq`
     items[] { ${NAV_ITEM_FIELDS} }
   },
   dashboardNav[] { ${NAV_ITEM_FIELDS} },
-  dashboardFooterNav[] { ${NAV_ITEM_FIELDS} },
   authNav[] { ${NAV_ITEM_FIELDS} },
   guestNav[] { ${NAV_ITEM_FIELDS} }
 `
@@ -342,9 +341,18 @@ export const PAGE_BY_TYPE_QUERY = groq`
       totalPosts { label },
       subscription { label, proText, freeText }
     },
+    dashboardNav[] { ${NAV_ITEM_FIELDS} },
+    dashboardFooterNav[] { ${NAV_ITEM_FIELDS} },
     'slug': slug.current,
     content,
     publishedAt
+  }
+`
+
+export const DASHBOARD_NAV_QUERY = groq`
+  *[_type == 'page' && pageType == 'dashboard'][0] {
+    dashboardNav[] { ${NAV_ITEM_FIELDS} },
+    dashboardFooterNav[] { ${NAV_ITEM_FIELDS} }
   }
 `
 
